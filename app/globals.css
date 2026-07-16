@@ -117,4 +117,14 @@
   .label-field {
     @apply text-[0.6875rem] uppercase tracking-[0.12em] text-muted-foreground;
   }
+
+  /*
+    Card-sized links wrap their own layout, so they miss the ring that shadcn
+    builds into Button and Input and fall back to the browser's hairline
+    outline. Focus should look the same everywhere it lands.
+  */
+  .focus-card {
+    @apply rounded-lg outline-none ring-offset-2 ring-offset-background
+      focus-visible:ring-2 focus-visible:ring-ring;
+  }
 }

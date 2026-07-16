@@ -23,7 +23,12 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="icon" className="rounded-full">
+        {/* h-11/w-11: 44px, the smallest reliable thumb target. */}
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-11 w-11 rounded-full"
+        >
           <PersonIcon className="h-5 w-5" />
           <span className="sr-only">Account menu</span>
         </Button>

@@ -91,7 +91,7 @@ export default function MedicinesPage() {
               <li key={m._id}>
                 <Link
                   href={`/medicines/${m._id}`}
-                  className="flex items-start justify-between gap-4 rounded-lg border bg-card p-4 transition-colors hover:border-input"
+                  className="focus-card flex items-start justify-between gap-4 rounded-lg border bg-card p-4 transition-colors hover:border-input"
                 >
                   <div className="min-w-0">
                     <p className="font-display text-lg font-medium leading-snug">

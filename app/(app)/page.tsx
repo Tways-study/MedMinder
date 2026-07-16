@@ -78,7 +78,7 @@ export default function DashboardPage() {
       {hasDraftCount && (
         <Link
           href="/count"
-          className="rounded-lg border border-primary/40 bg-secondary p-4 transition-colors hover:border-primary"
+          className="focus-card rounded-lg border border-primary/40 bg-secondary p-4 transition-colors hover:border-primary"
         >
           <p className="font-medium text-secondary-foreground">
             A count is in progress
@@ -109,7 +109,7 @@ export default function DashboardPage() {
           </div>
 
           {lots.map((lot) => (
-            <Link key={lot.batchId} href={`/medicines/${lot.medicineId}`}>
+            <Link key={lot.batchId} href={`/medicines/${lot.medicineId}`} className="focus-card block">
               <BatchCard
                 medicineName={lot.medicineName}
                 strength={lot.strength}
@@ -145,7 +145,7 @@ export default function DashboardPage() {
               <li key={m.medicineId}>
                 <Link
                   href={`/medicines/${m.medicineId}`}
-                  className="flex items-center justify-between gap-4 rounded-lg border bg-card p-4 transition-colors hover:border-input"
+                  className="focus-card flex items-center justify-between gap-4 rounded-lg border bg-card p-4 transition-colors hover:border-input"
                 >
                   <div className="min-w-0">
                     <p className="font-display text-base font-medium leading-snug">
