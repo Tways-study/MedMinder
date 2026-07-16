@@ -3,14 +3,6 @@ import type { ExpiryTier } from "@/convex/lib/inventory";
 import { formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const STRIPE: Record<ExpiryTier, string> = {
-  expired: "bg-tier-expired-stripe",
-  critical: "bg-tier-critical-stripe",
-  warning: "bg-tier-warning-stripe",
-  watch: "bg-tier-watch-stripe",
-  ok: "bg-tier-ok-stripe",
-};
-
 const DISTANCE_TEXT: Record<ExpiryTier, string> = {
   expired: "text-tier-expired",
   critical: "text-tier-critical",
@@ -20,18 +12,17 @@ const DISTANCE_TEXT: Record<ExpiryTier, string> = {
 };
 
 /*
-  The signature element: a batch rendered as a dispensing label.
+  A batch, drawn as the dispensing label it already is: field names small and
+  letterspaced, values in mono so they read against the physical box.
 
-  A lot on a pharmacy shelf already has a canonical visual form — the gummed
-  label, with its ruled fields and stamped lot and expiry. This borrows that
-  form: field names small and letterspaced, values in mono so they read against
-  the physical box, and a severity stripe down the binding edge.
+  Tier is carried by the badge alone — icon, word and colour, in the same
+  position on every card. An earlier version also ran a coloured stripe down the
+  binding edge. It scanned well, but a coloured side-stripe on a card is a
+  decorative reflex, and the badge already says everything the stripe said.
 
   Layout is driven by a 390px phone held one-handed. The quantity sits in the
   header because it is the number being compared against the shelf, and the
   expiry phrasing gets its own line so neither it nor the date can ever wrap.
-  The stripe repeats the badge's tier rather than replacing it: the stripe is
-  glanceable down a list, the badge is the accessible signal.
 */
 export function BatchCard({
   medicineName,
@@ -66,15 +57,8 @@ export function BatchCard({
   const leadsWithLot = medicineName === undefined;
 
   return (
-    <article
-      className={cn("relative overflow-hidden rounded-lg border bg-card", className)}
-    >
-      <span
-        className={cn("absolute inset-y-0 left-0 w-1", STRIPE[tier])}
-        aria-hidden
-      />
-
-      <div className="flex flex-col gap-3 py-4 pl-5 pr-4">
+    <article className={cn("rounded-lg border bg-card", className)}>
+      <div className="flex flex-col gap-3 p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             {leadsWithLot ? (

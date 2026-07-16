@@ -52,33 +52,27 @@ export default {
         orchid: "hsl(var(--orchid))",
         amethyst: "hsl(var(--amethyst))",
         // Expiry severity ramp. Paired fg/bg so a badge can never be assembled
-        // from a mismatched combination. `stripe` is the text-free variant and
-        // is the only one free to order itself by lightness.
+        // from a mismatched combination.
         tier: {
           expired: {
             DEFAULT: "hsl(var(--tier-expired-fg))",
             bg: "hsl(var(--tier-expired-bg))",
-            stripe: "hsl(var(--stripe-expired))",
           },
           critical: {
             DEFAULT: "hsl(var(--tier-critical-fg))",
             bg: "hsl(var(--tier-critical-bg))",
-            stripe: "hsl(var(--stripe-critical))",
           },
           warning: {
             DEFAULT: "hsl(var(--tier-warning-fg))",
             bg: "hsl(var(--tier-warning-bg))",
-            stripe: "hsl(var(--stripe-warning))",
           },
           watch: {
             DEFAULT: "hsl(var(--tier-watch-fg))",
             bg: "hsl(var(--tier-watch-bg))",
-            stripe: "hsl(var(--stripe-watch))",
           },
           ok: {
             DEFAULT: "hsl(var(--tier-ok-fg))",
             bg: "hsl(var(--tier-ok-bg))",
-            stripe: "hsl(var(--stripe-ok))",
           },
         },
       },

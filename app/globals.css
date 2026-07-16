@@ -49,18 +49,6 @@
     --tier-ok-fg: 136.6 15.7% 36.3%; /* #4E6B56 — 5.06:1 */
     --tier-ok-bg: 133.3 23.1% 92.4%;
 
-    /*
-      The stripe is a separate ramp because it carries no text and therefore has
-      no contrast floor. It is free to ascend in lightness with decreasing
-      urgency (luminance 0.04 -> 0.50), which is the ordering the badges cannot
-      express. Redundant by design: glanceable down a list, never the only cue.
-    */
-    --stripe-expired: 331.5 45% 25.7%; /* #5F2440 */
-    --stripe-critical: 13.1 49.5% 43.5%; /* #A65038 */
-    --stripe-warning: 38.3 45.7% 47.8%; /* #B08744 */
-    --stripe-watch: 225.3 26.8% 67.3%; /* #939FC4 */
-    --stripe-ok: 139.3 18.7% 70.6%; /* #A6C2AF */
-
     /* shadcn semantic tokens, mapped onto the palette above. */
     --background: var(--paper);
     --foreground: var(--ink);
