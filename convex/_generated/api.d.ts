@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as batches from "../batches.js";
+import type * as counts from "../counts.js";
 import type * as deliveries from "../deliveries.js";
 import type * as http from "../http.js";
 import type * as lib_digest from "../lib/digest.js";
@@ -27,6 +28,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   batches: typeof batches;
+  counts: typeof counts;
   deliveries: typeof deliveries;
   http: typeof http;
   "lib/digest": typeof lib_digest;
