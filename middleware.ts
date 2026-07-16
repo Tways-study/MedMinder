@@ -5,19 +5,21 @@ import {
 } from "@convex-dev/auth/nextjs/server";
 
 const isSignInPage = createRouteMatcher(["/signin"]);
-const isProtectedRoute = createRouteMatcher(["/product(.*)"]);
 
 export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
-  if (isSignInPage(request) && (await convexAuth.isAuthenticated())) {
-    return nextjsMiddlewareRedirect(request, "/product");
+  const authed = await convexAuth.isAuthenticated();
+
+  if (isSignInPage(request)) {
+    return authed ? nextjsMiddlewareRedirect(request, "/") : undefined;
   }
-  if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated())) {
+
+  // Everything that isn't the sign-in page is inventory data. Deny by default,
+  // so a route added later is protected without anyone remembering to list it.
+  if (!authed) {
     return nextjsMiddlewareRedirect(request, "/signin");
   }
 });
 
 export const config = {
-  // The following matcher runs middleware on all routes
-  // except static assets.
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
 };

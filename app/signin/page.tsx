@@ -1,87 +1,109 @@
 "use client";
 
-import { SignInMethodDivider } from "@/components/SignInMethodDivider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { toast, Toaster } from "sonner";
+import { useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { api } from "@/convex/_generated/api";
 
 export default function SignInPage() {
-  const [step, setStep] = useState<"signIn" | "linkSent">("signIn");
+  const { signIn } = useAuthActions();
+  const router = useRouter();
+  const claimed = useQuery(api.users.isClaimed);
+
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Until we know whether an account exists, we can't tell the pharmacist
+  // whether she's setting up or signing in.
+  const flow = claimed === false ? "signUp" : "signIn";
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setSubmitting(true);
+
+    const form = new FormData(event.currentTarget);
+    try {
+      await signIn("password", {
+        email: String(form.get("email")),
+        password: String(form.get("password")),
+        flow,
+      });
+      router.push("/");
+    } catch (err) {
+      setError(
+        err instanceof ConvexError
+          ? String(err.data)
+          : flow === "signUp"
+            ? "Could not create the account. Check the details and try again."
+            : "That email and password don't match an account.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
-    <div className="flex min-h-screen w-full container my-auto mx-auto">
-      <div className="max-w-[384px] mx-auto flex flex-col my-auto gap-4 pb-8">
-        {step === "signIn" ? (
-          <>
-            <h2 className="font-semibold text-2xl tracking-tight">
-              Sign in or create an account
-            </h2>
-            <SignInWithGitHub />
-            <SignInMethodDivider />
-            <SignInWithMagicLink handleLinkSent={() => setStep("linkSent")} />
-          </>
-        ) : (
-          <>
-            <h2 className="font-semibold text-2xl tracking-tight">
-              Check your email
-            </h2>
-            <p>A sign-in link has been sent to your email address.</p>
-            <Button
-              className="p-0 self-start"
-              variant="link"
-              onClick={() => setStep("signIn")}
-            >
-              Cancel
-            </Button>
-          </>
-        )}
+    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center gap-6 p-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">MedMinder</h1>
+        <p className="text-sm text-muted-foreground">
+          {claimed === undefined
+            ? " "
+            : flow === "signUp"
+              ? "Set up the pharmacy account. This is a single-account app — the first account claims it."
+              : "Sign in to your pharmacy inventory."}
+        </p>
       </div>
-    </div>
-  );
-}
 
-function SignInWithGitHub() {
-  const { signIn } = useAuthActions();
-  return (
-    <Button
-      className="flex-1"
-      variant="outline"
-      type="button"
-      onClick={() => void signIn("github", { redirectTo: "/product" })}
-    >
-      <GitHubLogoIcon className="mr-2 h-4 w-4" /> GitHub
-    </Button>
-  );
-}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium">Email</span>
+          <Input
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            disabled={claimed === undefined}
+          />
+        </label>
 
-function SignInWithMagicLink({
-  handleLinkSent,
-}: {
-  handleLinkSent: () => void;
-}) {
-  const { signIn } = useAuthActions();
-  return (
-    <form
-      className="flex flex-col"
-      onSubmit={(event) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        formData.set("redirectTo", "/product");
-        signIn("resend", formData)
-          .then(handleLinkSent)
-          .catch((error) => {
-            console.error(error);
-            toast.error("Could not send sign-in link");
-          });
-      }}
-    >
-      <label htmlFor="email">Email</label>
-      <Input name="email" id="email" className="mb-4" autoComplete="email" />
-      <Button type="submit">Send sign-in link</Button>
-      <Toaster />
-    </form>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium">Password</span>
+          <Input
+            name="password"
+            type="password"
+            autoComplete={
+              flow === "signUp" ? "new-password" : "current-password"
+            }
+            required
+            disabled={claimed === undefined}
+          />
+          {flow === "signUp" && (
+            <span className="text-xs text-muted-foreground">
+              At least 10 characters.
+            </span>
+          )}
+        </label>
+
+        {error !== null && (
+          <p role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
+        <Button type="submit" disabled={submitting || claimed === undefined}>
+          {submitting
+            ? "Working…"
+            : flow === "signUp"
+              ? "Create account"
+              : "Sign in"}
+        </Button>
+      </form>
+    </main>
   );
 }
