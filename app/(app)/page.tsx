@@ -9,12 +9,14 @@ import {
 } from "@/components/page-shell";
 import { tierLabel } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import type { ExpiryTier } from "@/convex/lib/inventory";
 import { formatExpiryDistance } from "@/convex/lib/inventory";
 import { formatDate, formatQuantity } from "@/lib/format";
 import { useQuery } from "convex/react";
 import Link from "next/link";
+import { useState } from "react";
 
 /** Most urgent first. Expired lots are a legal problem, not a planning one. */
 const TIER_ORDER: Exclude<ExpiryTier, "ok">[] = [
@@ -34,6 +36,7 @@ const TIER_BLURB: Record<Exclude<ExpiryTier, "ok">, string> = {
 export default function DashboardPage() {
   const summary = useQuery(api.dashboard.summary);
   const now = Date.now();
+  const [search, setSearch] = useState("");
 
   if (summary === undefined) {
     return (
@@ -45,12 +48,30 @@ export default function DashboardPage() {
   }
 
   const { alerts, lowStock, totals, hasDraftCount } = summary;
+  const nothingStocked = totals.medicines === 0;
+
+  const q = search.trim().toLowerCase();
+  // Matches on name or lot number: at the shelf, a lot number is often the
+  // thing in hand, not the brand name.
+  const filteredAlerts = q
+    ? alerts.filter(
+        (a) =>
+          a.medicineName.toLowerCase().includes(q) ||
+          a.lotNumber.toLowerCase().includes(q),
+      )
+    : alerts;
+  const filteredLowStock = q
+    ? lowStock.filter((m) => m.name.toLowerCase().includes(q))
+    : lowStock;
+
   const grouped = TIER_ORDER.map((tier) => ({
     tier,
-    lots: alerts.filter((a) => a.tier === tier),
+    lots: filteredAlerts.filter((a) => a.tier === tier),
   })).filter((g) => g.lots.length > 0);
 
-  const nothingStocked = totals.medicines === 0;
+  const searching = q.length > 0;
+  const noMatches =
+    searching && grouped.length === 0 && filteredLowStock.length === 0;
 
   return (
     <Page>
@@ -62,6 +83,17 @@ export default function DashboardPage() {
             : `${formatQuantity(totals.lots)} ${totals.lots === 1 ? "lot" : "lots"} · ${formatQuantity(totals.units)} units`
         }
       />
+
+      {!nothingStocked && (
+        <Input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by medicine or lot number"
+          aria-label="Search medicines"
+          className="h-11"
+        />
+      )}
 
       {nothingStocked && (
         <EmptyState
@@ -75,7 +107,7 @@ export default function DashboardPage() {
         />
       )}
 
-      {hasDraftCount && (
+      {hasDraftCount && !searching && (
         <Link
           href="/count"
           className="focus-card rounded-lg border border-primary/40 bg-secondary p-4 transition-colors hover:border-primary"
@@ -89,10 +121,17 @@ export default function DashboardPage() {
         </Link>
       )}
 
-      {!nothingStocked && alerts.length === 0 && (
+      {!nothingStocked && !searching && alerts.length === 0 && (
         <EmptyState
           title="Nothing expiring soon"
           body="No lot on the shelf expires within six months. This is the screen you want to be boring."
+        />
+      )}
+
+      {noMatches && (
+        <EmptyState
+          title="Nothing matches that"
+          body={`No medicine or lot matches "${search.trim()}". Check the spelling, or try the other one.`}
         />
       )}
 
@@ -126,13 +165,13 @@ export default function DashboardPage() {
         </section>
       ))}
 
-      {lowStock.length > 0 && (
+      {filteredLowStock.length > 0 && (
         <section className="flex flex-col gap-3">
           <div>
             <h2 className="font-display text-lg font-medium">
               Running low
               <span className="ml-2 font-data text-sm font-normal text-muted-foreground">
-                {lowStock.length}
+                {filteredLowStock.length}
               </span>
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -141,7 +180,7 @@ export default function DashboardPage() {
           </div>
 
           <ul className="flex flex-col gap-3">
-            {lowStock.map((m) => (
+            {filteredLowStock.map((m) => (
               <li key={m.medicineId}>
                 <Link
                   href={`/medicines/${m.medicineId}`}
