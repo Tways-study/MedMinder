@@ -1,17 +1,15 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["selector"],
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  safelist: ["dark"],
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1rem",
       screens: {
         "2xl": "1400px",
       },
@@ -51,18 +49,41 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        chart: {
-          "1": "hsl(var(--chart-1))",
-          "2": "hsl(var(--chart-2))",
-          "3": "hsl(var(--chart-3))",
-          "4": "hsl(var(--chart-4))",
-          "5": "hsl(var(--chart-5))",
+        amethyst: "hsl(var(--amethyst))",
+        // Expiry severity ramp. Paired fg/bg so a badge can never be assembled
+        // from a mismatched combination.
+        tier: {
+          expired: {
+            DEFAULT: "hsl(var(--tier-expired-fg))",
+            bg: "hsl(var(--tier-expired-bg))",
+          },
+          critical: {
+            DEFAULT: "hsl(var(--tier-critical-fg))",
+            bg: "hsl(var(--tier-critical-bg))",
+          },
+          warning: {
+            DEFAULT: "hsl(var(--tier-warning-fg))",
+            bg: "hsl(var(--tier-warning-bg))",
+          },
+          watch: {
+            DEFAULT: "hsl(var(--tier-watch-fg))",
+            bg: "hsl(var(--tier-watch-bg))",
+          },
+          ok: {
+            DEFAULT: "hsl(var(--tier-ok-fg))",
+            bg: "hsl(var(--tier-ok-bg))",
+          },
         },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        display: ["var(--font-petrona)", "ui-serif", "Georgia", "serif"],
+        sans: ["var(--font-karla)", "ui-sans-serif", "system-ui", "sans-serif"],
+        data: ["var(--font-plex-mono)", "ui-monospace", "monospace"],
       },
     },
   },
