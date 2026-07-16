@@ -3,6 +3,8 @@ export type DigestSchedule = {
   digestDay: number;
   digestHour: number;
   timezone: string;
+  /** Defaults to on; only `isDigestDue` consults it. */
+  enabled?: boolean;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -121,4 +123,38 @@ export function nextDigestRun(schedule: DigestSchedule, now: number): number {
 
   // Unreachable: two weeks of candidates always contain a future slot.
   throw new Error("Could not resolve a digest run after " + now);
+}
+
+/** Below this, a send counts as "already done today". */
+const RESEND_GUARD_MS = 20 * 60 * 60 * 1000;
+
+/**
+ * Whether an hourly tick should send the digest now.
+ *
+ * The cron runs hourly in UTC because Convex crons are fixed, while her
+ * schedule lives in her timezone and she can change it. So each tick asks
+ * whether, by her wall clock, the moment has arrived.
+ *
+ * Deliberately fires on any hour at or after the configured one, rather than
+ * only the exact hour: if the 8am tick is missed by a deploy or a cold start,
+ * 9am still sends. A weekly digest that silently skips a week is a worse
+ * failure than one that arrives an hour late. The guard against re-sending is
+ * `lastSentAt`, not the precision of the hour.
+ */
+export function isDigestDue(
+  schedule: DigestSchedule,
+  now: number,
+  lastSentAt: number | undefined,
+): boolean {
+  if (schedule.enabled === false) return false;
+
+  const wall = wallClockIn(schedule.timezone, now);
+  if (wall.weekday !== schedule.digestDay) return false;
+  if (wall.hour < schedule.digestHour) return false;
+
+  if (lastSentAt !== undefined && now - lastSentAt < RESEND_GUARD_MS) {
+    return false;
+  }
+
+  return true;
 }

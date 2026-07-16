@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { nextDigestRun } from "./digest";
+import { isDigestDue, nextDigestRun } from "./digest";
 
 const MANILA = { digestDay: 1, digestHour: 8, timezone: "Asia/Manila" };
 const at = (iso: string) => new Date(iso).getTime();
 const iso = (ms: number) => new Date(ms).toISOString();
+
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
 
 describe("nextDigestRun", () => {
   // 2026-07-16T00:00Z is Thursday 08:00 in Manila.
@@ -66,5 +69,52 @@ describe("nextDigestRun", () => {
     expect(iso(nextDigestRun(sundayEvening, at("2026-07-16T00:00:00Z")))).toBe(
       "2026-07-19T12:00:00.000Z",
     );
+  });
+});
+
+/*
+  The cron ticks hourly in UTC, but the schedule is hers and lives in her
+  timezone, so each tick has to decide for itself whether the moment has come.
+*/
+describe("isDigestDue", () => {
+  const MONDAY_8AM = at("2026-07-20T00:00:00Z"); // Monday 08:00 Manila.
+
+  it("is due at the configured hour when it has never been sent", () => {
+    expect(isDigestDue(MANILA, MONDAY_8AM, undefined)).toBe(true);
+  });
+
+  it("is not due on the wrong day", () => {
+    // Thursday 08:00 Manila.
+    expect(isDigestDue(MANILA, at("2026-07-16T00:00:00Z"), undefined)).toBe(false);
+  });
+
+  it("is not due before the hour arrives", () => {
+    // Monday 07:00 Manila.
+    expect(isDigestDue(MANILA, at("2026-07-19T23:00:00Z"), undefined)).toBe(false);
+  });
+
+  it("does not send twice in one day", () => {
+    const sentAt = MONDAY_8AM;
+    expect(isDigestDue(MANILA, MONDAY_8AM + HOUR, sentAt)).toBe(false);
+  });
+
+  /*
+    If the 8am tick is missed — a deploy, a cold start — the 9am tick should
+    still send. A weekly digest that silently skips a week is worse than one
+    that arrives an hour late.
+  */
+  it("catches up later the same day when the exact hour was missed", () => {
+    expect(isDigestDue(MANILA, MONDAY_8AM + 3 * HOUR, undefined)).toBe(true);
+  });
+
+  it("sends again the following week", () => {
+    const lastWeek = MONDAY_8AM - 7 * DAY;
+    expect(isDigestDue(MANILA, MONDAY_8AM, lastWeek)).toBe(true);
+  });
+
+  it("is never due when the digest is switched off", () => {
+    expect(
+      isDigestDue({ ...MANILA, enabled: false }, MONDAY_8AM, undefined),
+    ).toBe(false);
   });
 });

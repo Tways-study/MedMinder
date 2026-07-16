@@ -16,6 +16,12 @@ export const dev = internalMutation({
     const DAY = 24 * 60 * 60 * 1000;
     const now = Date.now();
 
+    /** Expiries are calendar dates, so they land on UTC midnight like real ones. */
+    const expiryIn = (days: number) => {
+      const d = new Date(now + days * DAY);
+      return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    };
+
     const fixtures = [
       {
         name: "Amoxicillin",
@@ -91,7 +97,7 @@ export const dev = internalMutation({
       const batchId = await ctx.db.insert("batches", {
         medicineId,
         lotNumber: f.lot,
-        expiryDate: now + f.days * DAY,
+        expiryDate: expiryIn(f.days),
         quantityExpected: f.qty,
         receivedDate: now - 30 * DAY,
         supplier: "Zuellig Pharma",
