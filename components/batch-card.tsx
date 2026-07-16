@@ -3,11 +3,11 @@ import type { ExpiryTier } from "@/convex/lib/inventory";
 import { cn } from "@/lib/utils";
 
 const STRIPE: Record<ExpiryTier, string> = {
-  expired: "bg-tier-expired",
-  critical: "bg-tier-critical",
-  warning: "bg-tier-warning",
-  watch: "bg-tier-watch",
-  ok: "bg-tier-ok",
+  expired: "bg-tier-expired-stripe",
+  critical: "bg-tier-critical-stripe",
+  warning: "bg-tier-warning-stripe",
+  watch: "bg-tier-watch-stripe",
+  ok: "bg-tier-ok-stripe",
 };
 
 const DISTANCE_TEXT: Record<ExpiryTier, string> = {
@@ -58,14 +58,18 @@ export function BatchCard({
       className={cn("relative overflow-hidden rounded-lg border bg-card", className)}
     >
       <span
-        className={cn("absolute inset-y-0 left-0 w-1.5", STRIPE[tier])}
+        className={cn("absolute inset-y-0 left-0 w-1", STRIPE[tier])}
         aria-hidden
       />
 
       <div className="flex flex-col gap-3 py-4 pl-5 pr-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h3 className="font-display text-lg font-semibold leading-tight">
+            {/*
+              Wraps rather than truncates: the name is what she matches against
+              the box, so hiding part of it risks pulling the wrong medicine.
+            */}
+            <h3 className="font-display text-lg font-medium leading-snug">
               {medicineName}
             </h3>
             {(strength || form) && (

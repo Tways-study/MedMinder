@@ -84,7 +84,7 @@ const SWATCHES = [
   { name: "hairline", var: "--hairline", note: "dividers" },
   { name: "input-line", var: "--input-line", note: "field borders" },
   { name: "amethyst", var: "--amethyst", note: "secondary" },
-  { name: "gentian", var: "--gentian", note: "primary" },
+  { name: "orchid", var: "--orchid", note: "primary" },
   { name: "ink", var: "--ink", note: "text" },
 ];
 
@@ -100,7 +100,7 @@ function Section({
   return (
     <section className="flex flex-col gap-4">
       <div>
-        <h2 className="font-display text-xl font-semibold">{title}</h2>
+        <h2 className="font-display text-lg font-medium">{title}</h2>
         {note && <p className="mt-1 text-sm text-muted-foreground">{note}</p>}
       </div>
       {children}
@@ -113,7 +113,7 @@ export default function DesignPage() {
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-12 p-5 pb-24">
       <header className="flex flex-col gap-2 border-b pb-6">
         <p className="label-field">Design system</p>
-        <h1 className="font-display text-4xl font-semibold leading-none">
+        <h1 className="font-display text-3xl font-medium leading-tight">
           MedMinder
         </h1>
         <p className="text-muted-foreground">
@@ -127,7 +127,7 @@ export default function DesignPage() {
         note="Petrona for headings, Karla for reading, Plex Mono for anything compared down a column."
       >
         <div className="flex flex-col gap-3 rounded-lg border bg-card p-5">
-          <p className="font-display text-3xl font-semibold leading-tight">
+          <p className="font-display text-2xl font-medium leading-tight">
             Losartan potassium
           </p>
           <p className="max-w-[60ch]">
@@ -160,7 +160,7 @@ export default function DesignPage() {
 
       <Section
         title="Expiry tiers"
-        note="Ordered wine to sage. Colour never carries the meaning alone: every badge has an icon and a word."
+        note="Ordered plum to sage. Colour never carries the meaning alone: every badge has an icon and a word, so it survives greyscale."
       >
         <div className="flex flex-wrap gap-2">
           {TIER_ORDER.map((tier) => (
