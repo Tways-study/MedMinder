@@ -6,10 +6,11 @@
     "dev": "npm-run-all --parallel dev:frontend dev:backend",
     "dev:frontend": "next dev --turbopack",
     "dev:backend": "convex dev",
-    "predev": "convex dev --until-success && node setup.mjs --once && convex dashboard",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@auth/core": "^0.37.0",
