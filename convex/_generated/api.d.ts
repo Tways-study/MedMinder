@@ -9,9 +9,13 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as batches from "../batches.js";
+import type * as deliveries from "../deliveries.js";
 import type * as http from "../http.js";
 import type * as lib_digest from "../lib/digest.js";
+import type * as lib_guards from "../lib/guards.js";
 import type * as lib_inventory from "../lib/inventory.js";
+import type * as medicines from "../medicines.js";
 import type * as users from "../users.js";
 
 import type {
@@ -22,9 +26,13 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  batches: typeof batches;
+  deliveries: typeof deliveries;
   http: typeof http;
   "lib/digest": typeof lib_digest;
+  "lib/guards": typeof lib_guards;
   "lib/inventory": typeof lib_inventory;
+  medicines: typeof medicines;
   users: typeof users;
 }>;
 

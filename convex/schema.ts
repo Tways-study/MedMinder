@@ -61,7 +61,9 @@ export default defineSchema({
   })
     .index("by_medicine", ["medicineId"])
     .index("by_expiry", ["expiryDate"])
-    .index("by_status_expiry", ["status", "expiryDate"]),
+    .index("by_status_expiry", ["status", "expiryDate"])
+    // Lot identity: same drug + same lot + same expiry is the same physical lot.
+    .index("by_lot_identity", ["medicineId", "lotNumber", "expiryDate"]),
 
   deliveries: defineTable({
     receivedDate: v.number(),
@@ -92,7 +94,9 @@ export default defineSchema({
     reason: v.optional(varianceReason),
   })
     .index("by_session", ["sessionId"])
-    .index("by_session_batch", ["sessionId", "batchId"]),
+    .index("by_session_batch", ["sessionId", "batchId"])
+    // Answers "is this lot mid-count?" before allowing it to be deleted.
+    .index("by_batch", ["batchId"]),
 
   movements: defineTable({
     batchId: v.id("batches"),
