@@ -11,12 +11,14 @@
 import type * as auth from "../auth.js";
 import type * as batches from "../batches.js";
 import type * as counts from "../counts.js";
+import type * as dashboard from "../dashboard.js";
 import type * as deliveries from "../deliveries.js";
 import type * as http from "../http.js";
 import type * as lib_digest from "../lib/digest.js";
 import type * as lib_guards from "../lib/guards.js";
 import type * as lib_inventory from "../lib/inventory.js";
 import type * as medicines from "../medicines.js";
+import type * as seed from "../seed.js";
 import type * as users from "../users.js";
 
 import type {
@@ -29,12 +31,14 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   batches: typeof batches;
   counts: typeof counts;
+  dashboard: typeof dashboard;
   deliveries: typeof deliveries;
   http: typeof http;
   "lib/digest": typeof lib_digest;
   "lib/guards": typeof lib_guards;
   "lib/inventory": typeof lib_inventory;
   medicines: typeof medicines;
+  seed: typeof seed;
   users: typeof users;
 }>;
 

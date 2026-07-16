@@ -132,6 +132,29 @@ describe("formatExpiryDistance", () => {
     );
   });
 
+  /*
+    Regression: an earlier version floored days/30, so a lot 149 days out read
+    as "4 months" while one 150 days out read as "5". Real clocks sit partway
+    through a day, so the same lot flipped between the two depending on the hour
+    it was viewed. Approximate phrasing must not hinge on the time of day.
+  */
+  it("does not flip a month when the clock is partway through the day", () => {
+    const midMorning = NOW + 9.5 * 60 * 60 * 1000;
+    expect(formatExpiryDistance(NOW + 150 * 24 * 60 * 60 * 1000, midMorning)).toBe(
+      "expires in 5 months",
+    );
+    expect(formatExpiryDistance(daysFromNow(149), NOW)).toBe(
+      "expires in 5 months",
+    );
+  });
+
+  it("rolls into years rather than counting past twelve months", () => {
+    expect(formatExpiryDistance(daysFromNow(360), NOW)).toBe("expires in 1 year");
+    expect(formatExpiryDistance(daysFromNow(340), NOW)).toBe(
+      "expires in 11 months",
+    );
+  });
+
   it("phrases an already-expired lot in the past tense", () => {
     expect(formatExpiryDistance(daysFromNow(-40), NOW)).toBe(
       "expired 1 month ago",

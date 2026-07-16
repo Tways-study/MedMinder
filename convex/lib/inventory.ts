@@ -69,14 +69,28 @@ export function expiryTier(
 
 const plural = (n: number, unit: string) => `${n} ${unit}${n === 1 ? "" : "s"}`;
 
+// Average lengths, not idealised ones. A 30-day month drifts about five days
+// per year, which is enough to move a lot into the wrong spoken month.
+const DAYS_PER_MONTH = 30.44;
+const DAYS_PER_YEAR = 365.25;
+
 /**
  * Approximate units, matching how a pharmacist speaks about expiry rather than
- * calendar-exact arithmetic: "expires in 5 months", not "in 4 months 28 days".
+ * calendar-exact arithmetic: "expires in 5 months", not "in 4 months 27 days".
+ *
+ * Rounds rather than floors. Flooring understates by up to a month — a lot 4
+ * months and 27 days out reads as "4 months" — and, worse, makes the phrase
+ * depend on the time of day, because a lot 150 days out is only 149 whole days
+ * out by mid-morning. Rounding is accurate to within about a fortnight in
+ * either direction and is stable across the day.
  */
 function coarseDistance(days: number): string {
   if (days < 31) return plural(days, "day");
-  if (days < 365) return plural(Math.floor(days / 30), "month");
-  return plural(Math.floor(days / 365), "year");
+
+  const months = Math.round(days / DAYS_PER_MONTH);
+  if (months < 12) return plural(months, "month");
+
+  return plural(Math.round(days / DAYS_PER_YEAR), "year");
 }
 
 export function formatExpiryDistance(expiryDate: number, now: number): string {
