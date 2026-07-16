@@ -14,6 +14,7 @@ import type * as counts from "../counts.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as deliveries from "../deliveries.js";
+import type * as devReset from "../devReset.js";
 import type * as digest from "../digest.js";
 import type * as http from "../http.js";
 import type * as lib_dates from "../lib/dates.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   dashboard: typeof dashboard;
   deliveries: typeof deliveries;
+  devReset: typeof devReset;
   digest: typeof digest;
   http: typeof http;
   "lib/dates": typeof lib_dates;
