@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { LogoMark } from "@/components/logo-mark";
+import { ArrowRightIcon } from "@radix-ui/react-icons";
 
 export default function SignInPage() {
   const { signIn } = useAuthActions();
@@ -57,10 +58,9 @@ export default function SignInPage() {
         the real reason it read as bare: generic shadcn defaults, not a
         deliberately flat choice.
 
-        The gradient is two shades already in the palette (orchid, amethyst),
-        not an invented AI-purple glow: this app's purple carries specific
-        intent (gentian violet, an actual pharmacy antiseptic dye), so a
-        confident purple panel here is brand-consistent rather than a default.
+        Solid orchid rather than a busy blend: a single confident fill plus one
+        soft corner highlight, closer to a real material than a gradient
+        showpiece. The two ring circles are the atmosphere, not the color.
       */}
       <div className="relative flex items-center overflow-hidden bg-primary px-8 py-12 text-primary-foreground lg:px-16 lg:py-16">
         <div
@@ -68,9 +68,19 @@ export default function SignInPage() {
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "radial-gradient(120% 90% at 12% 8%, hsl(var(--amethyst)) 0%, transparent 55%), radial-gradient(140% 110% at 100% 100%, hsl(var(--orchid)) 0%, transparent 60%)",
+              "radial-gradient(70% 60% at 15% 0%, hsl(var(--amethyst) / 0.35) 0%, transparent 60%)",
           }}
         />
+        {/* Purely decorative rings, thin and quiet, cropped by the panel edge. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full border border-primary-foreground/15"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-28 -right-16 h-72 w-72 rounded-full border border-primary-foreground/15"
+        />
+
         <div className="relative motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-left-4 motion-safe:duration-700">
           <LogoMark className="h-10 w-10 sm:h-11 sm:w-11" color="hsl(var(--paper))" />
           <p className="mt-4 font-display text-4xl font-medium tracking-tight sm:text-5xl">
@@ -109,19 +119,20 @@ export default function SignInPage() {
 
             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
               <label className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium">Email</span>
+                <span className="label-field">Email</span>
                 <Input
                   name="email"
                   type="email"
                   autoComplete="email"
+                  placeholder="pharmacist@example.com"
                   required
                   disabled={claimed === undefined}
-                  className="h-11"
+                  className="h-11 border-transparent bg-secondary placeholder:text-muted-foreground"
                 />
               </label>
 
               <label className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium">Password</span>
+                <span className="label-field">Password</span>
                 <Input
                   name="password"
                   type="password"
@@ -130,7 +141,7 @@ export default function SignInPage() {
                   }
                   required
                   disabled={claimed === undefined}
-                  className="h-11"
+                  className="h-11 border-transparent bg-secondary"
                 />
                 {flow === "signUp" && (
                   <span className="text-xs text-muted-foreground">
@@ -150,11 +161,16 @@ export default function SignInPage() {
                 disabled={submitting || claimed === undefined}
                 className="h-11"
               >
-                {submitting
-                  ? "Working…"
-                  : flow === "signUp"
-                    ? "Create account"
-                    : "Sign in"}
+                {submitting ? (
+                  "Working…"
+                ) : flow === "signUp" ? (
+                  "Create account"
+                ) : (
+                  <span className="inline-flex items-center gap-1.5">
+                    Sign in
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </span>
+                )}
               </Button>
             </form>
           </div>
