@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { LogoMark } from "@/components/logo-mark";
+import { Glow } from "@/components/ui/glow";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 
 export default function SignInPage() {
@@ -59,17 +60,14 @@ export default function SignInPage() {
         deliberately flat choice.
 
         Solid orchid rather than a busy blend: a single confident fill plus one
-        soft corner highlight, closer to a real material than a gradient
-        showpiece. The two ring circles are the atmosphere, not the color.
+        soft glow, closer to a real material than a gradient showpiece. The
+        two ring circles are the atmosphere, not the color.
       */}
       <div className="relative flex items-center overflow-hidden bg-primary px-8 py-12 text-primary-foreground lg:px-16 lg:py-16">
-        <div
+        <Glow
+          variant="top"
           aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(70% 60% at 15% 0%, hsl(var(--amethyst) / 0.35) 0%, transparent 60%)",
-          }}
+          className="pointer-events-none opacity-90 blur-2xl"
         />
         {/* Purely decorative rings, thin and quiet, cropped by the panel edge. */}
         <div

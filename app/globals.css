@@ -30,6 +30,15 @@
     --muted-ink: 270 9% 43.5%; /* #6F6579 — 5.02:1 on paper */
 
     /*
+      Aliases for the Glow component's own token names. Deliberately mapped to
+      the existing orchid/amethyst rather than the orange values Glow ships
+      with by default — one accent color for the whole app, not a second hue
+      introduced by a single component.
+    */
+    --brand: var(--orchid);
+    --brand-foreground: var(--amethyst);
+
+    /*
       Expiry tiers.
 
       Badge foregrounds all sit in a narrow dark band. That is forced, not

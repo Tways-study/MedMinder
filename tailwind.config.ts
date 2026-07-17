@@ -51,6 +51,9 @@ export default {
         ring: "hsl(var(--ring))",
         orchid: "hsl(var(--orchid))",
         amethyst: "hsl(var(--amethyst))",
+        // Aliases consumed by the Glow component; see app/globals.css.
+        brand: "hsl(var(--brand))",
+        "brand-foreground": "hsl(var(--brand-foreground))",
         // Expiry severity ramp. Paired fg/bg so a badge can never be assembled
         // from a mismatched combination.
         tier: {
