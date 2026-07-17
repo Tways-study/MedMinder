@@ -51,127 +51,116 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="grid min-h-[100dvh] w-full lg:grid-cols-2">
+    <main className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-background px-6 py-12">
       {/*
-        This is the app's only public-facing screen (no marketing site exists),
-        so it's the one place a first impression happens. It previously used
-        none of the apothecary system built for the rest of MedMinder, which is
-        the real reason it read as bare: generic shadcn defaults, not a
-        deliberately flat choice.
+        Previously a two-panel split: a solid purple hero block plus a
+        separate white card. The glow sat on top of that same purple, so it
+        barely read as an effect: a purple bloom on a purple field. On the
+        page's own light background, the same bloom is a distinct, visible
+        event, which is the point of using it. One card now carries the whole
+        screen, and the glow lives in the space around it, the way the
+        component's own reference usage does.
 
-        Solid orchid rather than a busy blend: a single confident fill plus one
-        soft glow, closer to a real material than a gradient showpiece. The
-        two ring circles are the atmosphere, not the color.
+        The two ring circles from the split-panel version are gone: with the
+        glow finally visible for what it is, adding a second decorative
+        device on top would be competing for the same attention, not adding
+        to it.
       */}
-      <div className="relative flex items-center overflow-hidden bg-primary px-8 py-12 text-primary-foreground lg:px-16 lg:py-16">
-        <Glow
-          variant="top"
-          aria-hidden
-          className="pointer-events-none opacity-90 blur-2xl"
-        />
-        {/* Purely decorative rings, thin and quiet, cropped by the panel edge. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-20 -top-24 h-64 w-64 rounded-full border border-primary-foreground/15"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-28 -right-16 h-72 w-72 rounded-full border border-primary-foreground/15"
-        />
+      <Glow
+        variant="center"
+        aria-hidden
+        className="pointer-events-none opacity-80 blur-3xl"
+      />
 
-        <div className="relative motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-left-4 motion-safe:duration-700">
-          <LogoMark className="h-10 w-10 sm:h-11 sm:w-11" color="hsl(var(--paper))" />
-          <p className="mt-4 font-display text-4xl font-medium tracking-tight sm:text-5xl">
-            MedMinder
-          </p>
-          <p className="mt-3 max-w-[34ch] text-sm text-primary-foreground/85 sm:text-base">
-            Medicine inventory and expiry tracking for community pharmacies.
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-center px-6 py-12 lg:py-16">
-        <div className="w-full max-w-sm motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-4 motion-safe:duration-700">
-          <div className="rounded-lg border bg-card p-6 sm:p-8">
-            <div className="flex flex-col gap-2">
-              {/*
-                Names the task rather than repeating the wordmark: on mobile the
-                brand banner above already shows "MedMinder" in the same
-                viewport, so a second one here would be pure repetition.
-              */}
-              <h1 className="min-h-8 font-display text-xl font-medium tracking-tight">
-                {claimed === undefined
-                  ? " "
-                  : flow === "signUp"
-                    ? "Set up your account"
-                    : "Sign in"}
-              </h1>
-              <p className="min-h-10 text-sm text-muted-foreground">
-                {claimed === undefined
-                  ? " "
-                  : flow === "signUp"
-                    ? "This is a single-account app, so the first account claims it."
-                    : "Enter your pharmacy inventory."}
+      <div className="relative w-full max-w-sm motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-700">
+        <div className="rounded-lg border bg-card p-6 shadow-lg shadow-primary/10 sm:p-8">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <LogoMark className="h-11 w-11" color="hsl(var(--primary))" />
+            <div>
+              <p className="font-display text-2xl font-medium tracking-tight sm:text-3xl">
+                MedMinder
+              </p>
+              <p className="mx-auto mt-2 max-w-[30ch] text-sm text-muted-foreground">
+                Medicine inventory and expiry tracking for community
+                pharmacies.
               </p>
             </div>
-
-            <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-              <label className="flex flex-col gap-1.5">
-                <span className="label-field">Email</span>
-                <Input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="pharmacist@example.com"
-                  required
-                  disabled={claimed === undefined}
-                  className="h-11 border-transparent bg-secondary placeholder:text-muted-foreground"
-                />
-              </label>
-
-              <label className="flex flex-col gap-1.5">
-                <span className="label-field">Password</span>
-                <Input
-                  name="password"
-                  type="password"
-                  autoComplete={
-                    flow === "signUp" ? "new-password" : "current-password"
-                  }
-                  required
-                  disabled={claimed === undefined}
-                  className="h-11 border-transparent bg-secondary"
-                />
-                {flow === "signUp" && (
-                  <span className="text-xs text-muted-foreground">
-                    At least 10 characters.
-                  </span>
-                )}
-              </label>
-
-              {error !== null && (
-                <p role="alert" className="text-sm text-destructive">
-                  {error}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                disabled={submitting || claimed === undefined}
-                className="h-11"
-              >
-                {submitting ? (
-                  "Working…"
-                ) : flow === "signUp" ? (
-                  "Create account"
-                ) : (
-                  <span className="inline-flex items-center gap-1.5">
-                    Sign in
-                    <ArrowRightIcon className="h-4 w-4" />
-                  </span>
-                )}
-              </Button>
-            </form>
           </div>
+
+          <div className="mt-6 flex flex-col gap-2 border-t pt-6">
+            {/* Names the task: the brand block above already said who this is. */}
+            <h1 className="min-h-8 font-display text-xl font-medium tracking-tight">
+              {claimed === undefined
+                ? " "
+                : flow === "signUp"
+                  ? "Set up your account"
+                  : "Sign in"}
+            </h1>
+            <p className="min-h-10 text-sm text-muted-foreground">
+              {claimed === undefined
+                ? " "
+                : flow === "signUp"
+                  ? "This is a single-account app, so the first account claims it."
+                  : "Enter your pharmacy inventory."}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+            <label className="flex flex-col gap-1.5">
+              <span className="label-field">Email</span>
+              <Input
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="pharmacist@example.com"
+                required
+                disabled={claimed === undefined}
+                className="h-11 border-transparent bg-secondary placeholder:text-muted-foreground"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1.5">
+              <span className="label-field">Password</span>
+              <Input
+                name="password"
+                type="password"
+                autoComplete={
+                  flow === "signUp" ? "new-password" : "current-password"
+                }
+                required
+                disabled={claimed === undefined}
+                className="h-11 border-transparent bg-secondary"
+              />
+              {flow === "signUp" && (
+                <span className="text-xs text-muted-foreground">
+                  At least 10 characters.
+                </span>
+              )}
+            </label>
+
+            {error !== null && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={submitting || claimed === undefined}
+              className="h-11"
+            >
+              {submitting ? (
+                "Working…"
+              ) : flow === "signUp" ? (
+                "Create account"
+              ) : (
+                <span className="inline-flex items-center gap-1.5">
+                  Sign in
+                  <ArrowRightIcon className="h-4 w-4" />
+                </span>
+              )}
+            </Button>
+          </form>
         </div>
       </div>
     </main>
