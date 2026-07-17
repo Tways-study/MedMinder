@@ -1,4 +1,5 @@
 import { AppNav } from "@/components/app-nav";
+import { LogoMark } from "@/components/logo-mark";
 import { UserMenu } from "@/components/UserMenu";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -14,8 +15,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         */}
         <Link
           href="/"
-          className="focus-card font-display text-xl font-medium tracking-tight"
+          className="focus-card flex items-center gap-2 font-display text-xl font-medium tracking-tight"
         >
+          <LogoMark className="h-6 w-6" color="hsl(var(--primary))" />
           MedMinder
         </Link>
         <UserMenu />
