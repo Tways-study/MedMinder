@@ -32,7 +32,7 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "MedMinder",
-  description: "Medicine inventory and expiry tracking for community pharmacy.",
+  description: "Medicine inventory and expiry tracking for community pharmacies.",
 };
 
 export const viewport: Viewport = {

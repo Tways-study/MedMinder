@@ -8,6 +8,7 @@ import { ConvexError } from "convex/values";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
+import { LogoMark } from "@/components/logo-mark";
 
 export default function SignInPage() {
   const { signIn } = useAuthActions();
@@ -71,11 +72,12 @@ export default function SignInPage() {
           }}
         />
         <div className="relative motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-left-4 motion-safe:duration-700">
-          <p className="font-display text-4xl font-medium tracking-tight sm:text-5xl">
+          <LogoMark className="h-10 w-10 sm:h-11 sm:w-11" color="hsl(var(--paper))" />
+          <p className="mt-4 font-display text-4xl font-medium tracking-tight sm:text-5xl">
             MedMinder
           </p>
           <p className="mt-3 max-w-[34ch] text-sm text-primary-foreground/85 sm:text-base">
-            Medicine inventory and expiry tracking for community pharmacy.
+            Medicine inventory and expiry tracking for community pharmacies.
           </p>
         </div>
       </div>
