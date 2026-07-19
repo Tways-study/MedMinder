@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogoMark } from "@/components/logo-mark";
 import { Glow } from "@/components/ui/glow";
-import { ArrowRightIcon } from "@radix-ui/react-icons";
+import { ArrowRightIcon, EyeClosedIcon, EyeOpenIcon } from "@radix-ui/react-icons";
 
 export default function SignInPage() {
   const { signIn } = useAuthActions();
@@ -17,6 +17,7 @@ export default function SignInPage() {
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,15 +109,30 @@ export default function SignInPage() {
 
             <label className="flex flex-col gap-1.5">
               <span className="label-field">Password</span>
-              <Input
-                name="password"
-                type="password"
-                autoComplete={
-                  flow === "signUp" ? "new-password" : "current-password"
-                }
-                required
-                className="h-11 border-transparent bg-secondary"
-              />
+              <div className="relative">
+                <Input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={
+                    flow === "signUp" ? "new-password" : "current-password"
+                  }
+                  required
+                  className="h-11 border-transparent bg-secondary pr-11"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-0 flex h-11 w-11 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {showPassword ? (
+                    <EyeClosedIcon className="h-4 w-4" />
+                  ) : (
+                    <EyeOpenIcon className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
               {flow === "signUp" && (
                 <span className="text-xs text-muted-foreground">
                   At least 10 characters.
