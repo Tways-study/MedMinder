@@ -67,3 +67,64 @@ export const resetAccount = internalMutation({
       : `Cleared ${cleared.join(", ")}.`;
   },
 });
+
+/**
+ * Deletes one account by email — a throwaway test signup, say — without
+ * touching any other tenant. `resetAccount` above is the blunt, wipe-everyone
+ * tool; this is the scoped one for when only a single account needs to go.
+ *
+ * Doesn't touch authVerificationCodes/authVerifiers/authRateLimits: those back
+ * OAuth/magic-link flows this app doesn't use (Password provider only), so
+ * they're never populated here.
+ *
+ *   npx convex run devReset:deleteAccountByEmail '{"email": "test@example.com"}'
+ */
+export const deleteAccountByEmail = internalMutation({
+  args: { email: v.string() },
+  returns: v.string(),
+  handler: async (ctx, { email }) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", email))
+      .first();
+    if (user === null) return `No account found for ${email}.`;
+
+    const cleared: string[] = [];
+
+    const sessions = await ctx.db
+      .query("authSessions")
+      .withIndex("userId", (q) => q.eq("userId", user._id))
+      .collect();
+    for (const session of sessions) {
+      const tokens = await ctx.db
+        .query("authRefreshTokens")
+        .withIndex("sessionId", (q) => q.eq("sessionId", session._id))
+        .collect();
+      for (const token of tokens) await ctx.db.delete(token._id);
+      if (tokens.length > 0) cleared.push(`authRefreshTokens: ${tokens.length}`);
+      await ctx.db.delete(session._id);
+    }
+    if (sessions.length > 0) cleared.push(`authSessions: ${sessions.length}`);
+
+    const accounts = await ctx.db
+      .query("authAccounts")
+      .withIndex("userIdAndProvider", (q) => q.eq("userId", user._id))
+      .collect();
+    for (const account of accounts) await ctx.db.delete(account._id);
+    if (accounts.length > 0) cleared.push(`authAccounts: ${accounts.length}`);
+
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .first();
+    if (settings !== null) {
+      await ctx.db.delete(settings._id);
+      cleared.push("settings: 1");
+    }
+
+    await ctx.db.delete(user._id);
+    cleared.push("users: 1");
+
+    return `Cleared ${cleared.join(", ")} for ${email}.`;
+  },
+});
