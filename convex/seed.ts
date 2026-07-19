@@ -7,12 +7,14 @@ import { internalMutation } from "./_generated/server";
  * inside 180 (the "expires in 5 months" case from the original brief), and far
  * enough out to stay quiet.
  *
- * internalMutation, so it is not reachable from the browser.
+ * internalMutation, so it is not reachable from the browser. Takes an
+ * ownerId because MedMinder is multi-tenant: fixtures belong to one account,
+ * same as everything else.
  */
 export const dev = internalMutation({
-  args: {},
+  args: { ownerId: v.id("users") },
   returns: v.string(),
-  handler: async (ctx) => {
+  handler: async (ctx, { ownerId }) => {
     const DAY = 24 * 60 * 60 * 1000;
     const now = Date.now();
 
@@ -81,11 +83,12 @@ export const dev = internalMutation({
     for (const f of fixtures) {
       const existing = await ctx.db
         .query("medicines")
-        .withIndex("by_name", (q) => q.eq("name", f.name))
+        .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId).eq("name", f.name))
         .first();
       if (existing !== null) continue;
 
       const medicineId = await ctx.db.insert("medicines", {
+        ownerId,
         name: f.name,
         genericName: f.genericName,
         form: f.form,
@@ -95,6 +98,7 @@ export const dev = internalMutation({
       });
 
       const batchId = await ctx.db.insert("batches", {
+        ownerId,
         medicineId,
         lotNumber: f.lot,
         expiryDate: expiryIn(f.days),

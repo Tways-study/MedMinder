@@ -2,6 +2,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, test } from "vitest";
 import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 
 // convex-test needs to find the function modules; import.meta.glob wires them up.
@@ -9,21 +10,31 @@ import schema from "./schema";
 // otherwise typechecks this file without Vite's ambient types.
 const modules = import.meta.glob("./**/*.ts");
 
-/** A signed-in identity. Every inventory function requires one. */
-const asUser = (t: ReturnType<typeof convexTest>) =>
-  t.withIdentity({ subject: "pharmacist", issuer: "test" });
+/**
+ * A signed-in identity backed by a real `users` row. getAuthUserId derives the
+ * userId straight from the identity subject, so the subject must be an actual
+ * user document ID for `v.id("users")` validation (used as an ownerId
+ * everywhere) to accept it.
+ */
+async function asUser(t: ReturnType<typeof convexTest>) {
+  const userId = await t.run((ctx) => ctx.db.insert("users", { email: "pharmacist@example.com" }));
+  return { u: t.withIdentity({ subject: userId, issuer: "test" }), ownerId: userId };
+}
 
 async function seedMedicineWithLot(
   t: ReturnType<typeof convexTest>,
+  ownerId: Id<"users">,
   quantity: number,
 ) {
   return await t.run(async (ctx) => {
     const medicineId = await ctx.db.insert("medicines", {
+      ownerId,
       name: "Losartan",
       form: "tablet",
       reorderPoint: 50,
     });
     const batchId = await ctx.db.insert("batches", {
+      ownerId,
       medicineId,
       lotNumber: "LOS-1",
       expiryDate: Date.now() + 200 * 24 * 60 * 60 * 1000,
@@ -38,8 +49,8 @@ async function seedMedicineWithLot(
 describe("count sessions", () => {
   test("a short count posts an adjustment that corrects the batch", async () => {
     const t = convexTest(schema, modules);
-    const u = asUser(t);
-    const { batchId } = await seedMedicineWithLot(t, 100);
+    const { u, ownerId } = await asUser(t);
+    const { batchId } = await seedMedicineWithLot(t, ownerId, 100);
 
     const sessionId = await u.mutation(api.counts.start, {
       scope: { kind: "all" },
@@ -71,8 +82,8 @@ describe("count sessions", () => {
 
   test("a matching count writes no adjustment movement", async () => {
     const t = convexTest(schema, modules);
-    const u = asUser(t);
-    const { batchId } = await seedMedicineWithLot(t, 100);
+    const { u, ownerId } = await asUser(t);
+    const { batchId } = await seedMedicineWithLot(t, ownerId, 100);
 
     const sessionId = await u.mutation(api.counts.start, {
       scope: { kind: "all" },
@@ -94,8 +105,8 @@ describe("count sessions", () => {
 
   test("expected quantity is snapshotted, so a mid-count delivery does not move it", async () => {
     const t = convexTest(schema, modules);
-    const u = asUser(t);
-    const { batchId } = await seedMedicineWithLot(t, 100);
+    const { u, ownerId } = await asUser(t);
+    const { batchId } = await seedMedicineWithLot(t, ownerId, 100);
 
     const sessionId = await u.mutation(api.counts.start, {
       scope: { kind: "all" },
@@ -123,8 +134,8 @@ describe("count sessions", () => {
 
   test("counting zero on a lot depletes it", async () => {
     const t = convexTest(schema, modules);
-    const u = asUser(t);
-    const { batchId } = await seedMedicineWithLot(t, 30);
+    const { u, ownerId } = await asUser(t);
+    const { batchId } = await seedMedicineWithLot(t, ownerId, 30);
 
     const sessionId = await u.mutation(api.counts.start, {
       scope: { kind: "all" },
@@ -149,10 +160,50 @@ describe("count sessions", () => {
     ).rejects.toThrow();
   });
 
+  test("one owner's lots are invisible to another owner's count", async () => {
+    const t = convexTest(schema, modules);
+    const { ownerId: ownerA } = await asUser(t);
+    const { u: userB } = await asUser(t);
+    await seedMedicineWithLot(t, ownerA, 100);
+
+    // B has no inventory of their own, so there is nothing for B to count —
+    // A's lot must not leak into B's scope.
+    await expect(
+      userB.mutation(api.counts.start, { scope: { kind: "all" } }),
+    ).rejects.toThrow();
+  });
+
+  test("a caller cannot save a count line against another owner's batch", async () => {
+    const t = convexTest(schema, modules);
+    const { ownerId: ownerA } = await asUser(t);
+    const { u: userB, ownerId: ownerB } = await asUser(t);
+
+    const { batchId: batchA } = await seedMedicineWithLot(t, ownerA, 100);
+    await seedMedicineWithLot(t, ownerB, 50);
+
+    const sessionB = await userB.mutation(api.counts.start, {
+      scope: { kind: "all" },
+    });
+
+    // B's session only has B's own lots, so counting against A's batchId
+    // must fail rather than silently reaching across tenants.
+    await expect(
+      userB.mutation(api.counts.saveLine, {
+        sessionId: sessionB,
+        batchId: batchA,
+        countedQty: 10,
+      }),
+    ).rejects.toThrow();
+
+    // A's batch is untouched by B's attempt.
+    const batch = await t.run((ctx) => ctx.db.get(batchA));
+    expect(batch?.quantityExpected).toBe(100);
+  });
+
   test("a rejected count quantity does not corrupt the batch", async () => {
     const t = convexTest(schema, modules);
-    const u = asUser(t);
-    const { batchId } = await seedMedicineWithLot(t, 100);
+    const { u, ownerId } = await asUser(t);
+    const { batchId } = await seedMedicineWithLot(t, ownerId, 100);
     const sessionId = await u.mutation(api.counts.start, {
       scope: { kind: "all" },
     });

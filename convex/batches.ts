@@ -19,7 +19,10 @@ export const listByMedicine = query({
   args: { medicineId: v.id("medicines") },
   returns: v.array(batchDoc),
   handler: async (ctx, { medicineId }) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
+
+    const medicine = await ctx.db.get(medicineId);
+    if (medicine === null || medicine.ownerId !== ownerId) return [];
 
     const batches = await ctx.db
       .query("batches")
@@ -45,7 +48,11 @@ export const history = query({
     }),
   ),
   handler: async (ctx, { batchId }) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
+
+    const batch = await ctx.db.get(batchId);
+    if (batch === null || batch.ownerId !== ownerId) return [];
+
     const movements = await ctx.db
       .query("movements")
       .withIndex("by_batch", (q) => q.eq("batchId", batchId))
@@ -58,7 +65,13 @@ export const remove = mutation({
   args: { batchId: v.id("batches") },
   returns: v.null(),
   handler: async (ctx, { batchId }) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
+
+    const owned = await ctx.db.get(batchId);
+    if (owned === null) return null;
+    if (owned.ownerId !== ownerId) {
+      throw new ConvexError("That lot no longer exists.");
+    }
 
     // A lot referenced by a draft count is mid-reconciliation; deleting it would
     // strand the count line she is standing at the shelf filling in.

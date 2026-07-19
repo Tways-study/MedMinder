@@ -50,16 +50,21 @@ export const summary = query({
     hasDraftCount: v.boolean(),
   }),
   handler: async (ctx) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
 
-    const settings = await ctx.db.query("settings").first();
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
+      .first();
     const tiers = settings?.alertTiers ?? DEFAULT_ALERT_TIERS;
     const now = Date.now();
 
     // Only active lots: a depleted lot is off the shelf and cannot expire on us.
     const batches = await ctx.db
       .query("batches")
-      .withIndex("by_status_expiry", (q) => q.eq("status", "active"))
+      .withIndex("by_owner_status_expiry", (q) =>
+        q.eq("ownerId", ownerId).eq("status", "active"),
+      )
       .collect();
 
     const medicineCache = new Map<string, Awaited<ReturnType<typeof ctx.db.get>>>();
@@ -106,7 +111,10 @@ export const summary = query({
     // Most urgent first: the lot she can still do something about leads.
     alerts.sort((a, b) => a.expiryDate - b.expiryDate);
 
-    const medicines = await ctx.db.query("medicines").withIndex("by_name").take(2000);
+    const medicines = await ctx.db
+      .query("medicines")
+      .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId))
+      .take(2000);
 
     const lowStock = medicines
       .map((m) => ({
@@ -122,7 +130,9 @@ export const summary = query({
 
     const draft = await ctx.db
       .query("countSessions")
-      .withIndex("by_status_started", (q) => q.eq("status", "draft"))
+      .withIndex("by_owner_status_started", (q) =>
+        q.eq("ownerId", ownerId).eq("status", "draft"),
+      )
       .first();
 
     return {

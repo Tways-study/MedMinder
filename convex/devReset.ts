@@ -2,11 +2,12 @@ import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 
 /**
- * Hands the app back to whoever signs up next.
+ * Wipes every account and, optionally, every account's inventory.
  *
- * MedMinder is claimed by its first account, which means a test account left
- * over from development permanently blocks the real pharmacist from signing up.
- * This clears the claim.
+ * A full-deployment reset for development and one-off cleanup — clears every
+ * tenant, not just one. MedMinder is multi-tenant, so this is a blunt tool:
+ * reach for it to clear test accounts off a deployment, not to remove a
+ * single user's data.
  *
  * internalMutation on purpose: not reachable from the browser, only from the
  * CLI by someone who already has deploy access.
@@ -62,7 +63,7 @@ export const resetAccount = internalMutation({
     }
 
     return cleared.length === 0
-      ? "Nothing to clear. The next person to open the app claims it."
-      : `Cleared ${cleared.join(", ")}. The next person to open the app claims it.`;
+      ? "Nothing to clear."
+      : `Cleared ${cleared.join(", ")}.`;
   },
 });

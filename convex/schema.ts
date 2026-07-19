@@ -35,7 +35,11 @@ export const movementType = v.union(
 export default defineSchema({
   ...authTables,
 
+  // ownerId scopes every top-level table to the account that created it:
+  // MedMinder is multi-tenant, and each account's inventory is fully
+  // isolated from every other account's.
   medicines: defineTable({
+    ownerId: v.id("users"),
     name: v.string(),
     genericName: v.optional(v.string()),
     form: medicineForm,
@@ -45,12 +49,13 @@ export default defineSchema({
     reorderPoint: v.number(),
     notes: v.optional(v.string()),
   })
-    .index("by_name", ["name"])
-    .index("by_category", ["category"]),
+    .index("by_owner_name", ["ownerId", "name"])
+    .index("by_owner_category", ["ownerId", "category"]),
 
   // A lot of a medicine. Expiry lives here, not on the medicine: the same drug
   // can sit on the shelf as two lots expiring months apart.
   batches: defineTable({
+    ownerId: v.id("users"),
     medicineId: v.id("medicines"),
     lotNumber: v.string(),
     expiryDate: v.number(),
@@ -60,19 +65,23 @@ export default defineSchema({
     status: batchStatus,
   })
     .index("by_medicine", ["medicineId"])
+    // Cross-owner maintenance only (see migrations.ts) — not used for
+    // per-tenant reads, which go through by_owner_status_expiry instead.
     .index("by_expiry", ["expiryDate"])
-    .index("by_status_expiry", ["status", "expiryDate"])
+    .index("by_owner_status_expiry", ["ownerId", "status", "expiryDate"])
     // Lot identity: same drug + same lot + same expiry is the same physical lot.
     .index("by_lot_identity", ["medicineId", "lotNumber", "expiryDate"]),
 
   deliveries: defineTable({
+    ownerId: v.id("users"),
     receivedDate: v.number(),
     supplier: v.string(),
     invoiceRef: v.optional(v.string()),
     notes: v.optional(v.string()),
-  }).index("by_received", ["receivedDate"]),
+  }).index("by_owner_received", ["ownerId", "receivedDate"]),
 
   countSessions: defineTable({
+    ownerId: v.id("users"),
     startedAt: v.number(),
     completedAt: v.optional(v.number()),
     status: v.union(v.literal("draft"), v.literal("completed")),
@@ -82,7 +91,7 @@ export default defineSchema({
       v.object({ kind: v.literal("medicine"), medicineId: v.id("medicines") }),
     ),
     notes: v.optional(v.string()),
-  }).index("by_status_started", ["status", "startedAt"]),
+  }).index("by_owner_status_started", ["ownerId", "status", "startedAt"]),
 
   countLines: defineTable({
     sessionId: v.id("countSessions"),
@@ -107,6 +116,7 @@ export default defineSchema({
   }).index("by_batch", ["batchId"]),
 
   settings: defineTable({
+    ownerId: v.id("users"),
     digestEnabled: v.boolean(),
     digestEmail: v.string(),
     // 0 = Sunday, 1 = Monday, ... matching JS getDay().
@@ -120,5 +130,5 @@ export default defineSchema({
       watch: v.number(),
     }),
     lastDigestSentAt: v.optional(v.number()),
-  }),
+  }).index("by_owner", ["ownerId"]),
 });

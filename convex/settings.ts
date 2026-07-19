@@ -23,11 +23,14 @@ export const get = query({
   args: {},
   returns: v.union(settingsShape, v.null()),
   handler: async (ctx) => {
-    await requireAuth(ctx);
-    const settings = await ctx.db.query("settings").first();
+    const ownerId = await requireAuth(ctx);
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
+      .first();
     if (settings === null) return null;
 
-    const { _id, _creationTime, ...rest } = settings;
+    const { _id, _creationTime, ownerId: _ownerId, ...rest } = settings;
     return rest;
   },
 });
@@ -43,7 +46,7 @@ export const update = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
 
     const email = assertNonEmpty(args.digestEmail, "Digest email");
     if (!email.includes("@")) {
@@ -80,11 +83,14 @@ export const update = mutation({
       );
     }
 
-    const existing = await ctx.db.query("settings").first();
+    const existing = await ctx.db
+      .query("settings")
+      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
+      .first();
     const patch = { ...args, digestEmail: email };
 
     if (existing === null) {
-      await ctx.db.insert("settings", patch);
+      await ctx.db.insert("settings", { ...patch, ownerId });
     } else {
       await ctx.db.patch(existing._id, patch);
     }
@@ -96,8 +102,11 @@ export const resetTiers = mutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    await requireAuth(ctx);
-    const existing = await ctx.db.query("settings").first();
+    const ownerId = await requireAuth(ctx);
+    const existing = await ctx.db
+      .query("settings")
+      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
+      .first();
     if (existing === null) return null;
     await ctx.db.patch(existing._id, { alertTiers: DEFAULT_ALERT_TIERS });
     return null;

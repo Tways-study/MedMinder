@@ -3,11 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { api } from "@/convex/_generated/api";
 import { LogoMark } from "@/components/logo-mark";
 import { Glow } from "@/components/ui/glow";
 import { ArrowRightIcon } from "@radix-ui/react-icons";
@@ -15,14 +13,10 @@ import { ArrowRightIcon } from "@radix-ui/react-icons";
 export default function SignInPage() {
   const { signIn } = useAuthActions();
   const router = useRouter();
-  const claimed = useQuery(api.users.isClaimed);
 
+  const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  // Until we know whether an account exists, we can't tell the pharmacist
-  // whether she's setting up or signing in.
-  const flow = claimed === false ? "signUp" : "signIn";
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -90,18 +84,12 @@ export default function SignInPage() {
           <div className="mt-6 flex flex-col gap-2 border-t pt-6">
             {/* Names the task: the brand block above already said who this is. */}
             <h1 className="min-h-8 font-display text-xl font-medium tracking-tight">
-              {claimed === undefined
-                ? " "
-                : flow === "signUp"
-                  ? "Set up your account"
-                  : "Sign in"}
+              {flow === "signUp" ? "Create your account" : "Sign in"}
             </h1>
             <p className="min-h-10 text-sm text-muted-foreground">
-              {claimed === undefined
-                ? " "
-                : flow === "signUp"
-                  ? "This is a single-account app, so the first account claims it."
-                  : "Enter your pharmacy inventory."}
+              {flow === "signUp"
+                ? "Each account gets its own private pharmacy inventory."
+                : "Enter your pharmacy inventory."}
             </p>
           </div>
 
@@ -114,7 +102,6 @@ export default function SignInPage() {
                 autoComplete="email"
                 placeholder="pharmacist@example.com"
                 required
-                disabled={claimed === undefined}
                 className="h-11 border-transparent bg-secondary placeholder:text-muted-foreground"
               />
             </label>
@@ -128,7 +115,6 @@ export default function SignInPage() {
                   flow === "signUp" ? "new-password" : "current-password"
                 }
                 required
-                disabled={claimed === undefined}
                 className="h-11 border-transparent bg-secondary"
               />
               {flow === "signUp" && (
@@ -144,11 +130,7 @@ export default function SignInPage() {
               </p>
             )}
 
-            <Button
-              type="submit"
-              disabled={submitting || claimed === undefined}
-              className="h-11"
-            >
+            <Button type="submit" disabled={submitting} className="h-11">
               {submitting ? (
                 "Working…"
               ) : flow === "signUp" ? (
@@ -160,6 +142,19 @@ export default function SignInPage() {
                 </span>
               )}
             </Button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setFlow(flow === "signUp" ? "signIn" : "signUp");
+              }}
+              className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+            >
+              {flow === "signUp"
+                ? "Already have an account? Sign in"
+                : "Don't have an account? Sign up"}
+            </button>
           </form>
         </div>
       </div>

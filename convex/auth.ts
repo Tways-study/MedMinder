@@ -19,22 +19,11 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [PharmacyPassword],
   callbacks: {
     /**
-     * MedMinder is a single-account app, but it lives on a public URL. Without
-     * this, the Password provider's sign-up flow would let anyone who finds it
-     * create an account and read the pharmacy's inventory.
-     *
-     * The first account to sign up claims the app; afterwards only that account
-     * can sign in.
+     * MedMinder is multi-tenant: each account gets its own private inventory,
+     * so sign-up is open to anyone who finds the URL.
      */
     async createOrUpdateUser(ctx, { existingUserId, profile }) {
       if (existingUserId !== null) return existingUserId;
-
-      const existingUser = await ctx.db.query("users").first();
-      if (existingUser !== null) {
-        throw new ConvexError(
-          "This MedMinder already has an account. Sign in instead.",
-        );
-      }
 
       const email = profile.email;
       if (typeof email !== "string" || email.length === 0) {
@@ -44,8 +33,9 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       const userId = await ctx.db.insert("users", { email });
 
       // Seed settings now so the digest has somewhere to send to, and so the
-      // rest of the app can assume a settings row exists.
+      // rest of the app can assume a settings row exists for this owner.
       await ctx.db.insert("settings", {
+        ownerId: userId,
         digestEnabled: true,
         digestEmail: email,
         digestDay: 1,

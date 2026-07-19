@@ -34,7 +34,7 @@ export const create = mutation({
   },
   returns: v.id("deliveries"),
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
 
     const supplier = assertNonEmpty(args.supplier, "Supplier");
     assertTimestamp(args.receivedDate, "Received date");
@@ -58,12 +58,13 @@ export const create = mutation({
       }
 
       const medicine = await ctx.db.get(line.medicineId);
-      if (medicine === null) {
+      if (medicine === null || medicine.ownerId !== ownerId) {
         throw new ConvexError(`${where}: that medicine no longer exists.`);
       }
     }
 
     const deliveryId = await ctx.db.insert("deliveries", {
+      ownerId,
       receivedDate: args.receivedDate,
       supplier,
       invoiceRef: args.invoiceRef?.trim() || undefined,
@@ -96,6 +97,7 @@ export const create = mutation({
         });
       } else {
         batchId = await ctx.db.insert("batches", {
+          ownerId,
           medicineId: line.medicineId,
           lotNumber,
           expiryDate: line.expiryDate,
@@ -134,10 +136,10 @@ export const listRecent = query({
     }),
   ),
   handler: async (ctx, { limit }) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
     return await ctx.db
       .query("deliveries")
-      .withIndex("by_received")
+      .withIndex("by_owner_received", (q) => q.eq("ownerId", ownerId))
       .order("desc")
       .take(Math.min(limit ?? 20, 100));
   },

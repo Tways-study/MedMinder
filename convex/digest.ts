@@ -1,6 +1,7 @@
 import { Resend } from "@convex-dev/resend";
 import { v } from "convex/values";
 import { components, internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import {
   internalAction,
   internalMutation,
@@ -47,7 +48,7 @@ const APP_URL = process.env.SITE_URL ?? "http://localhost:3000";
  * than no email.
  */
 export const contents = internalQuery({
-  args: {},
+  args: { ownerId: v.id("users") },
   returns: v.object({
     due: v.boolean(),
     email: v.union(v.string(), v.null()),
@@ -56,8 +57,11 @@ export const contents = internalQuery({
     text: v.string(),
     lotCount: v.number(),
   }),
-  handler: async (ctx) => {
-    const settings = await ctx.db.query("settings").first();
+  handler: async (ctx, { ownerId }) => {
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
+      .first();
     const now = Date.now();
 
     const due =
@@ -77,7 +81,9 @@ export const contents = internalQuery({
 
     const batches = await ctx.db
       .query("batches")
-      .withIndex("by_status_expiry", (q) => q.eq("status", "active"))
+      .withIndex("by_owner_status_expiry", (q) =>
+        q.eq("ownerId", ownerId).eq("status", "active"),
+      )
       .collect();
 
     const lots: DigestLot[] = [];
@@ -108,7 +114,10 @@ export const contents = internalQuery({
 
     lots.sort((a, b) => a.expiryDistance.localeCompare(b.expiryDistance));
 
-    const medicines = await ctx.db.query("medicines").withIndex("by_name").take(2000);
+    const medicines = await ctx.db
+      .query("medicines")
+      .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId))
+      .take(2000);
     const lowStock: DigestLowStock[] = medicines
       .map((m) => ({
         name: m.name,
@@ -130,50 +139,76 @@ export const contents = internalQuery({
 });
 
 export const markSent = internalMutation({
-  args: { at: v.number() },
+  args: { ownerId: v.id("users"), at: v.number() },
   returns: v.null(),
-  handler: async (ctx, { at }) => {
-    const settings = await ctx.db.query("settings").first();
+  handler: async (ctx, { ownerId, at }) => {
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
+      .first();
     if (settings === null) return null;
     await ctx.db.patch(settings._id, { lastDigestSentAt: at });
     return null;
   },
 });
 
+/** One ownerId per tenant with a settings row, for `maybeSend` to iterate. */
+export const ownerIds = internalQuery({
+  args: {},
+  returns: v.array(v.id("users")),
+  handler: async (ctx) => {
+    // Bounded well beyond what this app is sized for, same as the other
+    // hourly-job scans in this file.
+    const settings = await ctx.db.query("settings").take(5000);
+    return settings.map((s) => s.ownerId);
+  },
+});
+
 /**
- * Hourly tick. Sends only when her wall clock says it is time.
+ * Hourly tick. Sends only to owners whose wall clock says it is time.
  *
- * Convex crons are fixed UTC, but the schedule is hers and she can move it, so
- * the decision has to be made per tick rather than baked into the cron.
+ * Convex crons are fixed UTC, but each owner's schedule is theirs to move, so
+ * the decision has to be made per owner per tick rather than baked into the
+ * cron. MedMinder is multi-tenant, so one tick may send to several owners,
+ * each their own digest scoped to their own inventory.
  */
 export const maybeSend = internalAction({
   args: { force: v.optional(v.boolean()) },
   returns: v.string(),
   handler: async (ctx, { force }) => {
-    const digest: DigestContents = await ctx.runQuery(internal.digest.contents, {});
-
-    if (!force && !digest.due) return "Not due.";
-    if (digest.email === null) return "No recipient configured.";
-
     // Without a key the component throws. Fail loudly in the logs but do not
-    // mark the digest as sent, so it goes out once the key is added.
+    // mark anything as sent, so digests go out once the key is added.
     if (!process.env.RESEND_API_KEY) {
       console.error(
-        "RESEND_API_KEY is not set on this deployment, so the weekly digest cannot send. " +
+        "RESEND_API_KEY is not set on this deployment, so digests cannot send. " +
           "Set it with: npx convex env set RESEND_API_KEY re_xxx",
       );
       return "Skipped: RESEND_API_KEY is not set.";
     }
 
-    await resend.sendEmail(ctx, {
-      from: process.env.DIGEST_FROM ?? "MedMinder <onboarding@resend.dev>",
-      to: digest.email,
-      subject: digest.subject,
-      html: digest.html,
-      text: digest.text,
-    });
+    const owners: Id<"users">[] = await ctx.runQuery(internal.digest.ownerIds, {});
+    const sent: string[] = [];
 
-    await ctx.runMutation(internal.digest.markSent, { at: Date.now() });
-    return `Sent to ${digest.email}: ${digest.subject}`;
+    for (const ownerId of owners) {
+      const digest: DigestContents = await ctx.runQuery(internal.digest.contents, {
+        ownerId,
+      });
+
+      if (!force && !digest.due) continue;
+      if (digest.email === null) continue;
+
+      await resend.sendEmail(ctx, {
+        from: process.env.DIGEST_FROM ?? "MedMinder <onboarding@resend.dev>",
+        to: digest.email,
+        subject: digest.subject,
+        html: digest.html,
+        text: digest.text,
+      });
+
+      await ctx.runMutation(internal.digest.markSent, { ownerId, at: Date.now() });
+      sent.push(`${digest.email}: ${digest.subject}`);
+    }
+
+    return sent.length === 0 ? "Nothing due." : `Sent to ${sent.join("; ")}`;
   },
 });

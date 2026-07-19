@@ -15,6 +15,7 @@ const countScope = v.union(
 /** The lots a scope covers. Depleted lots are excluded: there is nothing to count. */
 async function batchesInScope(
   ctx: MutationCtx,
+  ownerId: Id<"users">,
   scope: { kind: string; category?: string; medicineId?: Id<"medicines"> },
 ): Promise<Doc<"batches">[]> {
   if (scope.kind === "medicine") {
@@ -24,12 +25,14 @@ async function batchesInScope(
         q.eq("medicineId", scope.medicineId as Id<"medicines">),
       )
       .collect();
-    return batches.filter((b) => b.status !== "depleted");
+    return batches.filter((b) => b.ownerId === ownerId && b.status !== "depleted");
   }
 
   const active = await ctx.db
     .query("batches")
-    .withIndex("by_status_expiry", (q) => q.eq("status", "active"))
+    .withIndex("by_owner_status_expiry", (q) =>
+      q.eq("ownerId", ownerId).eq("status", "active"),
+    )
     .collect();
 
   if (scope.kind === "all") return active;
@@ -37,7 +40,9 @@ async function batchesInScope(
   // Category lives on the medicine, so the lots have to be matched through it.
   const medicines = await ctx.db
     .query("medicines")
-    .withIndex("by_category", (q) => q.eq("category", scope.category))
+    .withIndex("by_owner_category", (q) =>
+      q.eq("ownerId", ownerId).eq("category", scope.category),
+    )
     .collect();
   const ids = new Set(medicines.map((m) => m._id));
   return active.filter((b) => ids.has(b.medicineId));
@@ -55,11 +60,13 @@ export const start = mutation({
   args: { scope: countScope, notes: v.optional(v.string()) },
   returns: v.id("countSessions"),
   handler: async (ctx, { scope, notes }) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
 
     const existing = await ctx.db
       .query("countSessions")
-      .withIndex("by_status_started", (q) => q.eq("status", "draft"))
+      .withIndex("by_owner_status_started", (q) =>
+        q.eq("ownerId", ownerId).eq("status", "draft"),
+      )
       .first();
 
     if (existing !== null) {
@@ -68,12 +75,13 @@ export const start = mutation({
       );
     }
 
-    const batches = await batchesInScope(ctx, scope);
+    const batches = await batchesInScope(ctx, ownerId, scope);
     if (batches.length === 0) {
       throw new ConvexError("There are no lots on the shelf to count.");
     }
 
     const sessionId = await ctx.db.insert("countSessions", {
+      ownerId,
       startedAt: Date.now(),
       status: "draft",
       scope,
@@ -102,12 +110,15 @@ export const saveLine = mutation({
   },
   returns: v.null(),
   handler: async (ctx, { sessionId, batchId, countedQty, reason }) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
 
     assertQuantity(countedQty, "Counted quantity");
 
     const session = await ctx.db.get(sessionId);
     if (session === null) throw new ConvexError("That count no longer exists.");
+    if (session.ownerId !== ownerId) {
+      throw new ConvexError("That count no longer exists.");
+    }
     if (session.status !== "draft") {
       throw new ConvexError("That count is already finished.");
     }
@@ -143,10 +154,13 @@ export const complete = mutation({
     skipped: v.number(),
   }),
   handler: async (ctx, { sessionId }) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
 
     const session = await ctx.db.get(sessionId);
     if (session === null) throw new ConvexError("That count no longer exists.");
+    if (session.ownerId !== ownerId) {
+      throw new ConvexError("That count no longer exists.");
+    }
     if (session.status !== "draft") {
       throw new ConvexError("That count is already finished.");
     }
@@ -201,10 +215,11 @@ export const discard = mutation({
   args: { sessionId: v.id("countSessions") },
   returns: v.null(),
   handler: async (ctx, { sessionId }) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
 
     const session = await ctx.db.get(sessionId);
     if (session === null) return null;
+    if (session.ownerId !== ownerId) return null;
     if (session.status !== "draft") {
       throw new ConvexError("A finished count cannot be discarded.");
     }
@@ -247,11 +262,13 @@ export const current = query({
     }),
   ),
   handler: async (ctx) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
 
     const session = await ctx.db
       .query("countSessions")
-      .withIndex("by_status_started", (q) => q.eq("status", "draft"))
+      .withIndex("by_owner_status_started", (q) =>
+        q.eq("ownerId", ownerId).eq("status", "draft"),
+      )
       .first();
 
     if (session === null) return null;
@@ -305,10 +322,10 @@ export const categories = query({
   args: {},
   returns: v.array(v.string()),
   handler: async (ctx) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
     const medicines = await ctx.db
       .query("medicines")
-      .withIndex("by_category")
+      .withIndex("by_owner_category", (q) => q.eq("ownerId", ownerId))
       .take(2000);
     const set = new Set(
       medicines.map((m) => m.category).filter((c): c is string => !!c),
@@ -331,11 +348,13 @@ export const history = query({
     }),
   ),
   handler: async (ctx, { limit }) => {
-    await requireAuth(ctx);
+    const ownerId = await requireAuth(ctx);
 
     const sessions = await ctx.db
       .query("countSessions")
-      .withIndex("by_status_started", (q) => q.eq("status", "completed"))
+      .withIndex("by_owner_status_started", (q) =>
+        q.eq("ownerId", ownerId).eq("status", "completed"),
+      )
       .order("desc")
       .take(Math.min(limit ?? 10, 50));
 

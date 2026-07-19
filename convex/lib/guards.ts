@@ -6,9 +6,8 @@ import { isValidQuantity } from "./inventory";
 /**
  * Every function that touches inventory calls this first.
  *
- * MedMinder is single-account, but "there is only one user" is not an access
- * control decision — without this, an unauthenticated caller could read the
- * pharmacy's whole inventory straight off the public deployment URL.
+ * MedMinder is multi-tenant — without this, an unauthenticated caller could
+ * read any pharmacy's inventory straight off the public deployment URL.
  */
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {
   const userId = await getAuthUserId(ctx);
