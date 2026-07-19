@@ -137,10 +137,11 @@ export const listRecent = query({
   ),
   handler: async (ctx, { limit }) => {
     const ownerId = await requireAuth(ctx);
-    return await ctx.db
+    const deliveries = await ctx.db
       .query("deliveries")
       .withIndex("by_owner_received", (q) => q.eq("ownerId", ownerId))
       .order("desc")
       .take(Math.min(limit ?? 20, 100));
+    return deliveries.map(({ ownerId: _ownerId, ...rest }) => rest);
   },
 });

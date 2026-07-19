@@ -54,8 +54,9 @@ export const list = query({
         // Depleted lots still exist as history but hold no stock.
         const live = batches.filter((b) => b.status !== "depleted");
 
+        const { ownerId: _ownerId, ...rest } = medicine;
         return {
-          ...medicine,
+          ...rest,
           totalQuantity: live.reduce((sum, b) => sum + b.quantityExpected, 0),
           batchCount: live.length,
           soonestExpiry: live.length
@@ -74,7 +75,8 @@ export const get = query({
     const ownerId = await requireAuth(ctx);
     const medicine = await ctx.db.get(medicineId);
     if (medicine === null || medicine.ownerId !== ownerId) return null;
-    return medicine;
+    const { ownerId: _ownerId, ...rest } = medicine;
+    return rest;
   },
 });
 

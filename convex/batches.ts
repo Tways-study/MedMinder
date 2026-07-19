@@ -30,7 +30,9 @@ export const listByMedicine = query({
       .collect();
 
     // Soonest expiry first: the lot she needs to act on leads the list.
-    return batches.sort((a, b) => a.expiryDate - b.expiryDate);
+    return batches
+      .map(({ ownerId: _ownerId, ...rest }) => rest)
+      .sort((a, b) => a.expiryDate - b.expiryDate);
   },
 });
 

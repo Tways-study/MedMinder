@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { Doc } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { ConvexError } from "convex/values";
 import { useState } from "react";
@@ -62,7 +61,7 @@ export function MedicineForm({
   onSubmit,
   onCancel,
 }: {
-  initial?: Doc<"medicines">;
+  initial?: Partial<MedicineFormValues>;
   submitLabel: string;
   onSubmit: (values: MedicineFormValues) => Promise<void>;
   onCancel: () => void;
