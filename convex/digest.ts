@@ -1,12 +1,5 @@
-import { Resend } from "@convex-dev/resend";
 import { v } from "convex/values";
-import { components, internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
-import {
-  internalAction,
-  internalMutation,
-  internalQuery,
-} from "./_generated/server";
+import { internalMutation, internalQuery } from "./_generated/server";
 import { formatExpiryDate } from "./lib/dates";
 import { isDigestDue } from "./lib/digest";
 import {
@@ -22,14 +15,11 @@ import {
   formatExpiryDistance,
 } from "./lib/inventory";
 
-export const resend: Resend = new Resend(components.resend, {});
-
 /**
- * Annotated explicitly to break a circular inference: `maybeSend` calls
- * `contents`, which lives in this same module, so the generated `internal` type
- * would otherwise be inferred from the file that is inferring it.
+ * Exported for sendDigest.ts (a separate "use node" module — Node actions
+ * can't share a file with queries/mutations, so the send step lives there).
  */
-type DigestContents = {
+export type DigestContents = {
   due: boolean;
   email: string | null;
   subject: string;
@@ -161,54 +151,5 @@ export const ownerIds = internalQuery({
     // hourly-job scans in this file.
     const settings = await ctx.db.query("settings").take(5000);
     return settings.map((s) => s.ownerId);
-  },
-});
-
-/**
- * Hourly tick. Sends only to owners whose wall clock says it is time.
- *
- * Convex crons are fixed UTC, but each owner's schedule is theirs to move, so
- * the decision has to be made per owner per tick rather than baked into the
- * cron. MedMinder is multi-tenant, so one tick may send to several owners,
- * each their own digest scoped to their own inventory.
- */
-export const maybeSend = internalAction({
-  args: { force: v.optional(v.boolean()) },
-  returns: v.string(),
-  handler: async (ctx, { force }) => {
-    // Without a key the component throws. Fail loudly in the logs but do not
-    // mark anything as sent, so digests go out once the key is added.
-    if (!process.env.RESEND_API_KEY) {
-      console.error(
-        "RESEND_API_KEY is not set on this deployment, so digests cannot send. " +
-          "Set it with: npx convex env set RESEND_API_KEY re_xxx",
-      );
-      return "Skipped: RESEND_API_KEY is not set.";
-    }
-
-    const owners: Id<"users">[] = await ctx.runQuery(internal.digest.ownerIds, {});
-    const sent: string[] = [];
-
-    for (const ownerId of owners) {
-      const digest: DigestContents = await ctx.runQuery(internal.digest.contents, {
-        ownerId,
-      });
-
-      if (!force && !digest.due) continue;
-      if (digest.email === null) continue;
-
-      await resend.sendEmail(ctx, {
-        from: process.env.DIGEST_FROM ?? "MedMinder <onboarding@resend.dev>",
-        to: digest.email,
-        subject: digest.subject,
-        html: digest.html,
-        text: digest.text,
-      });
-
-      await ctx.runMutation(internal.digest.markSent, { ownerId, at: Date.now() });
-      sent.push(`${digest.email}: ${digest.subject}`);
-    }
-
-    return sent.length === 0 ? "Nothing due." : `Sent to ${sent.join("; ")}`;
   },
 });

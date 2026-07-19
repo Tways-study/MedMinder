@@ -18,7 +18,7 @@ const crons = cronJobs();
 crons.hourly(
   "weekly expiry digest",
   { minuteUTC: 7 },
-  internal.digest.maybeSend,
+  internal.sendDigest.maybeSend,
   {},
 );
 

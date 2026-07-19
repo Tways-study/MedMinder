@@ -25,6 +25,7 @@ import type * as lib_inventory from "../lib/inventory.js";
 import type * as medicines from "../medicines.js";
 import type * as migrations from "../migrations.js";
 import type * as seed from "../seed.js";
+import type * as sendDigest from "../sendDigest.js";
 import type * as settings from "../settings.js";
 import type * as users from "../users.js";
 
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   medicines: typeof medicines;
   migrations: typeof migrations;
   seed: typeof seed;
+  sendDigest: typeof sendDigest;
   settings: typeof settings;
   users: typeof users;
 }>;
@@ -82,6 +84,4 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {
-  resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
-};
+export declare const components: {};
