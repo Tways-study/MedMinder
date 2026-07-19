@@ -15,6 +15,7 @@ import type { ExpiryTier } from "@/convex/lib/inventory";
 import { formatExpiryDistance } from "@/convex/lib/inventory";
 import { formatDate, formatQuantity } from "@/lib/format";
 import { useQuery } from "convex/react";
+import { Cross2Icon } from "@radix-ui/react-icons";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -85,14 +86,26 @@ export default function DashboardPage() {
       />
 
       {!nothingStocked && (
-        <Input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by medicine or lot number"
-          aria-label="Search medicines"
-          className="h-11"
-        />
+        <div className="relative">
+          <Input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by medicine or lot number"
+            aria-label="Search medicines"
+            className="h-11 pr-11 [&::-webkit-search-cancel-button]:appearance-none"
+          />
+          {searching && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              className="absolute inset-y-0 right-0 flex h-11 w-11 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Cross2Icon className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       )}
 
       {nothingStocked && (
@@ -131,7 +144,7 @@ export default function DashboardPage() {
       {noMatches && (
         <EmptyState
           title="Nothing matches that"
-          body={`No medicine or lot matches "${search.trim()}". Check the spelling, or try the other one.`}
+          body={`No medicine name or lot number matches "${search.trim()}". Check the spelling and try again.`}
         />
       )}
 
@@ -140,7 +153,11 @@ export default function DashboardPage() {
           <div>
             <h2 className="font-display text-lg font-medium">
               {tierLabel(tier)}
-              <span className="ml-2 font-data text-sm font-normal text-muted-foreground">
+              <span
+                className="ml-2 font-data text-sm font-normal text-muted-foreground"
+                aria-label={`${lots.length} ${lots.length === 1 ? "lot" : "lots"}`}
+                title={`${lots.length} ${lots.length === 1 ? "lot" : "lots"} in this tier`}
+              >
                 {lots.length}
               </span>
             </h2>
@@ -170,7 +187,11 @@ export default function DashboardPage() {
           <div>
             <h2 className="font-display text-lg font-medium">
               Running low
-              <span className="ml-2 font-data text-sm font-normal text-muted-foreground">
+              <span
+                className="ml-2 font-data text-sm font-normal text-muted-foreground"
+                aria-label={`${filteredLowStock.length} ${filteredLowStock.length === 1 ? "medicine" : "medicines"}`}
+                title={`${filteredLowStock.length} ${filteredLowStock.length === 1 ? "medicine" : "medicines"} at or below reorder point`}
+              >
                 {filteredLowStock.length}
               </span>
             </h2>
@@ -194,11 +215,20 @@ export default function DashboardPage() {
                       {[m.strength, m.form].filter(Boolean).join(" · ")}
                     </p>
                   </div>
-                  <p className="font-data shrink-0 whitespace-nowrap text-sm">
-                    <span className="font-medium">
+                  <p
+                    className="font-data shrink-0 whitespace-nowrap text-sm"
+                    title={`${formatQuantity(m.totalQuantity)} on hand, reorder point ${formatQuantity(m.reorderPoint)}`}
+                  >
+                    <span
+                      className="font-medium"
+                      aria-label={`${formatQuantity(m.totalQuantity)} on hand`}
+                    >
                       {formatQuantity(m.totalQuantity)}
                     </span>
-                    <span className="text-muted-foreground">
+                    <span
+                      className="text-muted-foreground"
+                      aria-label={`, reorder point ${formatQuantity(m.reorderPoint)}`}
+                    >
                       {" "}
                       / {formatQuantity(m.reorderPoint)}
                     </span>
