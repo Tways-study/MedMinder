@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { fromDateInput, toDateInput } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ConvexError } from "convex/values";
 import { useState } from "react";
@@ -25,6 +26,9 @@ export type MedicineFormValues = {
   category?: string;
   reorderPoint: number;
   notes?: string;
+  expiryDate?: number;
+  onHandQuantity: number;
+  actualQuantity: number;
 };
 
 export function Field({
@@ -75,9 +79,25 @@ export function MedicineForm({
 
     const data = new FormData(event.currentTarget);
     const reorderPoint = Number(data.get("reorderPoint"));
+    const onHandQuantity = Number(data.get("onHandQuantity"));
+    const actualQuantity = Number(data.get("actualQuantity"));
+    const expiryInput = String(data.get("expiryDate") || "");
 
     if (!Number.isInteger(reorderPoint) || reorderPoint < 0) {
       setError("Reorder point must be a whole number, zero or more.");
+      return;
+    }
+    if (!Number.isInteger(onHandQuantity) || onHandQuantity < 0) {
+      setError("On-hand quantity must be a whole number, zero or more.");
+      return;
+    }
+    if (!Number.isInteger(actualQuantity) || actualQuantity < 0) {
+      setError("Actual quantity must be a whole number, zero or more.");
+      return;
+    }
+    const expiryDate = expiryInput ? fromDateInput(expiryInput) : undefined;
+    if (expiryDate !== undefined && !Number.isFinite(expiryDate)) {
+      setError("Expiry date is not valid.");
       return;
     }
 
@@ -91,6 +111,9 @@ export function MedicineForm({
         category: String(data.get("category") || "") || undefined,
         reorderPoint,
         notes: String(data.get("notes") || "") || undefined,
+        expiryDate,
+        onHandQuantity,
+        actualQuantity,
       });
     } catch (err) {
       setError(
@@ -152,7 +175,7 @@ export function MedicineForm({
         </Field>
       </div>
 
-      <Field label="Category" hint="Optional. Used to scope a count to one shelf.">
+      <Field label="Category" hint="Optional. Helps you browse and organize medicines.">
         <Input
           name="category"
           placeholder="Antibiotics"
@@ -162,9 +185,49 @@ export function MedicineForm({
         />
       </Field>
 
+      <Field label="Expiry date" hint="Optional until you have stock with a printed expiry.">
+        <Input
+          name="expiryDate"
+          type="date"
+          defaultValue={initial?.expiryDate ? toDateInput(initial.expiryDate) : ""}
+          className="font-data h-11"
+        />
+      </Field>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Field
+          label="On-hand quantity"
+          hint="What you say you have. Flags as low at the reorder point."
+        >
+          <Input
+            name="onHandQuantity"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={1}
+            required
+            defaultValue={initial?.onHandQuantity ?? 0}
+            className="font-data h-11"
+          />
+        </Field>
+
+        <Field label="Actual quantity" hint="What you've physically counted.">
+          <Input
+            name="actualQuantity"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={1}
+            required
+            defaultValue={initial?.actualQuantity ?? initial?.onHandQuantity ?? 0}
+            className="font-data h-11"
+          />
+        </Field>
+      </div>
+
       <Field
         label="Reorder point"
-        hint="Flag this medicine as low when total stock falls to this number."
+        hint="Flag this medicine as low when on-hand stock falls to this number."
       >
         <Input
           name="reorderPoint"

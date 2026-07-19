@@ -1,10 +1,3 @@
-export type VarianceDirection = "short" | "over" | "match";
-
-export type Variance = {
-  delta: number;
-  direction: VarianceDirection;
-};
-
 export type ExpiryTier = "expired" | "critical" | "warning" | "watch" | "ok";
 
 export type AlertTiers = {
@@ -36,12 +29,6 @@ export function isValidQuantity(value: number): boolean {
   return (
     Number.isInteger(value) && value >= 0 && value <= MAX_QUANTITY
   );
-}
-
-export function variance(expectedQty: number, countedQty: number): Variance {
-  const delta = countedQty - expectedQty;
-  if (delta === 0) return { delta: 0, direction: "match" };
-  return { delta, direction: delta < 0 ? "short" : "over" };
 }
 
 /**

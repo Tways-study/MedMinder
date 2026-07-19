@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import {
   assertNonEmpty,
   assertQuantity,
+  assertTimestamp,
   requireAuth,
 } from "./lib/guards";
 import { medicineForm } from "./schema";
@@ -15,6 +16,9 @@ const medicineFields = {
   category: v.optional(v.string()),
   reorderPoint: v.number(),
   notes: v.optional(v.string()),
+  expiryDate: v.optional(v.number()),
+  onHandQuantity: v.number(),
+  actualQuantity: v.number(),
 };
 
 const medicineDoc = v.object({
@@ -23,19 +27,9 @@ const medicineDoc = v.object({
   ...medicineFields,
 });
 
-/** A medicine plus the stock figures the list needs, so the UI never N+1s. */
-const medicineWithStock = v.object({
-  _id: v.id("medicines"),
-  _creationTime: v.number(),
-  ...medicineFields,
-  totalQuantity: v.number(),
-  batchCount: v.number(),
-  soonestExpiry: v.union(v.number(), v.null()),
-});
-
 export const list = query({
   args: {},
-  returns: v.array(medicineWithStock),
+  returns: v.array(medicineDoc),
   handler: async (ctx) => {
     const ownerId = await requireAuth(ctx);
 
@@ -44,27 +38,7 @@ export const list = query({
       .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId))
       .collect();
 
-    return await Promise.all(
-      medicines.map(async (medicine) => {
-        const batches = await ctx.db
-          .query("batches")
-          .withIndex("by_medicine", (q) => q.eq("medicineId", medicine._id))
-          .collect();
-
-        // Depleted lots still exist as history but hold no stock.
-        const live = batches.filter((b) => b.status !== "depleted");
-
-        const { ownerId: _ownerId, ...rest } = medicine;
-        return {
-          ...rest,
-          totalQuantity: live.reduce((sum, b) => sum + b.quantityExpected, 0),
-          batchCount: live.length,
-          soonestExpiry: live.length
-            ? Math.min(...live.map((b) => b.expiryDate))
-            : null,
-        };
-      }),
-    );
+    return medicines.map(({ ownerId: _ownerId, ...rest }) => rest);
   },
 });
 
@@ -80,14 +54,30 @@ export const get = query({
   },
 });
 
+function validateFields(args: {
+  name: string;
+  reorderPoint: number;
+  onHandQuantity: number;
+  actualQuantity: number;
+  expiryDate?: number;
+}) {
+  const name = assertNonEmpty(args.name, "Name");
+  assertQuantity(args.reorderPoint, "Reorder point");
+  assertQuantity(args.onHandQuantity, "On-hand quantity");
+  assertQuantity(args.actualQuantity, "Actual quantity");
+  if (args.expiryDate !== undefined) {
+    assertTimestamp(args.expiryDate, "Expiry date");
+  }
+  return name;
+}
+
 export const create = mutation({
   args: medicineFields,
   returns: v.id("medicines"),
   handler: async (ctx, args) => {
     const ownerId = await requireAuth(ctx);
 
-    const name = assertNonEmpty(args.name, "Name");
-    assertQuantity(args.reorderPoint, "Reorder point");
+    const name = validateFields(args);
 
     return await ctx.db.insert("medicines", {
       ...args,
@@ -113,8 +103,7 @@ export const update = mutation({
       throw new ConvexError("That medicine no longer exists.");
     }
 
-    assertNonEmpty(args.name, "Name");
-    assertQuantity(args.reorderPoint, "Reorder point");
+    validateFields(args);
 
     await ctx.db.patch(medicineId, {
       ...args,
@@ -123,6 +112,35 @@ export const update = mutation({
       strength: args.strength?.trim() || undefined,
       category: args.category?.trim() || undefined,
       notes: args.notes?.trim() || undefined,
+    });
+    return null;
+  },
+});
+
+/**
+ * The lightweight write behind the dashboard's stepper and tap-to-type
+ * controls — a single field, no round trip through every other medicine
+ * field the way `update` needs for the full edit form.
+ */
+export const setStock = mutation({
+  args: {
+    medicineId: v.id("medicines"),
+    kind: v.union(v.literal("onHand"), v.literal("actual")),
+    quantity: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { medicineId, kind, quantity }) => {
+    const ownerId = await requireAuth(ctx);
+
+    const existing = await ctx.db.get(medicineId);
+    if (existing === null || existing.ownerId !== ownerId) {
+      throw new ConvexError("That medicine no longer exists.");
+    }
+
+    assertQuantity(quantity, kind === "onHand" ? "On-hand quantity" : "Actual quantity");
+
+    await ctx.db.patch(medicineId, {
+      [kind === "onHand" ? "onHandQuantity" : "actualQuantity"]: quantity,
     });
     return null;
   },
@@ -138,20 +156,6 @@ export const remove = mutation({
     if (medicine === null) return null;
     if (medicine.ownerId !== ownerId) {
       throw new ConvexError("That medicine no longer exists.");
-    }
-
-    // Refuse rather than cascade: deleting a medicine would orphan its lots and
-    // silently erase the movement history behind a variance she may still be
-    // reconciling.
-    const batch = await ctx.db
-      .query("batches")
-      .withIndex("by_medicine", (q) => q.eq("medicineId", medicineId))
-      .first();
-
-    if (batch !== null) {
-      throw new ConvexError(
-        "This medicine still has lots recorded. Remove its lots first.",
-      );
     }
 
     await ctx.db.delete(medicineId);

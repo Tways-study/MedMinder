@@ -62,7 +62,7 @@ export default function MedicinesPage() {
       {filtered && filtered.length === 0 && medicines?.length === 0 && (
         <EmptyState
           title="No medicines yet"
-          body="Add the medicines you stock. Lots and expiry dates come in with each delivery."
+          body="Add the medicines you stock, with their expiry date and quantity."
           action={
             <Button asChild className="mt-1">
               <Link href="/medicines/new">Add the first medicine</Link>
@@ -81,11 +81,11 @@ export default function MedicinesPage() {
       {filtered && filtered.length > 0 && (
         <ul className="flex flex-col gap-3">
           {filtered.map((m) => {
-            const low = m.totalQuantity <= m.reorderPoint;
+            const low = m.onHandQuantity <= m.reorderPoint;
             const tier =
-              m.soonestExpiry === null
+              m.expiryDate === undefined
                 ? null
-                : expiryTier(m.soonestExpiry, now, DEFAULT_ALERT_TIERS);
+                : expiryTier(m.expiryDate, now, DEFAULT_ALERT_TIERS);
 
             return (
               <li key={m._id}>
@@ -108,17 +108,12 @@ export default function MedicinesPage() {
                           Low stock
                         </span>
                       )}
-                      {m.batchCount === 0 && (
-                        <span className="text-xs text-muted-foreground">
-                          No lots recorded
-                        </span>
-                      )}
                     </div>
                   </div>
 
                   <div className="shrink-0 text-right">
                     <p className="font-data text-xl font-medium leading-none">
-                      {formatQuantity(m.totalQuantity)}
+                      {formatQuantity(m.onHandQuantity)}
                     </p>
                     <p className="label-field mt-1">On hand</p>
                   </div>

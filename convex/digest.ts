@@ -6,7 +6,7 @@ import {
   digestHtml,
   digestSubject,
   digestText,
-  type DigestLot,
+  type DigestAlert,
   type DigestLowStock,
 } from "./lib/digestEmail";
 import {
@@ -25,7 +25,7 @@ export type DigestContents = {
   subject: string;
   html: string;
   text: string;
-  lotCount: number;
+  alertCount: number;
 };
 
 const APP_URL = process.env.SITE_URL ?? "http://localhost:3000";
@@ -35,7 +35,7 @@ const APP_URL = process.env.SITE_URL ?? "http://localhost:3000";
  *
  * Deliberately shares expiryTier and formatExpiryDistance with the dashboard:
  * an email that disagreed with the screen about what is urgent would be worse
- * than no email.
+ * than no email. Driven by onHandQuantity, same reasoning as dashboard.ts.
  */
 export const contents = internalQuery({
   args: { ownerId: v.id("users") },
@@ -45,7 +45,7 @@ export const contents = internalQuery({
     subject: v.string(),
     html: v.string(),
     text: v.string(),
-    lotCount: v.number(),
+    alertCount: v.number(),
   }),
   handler: async (ctx, { ownerId }) => {
     const settings = await ctx.db
@@ -69,61 +69,43 @@ export const contents = internalQuery({
 
     const tiers = settings?.alertTiers ?? DEFAULT_ALERT_TIERS;
 
-    const batches = await ctx.db
-      .query("batches")
-      .withIndex("by_owner_status_expiry", (q) =>
-        q.eq("ownerId", ownerId).eq("status", "active"),
-      )
-      .collect();
-
-    const lots: DigestLot[] = [];
-    const stockByMedicine = new Map<string, number>();
-
-    for (const batch of batches) {
-      stockByMedicine.set(
-        batch.medicineId,
-        (stockByMedicine.get(batch.medicineId) ?? 0) + batch.quantityExpected,
-      );
-
-      const tier = expiryTier(batch.expiryDate, now, tiers);
-      if (tier === "ok") continue;
-
-      const medicine = await ctx.db.get(batch.medicineId);
-      if (medicine === null) continue;
-
-      lots.push({
-        medicineName: medicine.name,
-        strength: medicine.strength,
-        lotNumber: batch.lotNumber,
-        expiryLabel: formatExpiryDate(batch.expiryDate),
-        expiryDistance: formatExpiryDistance(batch.expiryDate, now),
-        quantity: batch.quantityExpected,
-        tier,
-      });
-    }
-
-    lots.sort((a, b) => a.expiryDistance.localeCompare(b.expiryDistance));
-
     const medicines = await ctx.db
       .query("medicines")
       .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId))
       .take(2000);
+
+    const alerts: DigestAlert[] = medicines
+      .filter((m) => m.expiryDate !== undefined && expiryTier(m.expiryDate, now, tiers) !== "ok")
+      .map((m) => ({
+        medicineName: m.name,
+        strength: m.strength,
+        expiryLabel: formatExpiryDate(m.expiryDate as number),
+        expiryDistance: formatExpiryDistance(m.expiryDate as number, now),
+        onHandQuantity: m.onHandQuantity,
+        tier: expiryTier(m.expiryDate as number, now, tiers) as Exclude<
+          ReturnType<typeof expiryTier>,
+          "ok"
+        >,
+      }));
+
+    alerts.sort((a, b) => a.expiryDistance.localeCompare(b.expiryDistance));
+
     const lowStock: DigestLowStock[] = medicines
+      .filter((m) => m.onHandQuantity <= m.reorderPoint)
       .map((m) => ({
         name: m.name,
         strength: m.strength,
-        totalQuantity: stockByMedicine.get(m._id) ?? 0,
+        onHandQuantity: m.onHandQuantity,
         reorderPoint: m.reorderPoint,
-      }))
-      .filter((m) => m.totalQuantity <= m.reorderPoint);
+      }));
 
     return {
       due,
       email: settings?.digestEmail ?? null,
-      subject: digestSubject(lots),
-      html: digestHtml(lots, lowStock, APP_URL),
-      text: digestText(lots, lowStock, APP_URL),
-      lotCount: lots.length,
+      subject: digestSubject(alerts),
+      html: digestHtml(alerts, lowStock, APP_URL),
+      text: digestText(alerts, lowStock, APP_URL),
+      alertCount: alerts.length,
     };
   },
 });

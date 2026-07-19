@@ -13,31 +13,17 @@ export const medicineForm = v.union(
   v.literal("other"),
 );
 
-export const batchStatus = v.union(
-  v.literal("active"),
-  v.literal("depleted"),
-  v.literal("expired"),
-);
-
-export const varianceReason = v.union(
-  v.literal("damaged"),
-  v.literal("expired"),
-  v.literal("miscount"),
-  v.literal("unrecorded_sale"),
-  v.literal("other"),
-);
-
-export const movementType = v.union(
-  v.literal("delivery"),
-  v.literal("count_adjustment"),
-);
-
 export default defineSchema({
   ...authTables,
 
   // ownerId scopes every top-level table to the account that created it:
   // MedMinder is multi-tenant, and each account's inventory is fully
   // isolated from every other account's.
+  //
+  // Stock lives directly on the medicine: one expiry date, and two
+  // independently-editable quantities — onHandQuantity (the actively
+  // maintained "book" number) and actualQuantity (the last physical count).
+  // There is no per-lot tracking; a medicine is the unit of record.
   medicines: defineTable({
     ownerId: v.id("users"),
     name: v.string(),
@@ -45,75 +31,16 @@ export default defineSchema({
     form: medicineForm,
     strength: v.optional(v.string()),
     category: v.optional(v.string()),
-    // Dashboard flags the medicine as low when total stock falls to or below this.
+    // Dashboard flags the medicine as low when on-hand stock falls to or
+    // below this.
     reorderPoint: v.number(),
     notes: v.optional(v.string()),
-  })
-    .index("by_owner_name", ["ownerId", "name"])
-    .index("by_owner_category", ["ownerId", "category"]),
-
-  // A lot of a medicine. Expiry lives here, not on the medicine: the same drug
-  // can sit on the shelf as two lots expiring months apart.
-  batches: defineTable({
-    ownerId: v.id("users"),
-    medicineId: v.id("medicines"),
-    lotNumber: v.string(),
-    expiryDate: v.number(),
-    quantityExpected: v.number(),
-    receivedDate: v.number(),
-    supplier: v.optional(v.string()),
-    status: batchStatus,
-  })
-    .index("by_medicine", ["medicineId"])
-    // Cross-owner maintenance only (see migrations.ts) — not used for
-    // per-tenant reads, which go through by_owner_status_expiry instead.
-    .index("by_expiry", ["expiryDate"])
-    .index("by_owner_status_expiry", ["ownerId", "status", "expiryDate"])
-    // Lot identity: same drug + same lot + same expiry is the same physical lot.
-    .index("by_lot_identity", ["medicineId", "lotNumber", "expiryDate"]),
-
-  deliveries: defineTable({
-    ownerId: v.id("users"),
-    receivedDate: v.number(),
-    supplier: v.string(),
-    invoiceRef: v.optional(v.string()),
-    notes: v.optional(v.string()),
-  }).index("by_owner_received", ["ownerId", "receivedDate"]),
-
-  countSessions: defineTable({
-    ownerId: v.id("users"),
-    startedAt: v.number(),
-    completedAt: v.optional(v.number()),
-    status: v.union(v.literal("draft"), v.literal("completed")),
-    scope: v.union(
-      v.object({ kind: v.literal("all") }),
-      v.object({ kind: v.literal("category"), category: v.string() }),
-      v.object({ kind: v.literal("medicine"), medicineId: v.id("medicines") }),
-    ),
-    notes: v.optional(v.string()),
-  }).index("by_owner_status_started", ["ownerId", "status", "startedAt"]),
-
-  countLines: defineTable({
-    sessionId: v.id("countSessions"),
-    batchId: v.id("batches"),
-    // Snapshotted when the line is created, not read live: a delivery arriving
-    // mid-count must not silently change a variance she already wrote down.
-    expectedQty: v.number(),
-    countedQty: v.optional(v.number()),
-    reason: v.optional(varianceReason),
-  })
-    .index("by_session", ["sessionId"])
-    .index("by_session_batch", ["sessionId", "batchId"])
-    // Answers "is this lot mid-count?" before allowing it to be deleted.
-    .index("by_batch", ["batchId"]),
-
-  movements: defineTable({
-    batchId: v.id("batches"),
-    type: movementType,
-    delta: v.number(),
-    at: v.number(),
-    ref: v.optional(v.string()),
-  }).index("by_batch", ["batchId"]),
+    // Unset until a real expiry is known — a freshly added medicine may not
+    // have any yet.
+    expiryDate: v.optional(v.number()),
+    onHandQuantity: v.number(),
+    actualQuantity: v.number(),
+  }).index("by_owner_name", ["ownerId", "name"]),
 
   settings: defineTable({
     ownerId: v.id("users"),

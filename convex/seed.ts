@@ -2,10 +2,10 @@ import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 
 /**
- * Development fixture. Lots sit at deliberately chosen distances from today so
- * every tier boundary is exercised: already expired, inside 30 days, inside 90,
- * inside 180 (the "expires in 5 months" case from the original brief), and far
- * enough out to stay quiet.
+ * Development fixture. Medicines sit at deliberately chosen expiry distances
+ * from today so every tier boundary is exercised: already expired, inside 30
+ * days, inside 90, inside 180 (the "expires in 5 months" case from the
+ * original brief), and far enough out to stay quiet.
  *
  * internalMutation, so it is not reachable from the browser. Takes an
  * ownerId because MedMinder is multi-tenant: fixtures belong to one account,
@@ -32,7 +32,6 @@ export const dev = internalMutation({
         strength: "500 mg",
         category: "Antibiotics",
         reorderPoint: 100,
-        lot: "AMX-4471B",
         days: -12,
         qty: 24,
       },
@@ -42,7 +41,6 @@ export const dev = internalMutation({
         strength: "100 mcg",
         category: "Respiratory",
         reorderPoint: 10,
-        lot: "SLB-9032",
         days: 20,
         qty: 6,
       },
@@ -52,7 +50,6 @@ export const dev = internalMutation({
         strength: "500 mg",
         category: "Analgesics",
         reorderPoint: 80,
-        lot: "MFA-1180",
         days: 62,
         qty: 140,
       },
@@ -62,7 +59,6 @@ export const dev = internalMutation({
         strength: "5 mg/5 mL",
         category: "Antihistamines",
         reorderPoint: 20,
-        lot: "CTZ-3390",
         days: 150,
         qty: 18,
       },
@@ -73,7 +69,6 @@ export const dev = internalMutation({
         strength: "500 mg",
         category: "Analgesics",
         reorderPoint: 200,
-        lot: "PCM-7719",
         days: 730,
         qty: 480,
       },
@@ -87,7 +82,7 @@ export const dev = internalMutation({
         .first();
       if (existing !== null) continue;
 
-      const medicineId = await ctx.db.insert("medicines", {
+      await ctx.db.insert("medicines", {
         ownerId,
         name: f.name,
         genericName: f.genericName,
@@ -95,30 +90,14 @@ export const dev = internalMutation({
         strength: f.strength,
         category: f.category,
         reorderPoint: f.reorderPoint,
-      });
-
-      const batchId = await ctx.db.insert("batches", {
-        ownerId,
-        medicineId,
-        lotNumber: f.lot,
         expiryDate: expiryIn(f.days),
-        quantityExpected: f.qty,
-        receivedDate: now - 30 * DAY,
-        supplier: "Zuellig Pharma",
-        status: "active",
-      });
-
-      await ctx.db.insert("movements", {
-        batchId,
-        type: "delivery",
-        delta: f.qty,
-        at: now - 30 * DAY,
-        ref: "SEED",
+        onHandQuantity: f.qty,
+        actualQuantity: f.qty,
       });
 
       created++;
     }
 
-    return `Seeded ${created} medicines with one lot each.`;
+    return `Seeded ${created} medicines.`;
   },
 });

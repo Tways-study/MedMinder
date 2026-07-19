@@ -4,15 +4,14 @@ import { requireAuth } from "./lib/guards";
 import { DEFAULT_ALERT_TIERS, expiryTier } from "./lib/inventory";
 import { medicineForm } from "./schema";
 
-const alertLot = v.object({
-  batchId: v.id("batches"),
+const alertMedicine = v.object({
   medicineId: v.id("medicines"),
   medicineName: v.string(),
   strength: v.optional(v.string()),
   form: medicineForm,
-  lotNumber: v.string(),
   expiryDate: v.number(),
-  quantity: v.number(),
+  onHandQuantity: v.number(),
+  actualQuantity: v.number(),
   tier: v.union(
     v.literal("expired"),
     v.literal("critical"),
@@ -22,32 +21,33 @@ const alertLot = v.object({
 });
 
 /**
- * Everything the dashboard leads with, in one query.
+ * Everything the "On hand" dashboard leads with, in one query.
  *
  * Alerts are computed server-side against the configured tier cutoffs so the
- * dashboard, the medicines list and the weekly digest cannot drift into
- * disagreeing about what counts as urgent.
+ * dashboard and the weekly digest cannot drift into disagreeing about what
+ * counts as urgent. Driven by onHandQuantity, not actualQuantity: on-hand is
+ * the number kept continuously current, so a reorder decision needs it over
+ * the periodically-verified physical count.
  */
 export const summary = query({
   args: {},
   returns: v.object({
-    alerts: v.array(alertLot),
+    alerts: v.array(alertMedicine),
     lowStock: v.array(
       v.object({
         medicineId: v.id("medicines"),
         name: v.string(),
         strength: v.optional(v.string()),
         form: medicineForm,
-        totalQuantity: v.number(),
+        onHandQuantity: v.number(),
         reorderPoint: v.number(),
       }),
     ),
     totals: v.object({
       medicines: v.number(),
-      lots: v.number(),
-      units: v.number(),
+      onHandUnits: v.number(),
+      actualUnits: v.number(),
     }),
-    hasDraftCount: v.boolean(),
   }),
   handler: async (ctx) => {
     const ownerId = await requireAuth(ctx);
@@ -59,91 +59,50 @@ export const summary = query({
     const tiers = settings?.alertTiers ?? DEFAULT_ALERT_TIERS;
     const now = Date.now();
 
-    // Only active lots: a depleted lot is off the shelf and cannot expire on us.
-    const batches = await ctx.db
-      .query("batches")
-      .withIndex("by_owner_status_expiry", (q) =>
-        q.eq("ownerId", ownerId).eq("status", "active"),
-      )
-      .collect();
-
-    const medicineCache = new Map<string, Awaited<ReturnType<typeof ctx.db.get>>>();
-    const medicineFor = async (id: string) => {
-      if (!medicineCache.has(id)) {
-        medicineCache.set(id, await ctx.db.get(id as never));
-      }
-      return medicineCache.get(id);
-    };
-
-    const alerts = [];
-    const stockByMedicine = new Map<string, number>();
-
-    for (const batch of batches) {
-      stockByMedicine.set(
-        batch.medicineId,
-        (stockByMedicine.get(batch.medicineId) ?? 0) + batch.quantityExpected,
-      );
-
-      const tier = expiryTier(batch.expiryDate, now, tiers);
-      if (tier === "ok") continue;
-
-      const medicine = (await medicineFor(batch.medicineId)) as {
-        _id: string;
-        name: string;
-        strength?: string;
-        form: string;
-      } | null;
-      if (medicine === null) continue;
-
-      alerts.push({
-        batchId: batch._id,
-        medicineId: batch.medicineId,
-        medicineName: medicine.name,
-        strength: medicine.strength,
-        form: medicine.form as never,
-        lotNumber: batch.lotNumber,
-        expiryDate: batch.expiryDate,
-        quantity: batch.quantityExpected,
-        tier: tier as "expired" | "critical" | "warning" | "watch",
-      });
-    }
-
-    // Most urgent first: the lot she can still do something about leads.
-    alerts.sort((a, b) => a.expiryDate - b.expiryDate);
-
     const medicines = await ctx.db
       .query("medicines")
       .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId))
       .take(2000);
 
+    const alerts = medicines
+      .filter((m) => m.expiryDate !== undefined && expiryTier(m.expiryDate, now, tiers) !== "ok")
+      .map((m) => ({
+        medicineId: m._id,
+        medicineName: m.name,
+        strength: m.strength,
+        form: m.form,
+        expiryDate: m.expiryDate as number,
+        onHandQuantity: m.onHandQuantity,
+        actualQuantity: m.actualQuantity,
+        tier: expiryTier(m.expiryDate as number, now, tiers) as
+          | "expired"
+          | "critical"
+          | "warning"
+          | "watch",
+      }))
+      // Most urgent first: the medicine she can still do something about leads.
+      .sort((a, b) => a.expiryDate - b.expiryDate);
+
     const lowStock = medicines
+      .filter((m) => m.onHandQuantity <= m.reorderPoint)
       .map((m) => ({
         medicineId: m._id,
         name: m.name,
         strength: m.strength,
         form: m.form,
-        totalQuantity: stockByMedicine.get(m._id) ?? 0,
+        onHandQuantity: m.onHandQuantity,
         reorderPoint: m.reorderPoint,
       }))
-      .filter((m) => m.totalQuantity <= m.reorderPoint)
-      .sort((a, b) => a.totalQuantity - b.totalQuantity);
-
-    const draft = await ctx.db
-      .query("countSessions")
-      .withIndex("by_owner_status_started", (q) =>
-        q.eq("ownerId", ownerId).eq("status", "draft"),
-      )
-      .first();
+      .sort((a, b) => a.onHandQuantity - b.onHandQuantity);
 
     return {
       alerts,
       lowStock,
       totals: {
         medicines: medicines.length,
-        lots: batches.length,
-        units: batches.reduce((sum, b) => sum + b.quantityExpected, 0),
+        onHandUnits: medicines.reduce((sum, m) => sum + m.onHandQuantity, 0),
+        actualUnits: medicines.reduce((sum, m) => sum + m.actualQuantity, 0),
       },
-      hasDraftCount: draft !== null,
     };
   },
 });

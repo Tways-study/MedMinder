@@ -1,6 +1,5 @@
 "use client";
 
-import { BatchCard } from "@/components/batch-card";
 import { MedicineForm } from "@/components/medicine-form";
 import {
   CardSkeleton,
@@ -9,13 +8,9 @@ import {
   PageHeader,
 } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import {
-  DEFAULT_ALERT_TIERS,
-  expiryTier,
-  formatExpiryDistance,
-} from "@/convex/lib/inventory";
 import { formatDate, formatQuantity } from "@/lib/format";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
@@ -23,19 +18,37 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
+function StatTile({
+  label,
+  value,
+  flag,
+}: {
+  label: string;
+  value: string;
+  flag?: string;
+}) {
+  return (
+    <div className="min-w-[7.5rem] flex-1 rounded-lg border bg-card p-4">
+      <p className="label-field">{label}</p>
+      <p className="font-data mt-1 text-2xl font-medium leading-none">{value}</p>
+      {flag && <p className="mt-1 text-xs font-medium text-primary">{flag}</p>}
+    </div>
+  );
+}
+
 export default function MedicineDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const medicineId = params.id as Id<"medicines">;
 
   const medicine = useQuery(api.medicines.get, { medicineId });
-  const batches = useQuery(api.batches.listByMedicine, { medicineId });
   const update = useMutation(api.medicines.update);
   const remove = useMutation(api.medicines.remove);
 
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const now = Date.now();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
   if (medicine === undefined) {
     return (
@@ -78,9 +91,7 @@ export default function MedicineDetailPage() {
     );
   }
 
-  const live = (batches ?? []).filter((b) => b.status !== "depleted");
-  const total = live.reduce((sum, b) => sum + b.quantityExpected, 0);
-  const low = total <= medicine.reorderPoint;
+  const low = medicine.onHandQuantity <= medicine.reorderPoint;
 
   return (
     <Page>
@@ -99,62 +110,22 @@ export default function MedicineDetailPage() {
       />
 
       <div className="flex flex-wrap gap-3">
-        <div className="flex-1 rounded-lg border bg-card p-4">
-          <p className="label-field">On hand</p>
-          <p className="font-data mt-1 text-2xl font-medium leading-none">
-            {formatQuantity(total)}
-          </p>
-        </div>
-        <div className="flex-1 rounded-lg border bg-card p-4">
-          <p className="label-field">Reorder at</p>
-          <p className="font-data mt-1 text-2xl font-medium leading-none">
-            {formatQuantity(medicine.reorderPoint)}
-          </p>
-          {low && (
-            <p className="mt-1 text-xs font-medium text-primary">
-              At or below reorder point
-            </p>
-          )}
-        </div>
+        <StatTile
+          label="On hand"
+          value={formatQuantity(medicine.onHandQuantity)}
+          flag={low ? "At or below reorder point" : undefined}
+        />
+        <StatTile label="Actual" value={formatQuantity(medicine.actualQuantity)} />
+        <StatTile label="Reorder at" value={formatQuantity(medicine.reorderPoint)} />
+        <StatTile
+          label="Expires"
+          value={medicine.expiryDate ? formatDate(medicine.expiryDate) : "—"}
+        />
       </div>
 
       {medicine.notes && (
         <p className="rounded-lg border bg-card p-4 text-sm">{medicine.notes}</p>
       )}
-
-      <section className="flex flex-col gap-3">
-        <h2 className="font-display text-lg font-medium">
-          Lots{live.length > 0 ? ` (${live.length})` : ""}
-        </h2>
-
-        {batches === undefined && <CardSkeleton count={2} />}
-
-        {batches && live.length === 0 && (
-          <EmptyState
-            title="No lots on the shelf"
-            body="Lots arrive with a delivery. Log one to start tracking expiry for this medicine."
-            action={
-              <Button asChild className="mt-1">
-                <Link href="/deliveries/new">Log a delivery</Link>
-              </Button>
-            }
-          />
-        )}
-
-        {/* No medicineName: the page header already names the drug. */}
-        {live.map((batch) => (
-          <BatchCard
-            key={batch._id}
-            lotNumber={batch.lotNumber}
-            expiryLabel={formatDate(batch.expiryDate)}
-            expiryDistance={formatExpiryDistance(batch.expiryDate, now)}
-            secondaryLabel="Received"
-            secondaryValue={formatDate(batch.receivedDate)}
-            quantity={batch.quantityExpected}
-            tier={expiryTier(batch.expiryDate, now, DEFAULT_ALERT_TIERS)}
-          />
-        ))}
-      </section>
 
       {error && (
         <p role="alert" className="text-sm text-destructive">
@@ -163,28 +134,68 @@ export default function MedicineDetailPage() {
       )}
 
       <section className="mt-4 border-t pt-5">
-        <Button
-          variant="outline"
-          className="text-destructive"
-          onClick={async () => {
-            setError(null);
-            try {
-              await remove({ medicineId });
-              router.push("/medicines");
-            } catch (err) {
-              setError(
-                err instanceof ConvexError
-                  ? String(err.data)
-                  : "Could not remove this medicine.",
-              );
-            }
-          }}
-        >
-          Remove medicine
-        </Button>
+        {!confirmingDelete ? (
+          <Button
+            variant="outline"
+            className="text-destructive"
+            onClick={() => {
+              setError(null);
+              setConfirmingDelete(true);
+            }}
+          >
+            Remove medicine
+          </Button>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium">
+                Type <span className="font-data">{medicine.name}</span> to confirm
+              </span>
+              <Input
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                autoFocus
+                className="h-11"
+                autoComplete="off"
+              />
+            </label>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="h-11 flex-1 text-destructive"
+                disabled={confirmText.trim() !== medicine.name}
+                onClick={async () => {
+                  setError(null);
+                  try {
+                    await remove({ medicineId });
+                    router.push("/medicines");
+                  } catch (err) {
+                    setError(
+                      err instanceof ConvexError
+                        ? String(err.data)
+                        : "Could not remove this medicine.",
+                    );
+                  }
+                }}
+              >
+                Remove medicine
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11"
+                onClick={() => {
+                  setConfirmingDelete(false);
+                  setConfirmText("");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
         <p className="mt-2 text-xs text-muted-foreground">
-          Only possible once its lots are gone. Removing it would erase the
-          movement history behind any variance.
+          This removes the medicine and its stock numbers. It cannot be undone.
         </p>
       </section>
     </Page>

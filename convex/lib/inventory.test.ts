@@ -4,30 +4,7 @@ import {
   expiryTier,
   formatExpiryDistance,
   isValidQuantity,
-  variance,
 } from "./inventory";
-
-describe("variance", () => {
-  it("reports a match when counted equals expected", () => {
-    expect(variance(50, 50)).toEqual({ delta: 0, direction: "match" });
-  });
-
-  it("reports short when fewer on the shelf than expected", () => {
-    expect(variance(50, 42)).toEqual({ delta: -8, direction: "short" });
-  });
-
-  it("reports over when more on the shelf than expected", () => {
-    expect(variance(50, 53)).toEqual({ delta: 3, direction: "over" });
-  });
-
-  it("handles counting an empty shelf", () => {
-    expect(variance(12, 0)).toEqual({ delta: -12, direction: "short" });
-  });
-
-  it("handles finding stock where none was expected", () => {
-    expect(variance(0, 6)).toEqual({ delta: 6, direction: "over" });
-  });
-});
 
 describe("isValidQuantity", () => {
   it("accepts zero and positive integers", () => {

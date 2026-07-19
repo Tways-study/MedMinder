@@ -45,15 +45,7 @@ export const resetAccount = internalMutation({
     }
 
     if (alsoWipeInventory) {
-      // Order matters: movements and count lines point at batches.
-      const inventoryTables = [
-        "movements",
-        "countLines",
-        "countSessions",
-        "batches",
-        "deliveries",
-        "medicines",
-      ] as const;
+      const inventoryTables = ["medicines"] as const;
 
       for (const table of inventoryTables) {
         const rows = await ctx.db.query(table).take(5000);

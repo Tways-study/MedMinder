@@ -1,6 +1,7 @@
 "use client";
 
-import { BatchCard } from "@/components/batch-card";
+import { MedicineCard } from "@/components/medicine-card";
+import { MedicineForm } from "@/components/medicine-form";
 import {
   CardSkeleton,
   EmptyState,
@@ -10,16 +11,21 @@ import {
 import { tierLabel } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import type { ExpiryTier } from "@/convex/lib/inventory";
 import { formatExpiryDistance } from "@/convex/lib/inventory";
-import { formatDate, formatQuantity } from "@/lib/format";
-import { useQuery } from "convex/react";
+import { formatQuantity } from "@/lib/format";
+import type { FunctionReturnType } from "convex/server";
+import { useMutation, useQuery } from "convex/react";
 import { Cross2Icon } from "@radix-ui/react-icons";
-import Link from "next/link";
 import { useState } from "react";
 
-/** Most urgent first. Expired lots are a legal problem, not a planning one. */
+type DashboardSummary = FunctionReturnType<typeof api.dashboard.summary>;
+type MedicineList = FunctionReturnType<typeof api.medicines.list>;
+
+/** Most urgent first. Expired medicines are a legal problem, not a planning one. */
 const TIER_ORDER: Exclude<ExpiryTier, "ok">[] = [
   "expired",
   "critical",
@@ -34,12 +40,20 @@ const TIER_BLURB: Record<Exclude<ExpiryTier, "ok">, string> = {
   watch: "Time to plan around these.",
 };
 
+type Tab = "onHand" | "actual";
+
 export default function DashboardPage() {
   const summary = useQuery(api.dashboard.summary);
+  const medicines = useQuery(api.medicines.list);
+  const create = useMutation(api.medicines.create);
   const now = Date.now();
-  const [search, setSearch] = useState("");
 
-  if (summary === undefined) {
+  const [tab, setTab] = useState<Tab>("onHand");
+  const [search, setSearch] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<Id<"medicines"> | null>(null);
+
+  if (summary === undefined || medicines === undefined) {
     return (
       <Page>
         <PageHeader title="Today" />
@@ -48,31 +62,43 @@ export default function DashboardPage() {
     );
   }
 
-  const { alerts, lowStock, totals, hasDraftCount } = summary;
-  const nothingStocked = totals.medicines === 0;
+  const nothingStocked = medicines.length === 0;
+  const medicineById = new Map(medicines.map((m) => [m._id, m]));
+  // Alerts already carry the settings-configured tier, computed server-side —
+  // reused here so a badge on the Actual tab never disagrees with On hand.
+  const tierByMedicine = new Map(summary.alerts.map((a) => [a.medicineId, a.tier]));
 
   const q = search.trim().toLowerCase();
-  // Matches on name or lot number: at the shelf, a lot number is often the
-  // thing in hand, not the brand name.
-  const filteredAlerts = q
-    ? alerts.filter(
-        (a) =>
-          a.medicineName.toLowerCase().includes(q) ||
-          a.lotNumber.toLowerCase().includes(q),
-      )
-    : alerts;
-  const filteredLowStock = q
-    ? lowStock.filter((m) => m.name.toLowerCase().includes(q))
-    : lowStock;
-
-  const grouped = TIER_ORDER.map((tier) => ({
-    tier,
-    lots: filteredAlerts.filter((a) => a.tier === tier),
-  })).filter((g) => g.lots.length > 0);
-
   const searching = q.length > 0;
-  const noMatches =
-    searching && grouped.length === 0 && filteredLowStock.length === 0;
+
+  function toggleEdit(id: Id<"medicines">) {
+    setEditingId((current) => (current === id ? null : id));
+  }
+
+  const addPanel = (
+    <div className="flex flex-col gap-3">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setAdding((v) => !v)}
+        className="h-11"
+      >
+        {adding ? "Cancel" : "+ Add medicine"}
+      </Button>
+      {adding && (
+        <div className="rounded-lg border bg-card p-4">
+          <MedicineForm
+            submitLabel="Add medicine"
+            onCancel={() => setAdding(false)}
+            onSubmit={async (values) => {
+              await create(values);
+              setAdding(false);
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <Page>
@@ -81,9 +107,25 @@ export default function DashboardPage() {
         subtitle={
           nothingStocked
             ? undefined
-            : `${formatQuantity(totals.lots)} ${totals.lots === 1 ? "lot" : "lots"} · ${formatQuantity(totals.units)} units`
+            : `${formatQuantity(summary.totals.medicines)} ${summary.totals.medicines === 1 ? "medicine" : "medicines"} · ${formatQuantity(tab === "onHand" ? summary.totals.onHandUnits : summary.totals.actualUnits)} units`
         }
       />
+
+      {!nothingStocked && (
+        <ToggleGroup
+          type="single"
+          value={tab}
+          onValueChange={(v) => v && setTab(v as Tab)}
+          className="w-full rounded-md border p-1"
+        >
+          <ToggleGroupItem value="onHand" className="h-11 flex-1 rounded-sm">
+            On hand
+          </ToggleGroupItem>
+          <ToggleGroupItem value="actual" className="h-11 flex-1 rounded-sm">
+            Actual
+          </ToggleGroupItem>
+        </ToggleGroup>
+      )}
 
       {!nothingStocked && (
         <div className="relative">
@@ -91,7 +133,7 @@ export default function DashboardPage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by medicine or lot number"
+            placeholder="Search medicines"
             aria-label="Search medicines"
             className="h-11 pr-11 [&::-webkit-search-cancel-button]:appearance-none"
           />
@@ -108,77 +150,118 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {nothingStocked && (
+      {addPanel}
+
+      {nothingStocked && !adding && (
         <EmptyState
           title="Nothing on the shelf yet"
-          body="Add the medicines you stock, then log a delivery. Expiry alerts start from the lots that arrive."
-          action={
-            <Button asChild className="mt-1">
-              <Link href="/medicines/new">Add a medicine</Link>
-            </Button>
-          }
+          body="Add the medicines you stock, with their expiry date and quantity. Expiry alerts start from there."
         />
       )}
 
-      {hasDraftCount && !searching && (
-        <Link
-          href="/count"
-          className="focus-card rounded-lg border border-primary/40 bg-secondary p-4 transition-colors hover:border-primary"
-        >
-          <p className="font-medium text-secondary-foreground">
-            A count is in progress
-          </p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Pick it back up, or discard it to start fresh.
-          </p>
-        </Link>
+      {tab === "onHand" ? (
+        <OnHandTab
+          summary={summary}
+          medicineById={medicineById}
+          now={now}
+          search={q}
+          searching={searching}
+          editingId={editingId}
+          onToggleEdit={toggleEdit}
+        />
+      ) : (
+        <ActualTab
+          medicines={medicines}
+          tierByMedicine={tierByMedicine}
+          now={now}
+          search={q}
+          searching={searching}
+          editingId={editingId}
+          onToggleEdit={toggleEdit}
+        />
       )}
+    </Page>
+  );
+}
 
-      {!nothingStocked && !searching && alerts.length === 0 && (
+function OnHandTab({
+  summary,
+  medicineById,
+  now,
+  search,
+  searching,
+  editingId,
+  onToggleEdit,
+}: {
+  summary: DashboardSummary;
+  medicineById: Map<Id<"medicines">, MedicineList[number]>;
+  now: number;
+  search: string;
+  searching: boolean;
+  editingId: Id<"medicines"> | null;
+  onToggleEdit: (id: Id<"medicines">) => void;
+}) {
+  const filteredAlerts = search
+    ? summary.alerts.filter((a) => a.medicineName.toLowerCase().includes(search))
+    : summary.alerts;
+  const filteredLowStock = search
+    ? summary.lowStock.filter((m) => m.name.toLowerCase().includes(search))
+    : summary.lowStock;
+
+  const grouped = TIER_ORDER.map((tier) => ({
+    tier,
+    items: filteredAlerts.filter((a) => a.tier === tier),
+  })).filter((g) => g.items.length > 0);
+
+  const noMatches = searching && grouped.length === 0 && filteredLowStock.length === 0;
+
+  return (
+    <>
+      {!searching && summary.alerts.length === 0 && summary.totals.medicines > 0 && (
         <EmptyState
           title="Nothing expiring soon"
-          body="No lot on the shelf expires within six months. This is the screen you want to be boring."
+          body="Nothing on the shelf expires within six months. This is the screen you want to be boring."
         />
       )}
 
       {noMatches && (
         <EmptyState
           title="Nothing matches that"
-          body={`No medicine name or lot number matches "${search.trim()}". Check the spelling and try again.`}
+          body={`No medicine matches "${search}". Check the spelling and try again.`}
         />
       )}
 
-      {grouped.map(({ tier, lots }) => (
+      {grouped.map(({ tier, items }) => (
         <section key={tier} className="flex flex-col gap-3">
           <div>
             <h2 className="font-display text-lg font-medium">
               {tierLabel(tier)}
               <span
                 className="ml-2 font-data text-sm font-normal text-muted-foreground"
-                aria-label={`${lots.length} ${lots.length === 1 ? "lot" : "lots"}`}
-                title={`${lots.length} ${lots.length === 1 ? "lot" : "lots"} in this tier`}
+                aria-label={`${items.length} ${items.length === 1 ? "medicine" : "medicines"}`}
+                title={`${items.length} ${items.length === 1 ? "medicine" : "medicines"} in this tier`}
               >
-                {lots.length}
+                {items.length}
               </span>
             </h2>
             <p className="text-sm text-muted-foreground">{TIER_BLURB[tier]}</p>
           </div>
 
-          {lots.map((lot) => (
-            <Link key={lot.batchId} href={`/medicines/${lot.medicineId}`} className="focus-card block">
-              <BatchCard
-                medicineName={lot.medicineName}
-                strength={lot.strength}
-                form={lot.form}
-                lotNumber={lot.lotNumber}
-                expiryLabel={formatDate(lot.expiryDate)}
-                expiryDistance={formatExpiryDistance(lot.expiryDate, now)}
-                quantity={lot.quantity}
-                tier={lot.tier}
-                className="transition-colors hover:border-input"
+          {items.map((item) => {
+            const medicine = medicineById.get(item.medicineId);
+            if (!medicine) return null;
+            return (
+              <MedicineCard
+                key={item.medicineId}
+                medicine={medicine}
+                activeKind="onHand"
+                tier={item.tier}
+                expiryDistance={formatExpiryDistance(item.expiryDate, now)}
+                isEditing={editingId === item.medicineId}
+                onToggleEdit={() => onToggleEdit(item.medicineId)}
               />
-            </Link>
-          ))}
+            );
+          })}
         </section>
       ))}
 
@@ -200,45 +283,87 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <ul className="flex flex-col gap-3">
-            {filteredLowStock.map((m) => (
-              <li key={m.medicineId}>
-                <Link
-                  href={`/medicines/${m.medicineId}`}
-                  className="focus-card flex items-center justify-between gap-4 rounded-lg border bg-card p-4 transition-colors hover:border-input"
-                >
-                  <div className="min-w-0">
-                    <p className="font-display text-base font-medium leading-snug">
-                      {m.name}
-                    </p>
-                    <p className="mt-0.5 text-sm text-muted-foreground">
-                      {[m.strength, m.form].filter(Boolean).join(" · ")}
-                    </p>
-                  </div>
-                  <p
-                    className="font-data shrink-0 whitespace-nowrap text-sm"
-                    title={`${formatQuantity(m.totalQuantity)} on hand, reorder point ${formatQuantity(m.reorderPoint)}`}
-                  >
-                    <span
-                      className="font-medium"
-                      aria-label={`${formatQuantity(m.totalQuantity)} on hand`}
-                    >
-                      {formatQuantity(m.totalQuantity)}
-                    </span>
-                    <span
-                      className="text-muted-foreground"
-                      aria-label={`, reorder point ${formatQuantity(m.reorderPoint)}`}
-                    >
-                      {" "}
-                      / {formatQuantity(m.reorderPoint)}
-                    </span>
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {filteredLowStock.map((m) => {
+            const medicine = medicineById.get(m.medicineId);
+            if (!medicine) return null;
+            return (
+              <MedicineCard
+                key={m.medicineId}
+                medicine={medicine}
+                activeKind="onHand"
+                tier={undefined}
+                expiryDistance={
+                  medicine.expiryDate ? formatExpiryDistance(medicine.expiryDate, now) : undefined
+                }
+                isEditing={editingId === m.medicineId}
+                onToggleEdit={() => onToggleEdit(m.medicineId)}
+              />
+            );
+          })}
         </section>
       )}
-    </Page>
+    </>
+  );
+}
+
+function ActualTab({
+  medicines,
+  tierByMedicine,
+  now,
+  search,
+  searching,
+  editingId,
+  onToggleEdit,
+}: {
+  medicines: MedicineList;
+  tierByMedicine: Map<Id<"medicines">, Exclude<ExpiryTier, "ok">>;
+  now: number;
+  search: string;
+  searching: boolean;
+  editingId: Id<"medicines"> | null;
+  onToggleEdit: (id: Id<"medicines">) => void;
+}) {
+  const filtered = search
+    ? medicines.filter((m) => m.name.toLowerCase().includes(search))
+    : medicines;
+  const sorted = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+
+  if (searching && sorted.length === 0) {
+    return (
+      <EmptyState
+        title="Nothing matches that"
+        body={`No medicine matches "${search}". Check the spelling and try again.`}
+      />
+    );
+  }
+
+  if (sorted.length === 0) return null;
+
+  return (
+    <section className="flex flex-col gap-3">
+      <div>
+        <h2 className="font-display text-lg font-medium">
+          All medicines
+          <span className="ml-2 font-data text-sm font-normal text-muted-foreground">
+            {sorted.length}
+          </span>
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Walk the shelf and update counts as you go.
+        </p>
+      </div>
+
+      {sorted.map((m) => (
+        <MedicineCard
+          key={m._id}
+          medicine={m}
+          activeKind="actual"
+          tier={tierByMedicine.get(m._id)}
+          expiryDistance={m.expiryDate ? formatExpiryDistance(m.expiryDate, now) : undefined}
+          isEditing={editingId === m._id}
+          onToggleEdit={() => onToggleEdit(m._id)}
+        />
+      ))}
+    </section>
   );
 }

@@ -1,19 +1,18 @@
 import type { ExpiryTier } from "./inventory";
 
-export type DigestLot = {
+export type DigestAlert = {
   medicineName: string;
   strength?: string;
-  lotNumber: string;
   expiryLabel: string;
   expiryDistance: string;
-  quantity: number;
+  onHandQuantity: number;
   tier: Exclude<ExpiryTier, "ok">;
 };
 
 export type DigestLowStock = {
   name: string;
   strength?: string;
-  totalQuantity: number;
+  onHandQuantity: number;
   reorderPoint: number;
 };
 
@@ -50,43 +49,43 @@ const escape = (s: string) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
-export function digestSubject(lots: DigestLot[]): string {
-  if (lots.length === 0) return "MedMinder: nothing expiring soon";
+export function digestSubject(alerts: DigestAlert[]): string {
+  if (alerts.length === 0) return "MedMinder: nothing expiring soon";
 
-  const expired = lots.filter((l) => l.tier === "expired").length;
-  const soon = lots.length - expired;
+  const expired = alerts.filter((a) => a.tier === "expired").length;
+  const soon = alerts.length - expired;
 
   // The subject line is often all she reads, so it carries the actual counts.
   if (expired > 0 && soon > 0) {
     return `MedMinder: ${expired} expired, ${soon} expiring soon`;
   }
   if (expired > 0) {
-    return `MedMinder: ${expired} expired ${expired === 1 ? "lot" : "lots"}`;
+    return `MedMinder: ${expired} expired ${expired === 1 ? "medicine" : "medicines"}`;
   }
-  return `MedMinder: ${soon} ${soon === 1 ? "lot" : "lots"} expiring soon`;
+  return `MedMinder: ${soon} ${soon === 1 ? "medicine" : "medicines"} expiring soon`;
 }
 
 /** Plain text alongside the HTML: some clients show it, and it always renders. */
 export function digestText(
-  lots: DigestLot[],
+  alerts: DigestAlert[],
   lowStock: DigestLowStock[],
   appUrl: string,
 ): string {
   const lines: string[] = ["MedMinder weekly summary", ""];
 
-  if (lots.length === 0) {
-    lines.push("No lot on the shelf expires within six months.", "");
+  if (alerts.length === 0) {
+    lines.push("Nothing on the shelf expires within six months.", "");
   }
 
   for (const tier of TIER_ORDER) {
-    const group = lots.filter((l) => l.tier === tier);
+    const group = alerts.filter((a) => a.tier === tier);
     if (group.length === 0) continue;
 
     lines.push(`${TIER_HEADING[tier]} (${group.length})`);
-    for (const lot of group) {
-      const name = [lot.medicineName, lot.strength].filter(Boolean).join(" ");
+    for (const alert of group) {
+      const name = [alert.medicineName, alert.strength].filter(Boolean).join(" ");
       lines.push(
-        `  - ${name}, lot ${lot.lotNumber}: ${lot.expiryDistance} (${lot.expiryLabel}), ${lot.quantity} on hand`,
+        `  - ${name}: ${alert.expiryDistance} (${alert.expiryLabel}), ${alert.onHandQuantity} on hand`,
       );
     }
     lines.push("");
@@ -96,7 +95,7 @@ export function digestText(
     lines.push(`Running low (${lowStock.length})`);
     for (const m of lowStock) {
       const name = [m.name, m.strength].filter(Boolean).join(" ");
-      lines.push(`  - ${name}: ${m.totalQuantity} left, reorder at ${m.reorderPoint}`);
+      lines.push(`  - ${name}: ${m.onHandQuantity} left, reorder at ${m.reorderPoint}`);
     }
     lines.push("");
   }
@@ -106,38 +105,38 @@ export function digestText(
 }
 
 export function digestHtml(
-  lots: DigestLot[],
+  alerts: DigestAlert[],
   lowStock: DigestLowStock[],
   appUrl: string,
 ): string {
   const sections: string[] = [];
 
-  if (lots.length === 0) {
+  if (alerts.length === 0) {
     sections.push(
-      `<p style="margin:0 0 24px;color:#6F6579;">No lot on the shelf expires within six months.</p>`,
+      `<p style="margin:0 0 24px;color:#6F6579;">Nothing on the shelf expires within six months.</p>`,
     );
   }
 
   for (const tier of TIER_ORDER) {
-    const group = lots.filter((l) => l.tier === tier);
+    const group = alerts.filter((a) => a.tier === tier);
     if (group.length === 0) continue;
 
     const rows = group
-      .map((lot) => {
+      .map((alert) => {
         const name = escape(
-          [lot.medicineName, lot.strength].filter(Boolean).join(" "),
+          [alert.medicineName, alert.strength].filter(Boolean).join(" "),
         );
         return `
           <tr>
             <td style="padding:10px 0;border-bottom:1px solid #E0D5EA;">
               <div style="font-weight:600;color:#2A2434;">${name}</div>
               <div style="font-family:monospace;font-size:13px;color:#6F6579;margin-top:2px;">
-                Lot ${escape(lot.lotNumber)} &middot; ${escape(lot.expiryLabel)}
+                ${escape(alert.expiryLabel)}
               </div>
             </td>
             <td style="padding:10px 0;border-bottom:1px solid #E0D5EA;text-align:right;vertical-align:top;">
-              <div style="color:${TIER_COLOR[tier]};font-size:14px;">${escape(lot.expiryDistance)}</div>
-              <div style="font-family:monospace;font-size:13px;color:#6F6579;margin-top:2px;">${lot.quantity} on hand</div>
+              <div style="color:${TIER_COLOR[tier]};font-size:14px;">${escape(alert.expiryDistance)}</div>
+              <div style="font-family:monospace;font-size:13px;color:#6F6579;margin-top:2px;">${alert.onHandQuantity} on hand</div>
             </td>
           </tr>`;
       })
@@ -160,7 +159,7 @@ export function digestHtml(
           <tr>
             <td style="padding:10px 0;border-bottom:1px solid #E0D5EA;color:#2A2434;">${name}</td>
             <td style="padding:10px 0;border-bottom:1px solid #E0D5EA;text-align:right;font-family:monospace;font-size:13px;color:#6F6579;">
-              ${m.totalQuantity} / ${m.reorderPoint}
+              ${m.onHandQuantity} / ${m.reorderPoint}
             </td>
           </tr>`;
       })

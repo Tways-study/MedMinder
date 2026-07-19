@@ -9,11 +9,8 @@
  */
 
 import type * as auth from "../auth.js";
-import type * as batches from "../batches.js";
-import type * as counts from "../counts.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
-import type * as deliveries from "../deliveries.js";
 import type * as devReset from "../devReset.js";
 import type * as digest from "../digest.js";
 import type * as http from "../http.js";
@@ -23,7 +20,6 @@ import type * as lib_digestEmail from "../lib/digestEmail.js";
 import type * as lib_guards from "../lib/guards.js";
 import type * as lib_inventory from "../lib/inventory.js";
 import type * as medicines from "../medicines.js";
-import type * as migrations from "../migrations.js";
 import type * as seed from "../seed.js";
 import type * as sendDigest from "../sendDigest.js";
 import type * as settings from "../settings.js";
@@ -37,11 +33,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  batches: typeof batches;
-  counts: typeof counts;
   crons: typeof crons;
   dashboard: typeof dashboard;
-  deliveries: typeof deliveries;
   devReset: typeof devReset;
   digest: typeof digest;
   http: typeof http;
@@ -51,7 +44,6 @@ declare const fullApi: ApiFromModules<{
   "lib/guards": typeof lib_guards;
   "lib/inventory": typeof lib_inventory;
   medicines: typeof medicines;
-  migrations: typeof migrations;
   seed: typeof seed;
   sendDigest: typeof sendDigest;
   settings: typeof settings;
