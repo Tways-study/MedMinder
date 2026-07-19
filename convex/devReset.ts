@@ -114,9 +114,34 @@ export const deleteAccountByEmail = internalMutation({
       cleared.push("settings: 1");
     }
 
+    const medicines = await ctx.db
+      .query("medicines")
+      .withIndex("by_owner_name", (q) => q.eq("ownerId", user._id))
+      .collect();
+    for (const medicine of medicines) await ctx.db.delete(medicine._id);
+    if (medicines.length > 0) cleared.push(`medicines: ${medicines.length}`);
+
     await ctx.db.delete(user._id);
     cleared.push("users: 1");
 
     return `Cleared ${cleared.join(", ")} for ${email}.`;
+  },
+});
+
+/**
+ * Deletes one medicine by ID directly, bypassing ownership checks — for
+ * orphaned rows left behind by an account that's already gone (e.g. from
+ * before medicines cleanup was added to deleteAccountByEmail above).
+ *
+ *   npx convex run devReset:deleteMedicineById '{"medicineId": "..."}'
+ */
+export const deleteMedicineById = internalMutation({
+  args: { medicineId: v.id("medicines") },
+  returns: v.string(),
+  handler: async (ctx, { medicineId }) => {
+    const medicine = await ctx.db.get(medicineId);
+    if (medicine === null) return "No medicine found with that ID.";
+    await ctx.db.delete(medicineId);
+    return `Deleted "${medicine.name}".`;
   },
 });
