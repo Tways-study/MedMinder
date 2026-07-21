@@ -1,0 +1,7 @@
+# Normalize line endings to LF in the repo; Git converts on checkout only for
+# files explicitly set to CRLF below. This prevents LF/CRLF warnings on Windows.
+* text=auto eol=lf
+
+# Windows batch files need CRLF or they break.
+*.bat text eol=crlf
+*.cmd text eol=crlf

@@ -22,6 +22,9 @@ import { useMutation, useQuery } from "convex/react";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { useState } from "react";
 
+import { DashboardMetrics } from "@/components/dashboard-metrics";
+import { Plus, Search, X } from "lucide-react";
+
 type DashboardSummary = FunctionReturnType<typeof api.dashboard.summary>;
 type MedicineList = FunctionReturnType<typeof api.medicines.list>;
 
@@ -67,6 +70,7 @@ export default function DashboardPage() {
   // Alerts already carry the settings-configured tier, computed server-side —
   // reused here so a badge on the Actual tab never disagrees with On hand.
   const tierByMedicine = new Map(summary.alerts.map((a) => [a.medicineId, a.tier]));
+  const discrepancyCount = medicines.filter((m) => m.onHandQuantity !== m.actualQuantity).length;
 
   const q = search.trim().toLowerCase();
   const searching = q.length > 0;
@@ -77,16 +81,20 @@ export default function DashboardPage() {
 
   const addPanel = (
     <div className="flex flex-col gap-3">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => setAdding((v) => !v)}
-        className="h-11"
-      >
-        {adding ? "Cancel" : "+ Add medicine"}
-      </Button>
       {adding && (
-        <div className="rounded-lg border bg-card p-4">
+        <div className="rounded-xl border border-orchid/30 bg-card p-5 shadow-md transition-all">
+          <div className="mb-4 flex items-center justify-between border-b pb-3">
+            <h3 className="font-display text-lg font-semibold text-foreground">Add New Medicine</h3>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setAdding(false)}
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
           <MedicineForm
             submitLabel="Add medicine"
             onCancel={() => setAdding(false)}
@@ -104,53 +112,85 @@ export default function DashboardPage() {
     <Page>
       <PageHeader
         title="Today"
-        subtitle={
-          nothingStocked
-            ? undefined
-            : `${formatQuantity(summary.totals.medicines)} ${summary.totals.medicines === 1 ? "medicine" : "medicines"} · ${formatQuantity(tab === "onHand" ? summary.totals.onHandUnits : summary.totals.actualUnits)} units`
+        subtitle="Inventory health dashboard & reconciliation"
+        action={
+          <Button
+            type="button"
+            onClick={() => setAdding((v) => !v)}
+            className="flex items-center gap-2 rounded-lg bg-orchid px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-orchid/90 hover:shadow active:scale-98"
+          >
+            {adding ? (
+              <>
+                <X className="h-4 w-4" /> Cancel
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" /> Add medicine
+              </>
+            )}
+          </Button>
         }
       />
 
       {!nothingStocked && (
-        <ToggleGroup
-          type="single"
-          value={tab}
-          onValueChange={(v) => v && setTab(v as Tab)}
-          className="w-full rounded-md border p-1"
-        >
-          <ToggleGroupItem value="onHand" className="h-11 flex-1 rounded-sm">
-            On hand
-          </ToggleGroupItem>
-          <ToggleGroupItem value="actual" className="h-11 flex-1 rounded-sm">
-            Actual
-          </ToggleGroupItem>
-        </ToggleGroup>
-      )}
-
-      {!nothingStocked && (
-        <div className="relative">
-          <Input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search medicines"
-            aria-label="Search medicines"
-            className="h-11 pr-11 [&::-webkit-search-cancel-button]:appearance-none"
-          />
-          {searching && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              aria-label="Clear search"
-              className="absolute inset-y-0 right-0 flex h-11 w-11 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Cross2Icon className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        <DashboardMetrics
+          totalMedicines={summary.totals.medicines}
+          onHandUnits={summary.totals.onHandUnits}
+          actualUnits={summary.totals.actualUnits}
+          alertCount={summary.alerts.length}
+          lowStockCount={summary.lowStock.length}
+          discrepancyCount={discrepancyCount}
+          activeTab={tab}
+        />
       )}
 
       {addPanel}
+
+      {!nothingStocked && (
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <ToggleGroup
+            type="single"
+            value={tab}
+            onValueChange={(v) => v && setTab(v as Tab)}
+            className="inline-flex h-10 w-full sm:w-auto rounded-lg border border-border/80 bg-muted/40 p-1 shadow-2xs"
+          >
+            <ToggleGroupItem
+              value="onHand"
+              className="flex-1 sm:flex-initial px-5 h-8 rounded-md text-xs font-semibold tracking-tight data-[state=on]:bg-card data-[state=on]:text-orchid data-[state=on]:shadow-xs transition-all"
+            >
+              On hand
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="actual"
+              className="flex-1 sm:flex-initial px-5 h-8 rounded-md text-xs font-semibold tracking-tight data-[state=on]:bg-card data-[state=on]:text-orchid data-[state=on]:shadow-xs transition-all"
+            >
+              Actual
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          <div className="relative flex-1 sm:max-w-xs">
+            <Search className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search medicines..."
+              aria-label="Search medicines"
+              className="h-10 pl-9 pr-9 text-sm rounded-lg border-border/80 bg-card shadow-2xs focus-visible:ring-orchid [&::-webkit-search-cancel-button]:appearance-none"
+            />
+            {searching && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute inset-y-0 right-0 flex h-10 w-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {nothingStocked && !adding && (
         <EmptyState

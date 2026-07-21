@@ -9,7 +9,7 @@ export function Page({
   className?: string;
 }) {
   return (
-    <main className={cn("mx-auto flex w-full max-w-3xl flex-col gap-6 px-5", className)}>
+    <main className={cn("mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 sm:px-6", className)}>
       {children}
     </main>
   );
@@ -25,11 +25,11 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <header className="flex items-start justify-between gap-4">
+    <header className="flex items-center justify-between gap-4">
       <div className="min-w-0">
-        <h1 className="font-display text-2xl font-medium leading-tight">{title}</h1>
+        <h1 className="font-display text-3xl font-semibold leading-tight tracking-tight text-foreground">{title}</h1>
         {subtitle && (
-          <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+          <p className="mt-1 text-sm font-medium text-muted-foreground">{subtitle}</p>
         )}
       </div>
       {action && <div className="shrink-0">{action}</div>}

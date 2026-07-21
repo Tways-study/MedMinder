@@ -103,12 +103,19 @@ export function MedicineCard({
         }`;
 
   return (
-    <article className={cn("rounded-lg border bg-card p-4", className)}>
+    <article
+      className={cn(
+        "group relative rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-all duration-200 hover:border-orchid/40 hover:shadow-md",
+        className,
+      )}
+    >
       <div className="flex items-start justify-between gap-4">
-        <Link href={`/medicines/${medicine._id}`} className="focus-card min-w-0 flex-1 rounded-sm">
-          <h3 className="font-display text-lg font-medium leading-snug">{medicine.name}</h3>
+        <Link href={`/medicines/${medicine._id}`} className="focus-card min-w-0 flex-1 rounded-md">
+          <h3 className="font-display text-lg font-semibold leading-snug tracking-tight text-foreground transition-colors group-hover:text-orchid">
+            {medicine.name}
+          </h3>
           {(medicine.strength || medicine.form) && (
-            <p className="mt-0.5 text-sm text-muted-foreground">
+            <p className="mt-0.5 text-xs font-medium text-muted-foreground">
               {[medicine.strength, medicine.form].filter(Boolean).join(" · ")}
             </p>
           )}
@@ -118,7 +125,7 @@ export function MedicineCard({
           type="button"
           onClick={onToggleEdit}
           aria-label={`Edit ${medicine.name}`}
-          className="focus-card flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="focus-card flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/30 text-muted-foreground transition-all hover:border-orchid/40 hover:bg-orchid/10 hover:text-orchid"
         >
           <Pencil1Icon className="h-4 w-4" />
         </button>
@@ -127,27 +134,35 @@ export function MedicineCard({
       {tier && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <TierBadge tier={tier} />
-          {expiryDistance && <span className="text-sm text-muted-foreground">{expiryDistance}</span>}
+          {expiryDistance && (
+            <span className="text-xs font-medium text-muted-foreground">
+              expires {expiryDistance}
+            </span>
+          )}
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-between border-t pt-3">
+      <div className="mt-3.5 flex items-center justify-between border-t border-border/60 pt-3">
         <QuantityStepper
           medicineId={medicine._id}
           kind={activeKind}
           value={activeQuantity}
         />
-        <div className="text-right">
-          <p className="label-field">{activeLabel}</p>
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground">
+            {activeLabel}
+          </span>
           {driftText && (
-            <p
+            <span
               className={cn(
-                "mt-0.5 text-xs",
-                diff < 0 ? "text-tier-critical" : "text-tier-watch",
+                "inline-flex items-center rounded-md px-2 py-0.5 text-[0.7rem] font-medium tracking-tight shadow-2xs",
+                diff < 0
+                  ? "bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/50"
+                  : "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/50",
               )}
             >
               {driftText}
-            </p>
+            </span>
           )}
         </div>
       </div>
@@ -231,20 +246,20 @@ function QuantityStepper({
             setTyping(false);
           }
         }}
-        className="font-data h-11 w-20 rounded-sm border border-input bg-background px-2 text-lg touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="font-data h-9 w-20 rounded-lg border border-primary bg-background px-2.5 text-center text-base font-semibold shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
     );
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center rounded-xl border border-border/80 bg-muted/40 p-1 shadow-2xs">
       <button
         type="button"
         onClick={() => nudge(-1)}
         aria-label="Decrease"
-        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        className="flex h-8 w-8 touch-manipulation items-center justify-center rounded-lg border border-border/50 bg-card text-muted-foreground shadow-2xs transition-all hover:bg-secondary hover:text-foreground active:scale-95"
       >
-        <MinusIcon className="h-4 w-4" />
+        <MinusIcon className="h-3.5 w-3.5" />
       </button>
       <button
         type="button"
@@ -252,7 +267,7 @@ function QuantityStepper({
           setDraft(String(value));
           setTyping(true);
         }}
-        className="font-data h-11 min-w-[3.5rem] touch-manipulation rounded-sm text-center text-lg font-medium transition-colors hover:bg-secondary"
+        className="font-data h-8 min-w-[3rem] touch-manipulation px-2 text-center text-base font-bold tracking-tight text-foreground transition-colors hover:text-orchid"
       >
         {formatQuantity(value)}
       </button>
@@ -260,9 +275,9 @@ function QuantityStepper({
         type="button"
         onClick={() => nudge(1)}
         aria-label="Increase"
-        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        className="flex h-8 w-8 touch-manipulation items-center justify-center rounded-lg border border-border/50 bg-card text-muted-foreground shadow-2xs transition-all hover:bg-secondary hover:text-foreground active:scale-95"
       >
-        <PlusIcon className="h-4 w-4" />
+        <PlusIcon className="h-3.5 w-3.5" />
       </button>
     </div>
   );

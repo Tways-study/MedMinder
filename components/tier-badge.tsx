@@ -20,27 +20,27 @@ const TIERS: Record<
   expired: {
     label: "Expired",
     icon: CrossCircledIcon,
-    className: "bg-tier-expired-bg text-tier-expired",
+    className: "bg-tier-expired-bg text-tier-expired border border-tier-expired/30 font-medium",
   },
   critical: {
     label: "Critical",
     icon: ExclamationTriangleIcon,
-    className: "bg-tier-critical-bg text-tier-critical",
+    className: "bg-tier-critical-bg text-tier-critical border border-tier-critical/30 font-medium",
   },
   warning: {
     label: "Soon",
     icon: ClockIcon,
-    className: "bg-tier-warning-bg text-tier-warning",
+    className: "bg-tier-warning-bg text-tier-warning border border-tier-warning/30 font-medium",
   },
   watch: {
     label: "Watch",
     icon: EyeOpenIcon,
-    className: "bg-tier-watch-bg text-tier-watch",
+    className: "bg-tier-watch-bg text-tier-watch border border-tier-watch/30 font-medium",
   },
   ok: {
     label: "In date",
     icon: CheckCircledIcon,
-    className: "bg-tier-ok-bg text-tier-ok",
+    className: "bg-tier-ok-bg text-tier-ok border border-tier-ok/30 font-medium",
   },
 };
 
@@ -59,7 +59,7 @@ export function TierBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-sm px-2 py-1 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs tracking-tight shadow-2xs",
         tierClass,
         className,
       )}
