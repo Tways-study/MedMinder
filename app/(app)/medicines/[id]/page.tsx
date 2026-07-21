@@ -115,7 +115,7 @@ export default function MedicineDetailPage() {
   }
 
   const low = medicine.onHandQuantity <= medicine.reorderPoint;
-  const variance = medicine.onHandQuantity - medicine.actualQuantity;
+  const variance = medicine.actualQuantity - medicine.onHandQuantity;
 
   return (
     <Page>
