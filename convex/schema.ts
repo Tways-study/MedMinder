@@ -27,6 +27,7 @@ export default defineSchema({
   medicines: defineTable({
     ownerId: v.id("users"),
     name: v.string(),
+    sku: v.optional(v.string()),
     genericName: v.optional(v.string()),
     form: medicineForm,
     strength: v.optional(v.string()),

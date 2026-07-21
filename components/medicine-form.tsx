@@ -20,6 +20,7 @@ const FORMS = [
 
 export type MedicineFormValues = {
   name: string;
+  sku?: string;
   genericName?: string;
   form: (typeof FORMS)[number];
   strength?: string;
@@ -105,6 +106,7 @@ export function MedicineForm({
     try {
       await onSubmit({
         name: String(data.get("name")),
+        sku: String(data.get("sku") || "") || undefined,
         genericName: String(data.get("genericName") || "") || undefined,
         form: String(data.get("form")) as MedicineFormValues["form"],
         strength: String(data.get("strength") || "") || undefined,
@@ -133,6 +135,15 @@ export function MedicineForm({
           required
           defaultValue={initial?.name}
           className="h-11"
+          autoComplete="off"
+        />
+      </Field>
+
+      <Field label="SKU" hint="Optional. Internal or supplier code for this medicine.">
+        <Input
+          name="sku"
+          defaultValue={initial?.sku}
+          className="font-data h-11"
           autoComplete="off"
         />
       </Field>

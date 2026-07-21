@@ -36,6 +36,29 @@ function StatTile({
   );
 }
 
+function VarianceTile({ variance }: { variance: number }) {
+  const sign = variance > 0 ? "positive" : variance < 0 ? "negative" : "equal";
+
+  const valueStr =
+    variance > 0 ? `+${formatQuantity(variance)}` : formatQuantity(variance);
+
+  const styles = {
+    positive: { value: "text-[color:var(--tier-ok-fg)]", label: "Surplus" },
+    negative: { value: "text-[color:var(--tier-critical-fg)]", label: "Deficit" },
+    equal: { value: "text-muted-foreground", label: "Balanced" },
+  }[sign];
+
+  return (
+    <div className="min-w-[7.5rem] flex-1 rounded-lg border bg-card p-4">
+      <p className="label-field">Variance</p>
+      <p className={`font-data mt-1 text-2xl font-medium leading-none ${styles.value}`}>
+        {valueStr}
+      </p>
+      <p className={`mt-1 text-xs font-medium ${styles.value}`}>{styles.label}</p>
+    </div>
+  );
+}
+
 export default function MedicineDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -92,13 +115,19 @@ export default function MedicineDetailPage() {
   }
 
   const low = medicine.onHandQuantity <= medicine.reorderPoint;
+  const variance = medicine.onHandQuantity - medicine.actualQuantity;
 
   return (
     <Page>
       <PageHeader
         title={medicine.name}
         subtitle={
-          [medicine.strength, medicine.form, medicine.genericName]
+          [
+            medicine.strength,
+            medicine.form,
+            medicine.genericName,
+            medicine.sku ? `SKU: ${medicine.sku}` : undefined,
+          ]
             .filter(Boolean)
             .join(" · ") || undefined
         }
@@ -116,7 +145,7 @@ export default function MedicineDetailPage() {
           flag={low ? "At or below reorder point" : undefined}
         />
         <StatTile label="Actual" value={formatQuantity(medicine.actualQuantity)} />
-        <StatTile label="Reorder at" value={formatQuantity(medicine.reorderPoint)} />
+        <VarianceTile variance={variance} />
         <StatTile
           label="Expires"
           value={medicine.expiryDate ? formatDate(medicine.expiryDate) : "—"}

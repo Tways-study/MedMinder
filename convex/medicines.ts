@@ -10,6 +10,7 @@ import { medicineForm } from "./schema";
 
 const medicineFields = {
   name: v.string(),
+  sku: v.optional(v.string()),
   genericName: v.optional(v.string()),
   form: medicineForm,
   strength: v.optional(v.string()),
@@ -83,6 +84,7 @@ export const create = mutation({
       ...args,
       ownerId,
       name,
+      sku: args.sku?.trim() || undefined,
       genericName: args.genericName?.trim() || undefined,
       strength: args.strength?.trim() || undefined,
       category: args.category?.trim() || undefined,
@@ -108,6 +110,7 @@ export const update = mutation({
     await ctx.db.patch(medicineId, {
       ...args,
       name: args.name.trim(),
+      sku: args.sku?.trim() || undefined,
       genericName: args.genericName?.trim() || undefined,
       strength: args.strength?.trim() || undefined,
       category: args.category?.trim() || undefined,

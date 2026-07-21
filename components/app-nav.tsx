@@ -1,12 +1,18 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ArchiveIcon, DashboardIcon, GearIcon } from "@radix-ui/react-icons";
+import {
+  ArchiveIcon,
+  CalendarIcon,
+  DashboardIcon,
+  GearIcon,
+} from "@radix-ui/react-icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ITEMS = [
   { href: "/", label: "Today", icon: DashboardIcon },
+  { href: "/calendar", label: "Calendar", icon: CalendarIcon },
   { href: "/medicines", label: "Medicines", icon: ArchiveIcon },
   { href: "/settings", label: "Settings", icon: GearIcon },
 ];
