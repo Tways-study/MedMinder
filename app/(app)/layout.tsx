@@ -1,5 +1,6 @@
 import { AppNav } from "@/components/app-nav";
 import { LogoMark } from "@/components/logo-mark";
+import { Glow } from "@/components/ui/glow";
 import { UserMenu } from "@/components/UserMenu";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -7,6 +8,9 @@ import type { ReactNode } from "react";
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-[100dvh] sm:pl-56">
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
+        <Glow variant="top" className="opacity-20 blur-3xl" />
+      </div>
       <header className="flex items-center justify-between gap-4 px-5 pb-3 pt-5">
         {/*
           The wordmark used to reuse .label-field, the 11px uppercase caption
