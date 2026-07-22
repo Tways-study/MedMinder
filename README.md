@@ -1,70 +1,84 @@
-# Welcome to your Convex + Next.js + Convex Auth app
+# MedMinder
 
-This is a [Convex](https://convex.dev/) project created with [`npm create convex`](https://www.npmjs.com/package/create-convex).
+A personal medicine inventory tracker for pharmacists and clinics. Track stock levels, expiry dates, and reorder points across your entire shelf — with a weekly email digest so nothing slips through.
 
-After the initial setup (<2 minutes) you'll have a working full-stack app using:
+Built with [Convex](https://convex.dev/), [Next.js](https://nextjs.org/), [Convex Auth](https://labs.convex.dev/auth), [Tailwind CSS](https://tailwindcss.com/), and [shadcn/ui](https://ui.shadcn.com/).
 
-- Convex as your backend (database, server logic)
-- [Convex Auth](https://labs.convex.dev/auth) for your authentication implementation
-- [React](https://react.dev/) as your frontend (web page interactivity)
-- [Next.js](https://nextjs.org/) for optimized web hosting and page routing
-- [Tailwind](https://tailwindcss.com/) and [shadcn/ui](https://ui.shadcn.com/) for building great looking accessible UI fast
+## Features
 
-## Get started
+- **Dashboard** — expiry alerts (expired / critical / warning / watch tiers), low-stock warnings, and running totals for on-hand vs. actual units
+- **Medicine inventory** — add, edit, and delete medicines with name, generic name, SKU, form, strength, category, expiry date, reorder point, and dual-quantity tracking (on-hand and physical count)
+- **Quick stock adjustment** — tap −/+ steppers or the quantity itself to type an exact value directly on the dashboard or medicine card
+- **Expiry calendar** — monthly view of upcoming expiry dates
+- **Weekly digest email** — configurable day, hour, and timezone; lists all expiring and low-stock medicines so you can act before the week starts
+- **Per-account settings** — digest schedule, alert tier cutoffs (days until expiry), and notification email
 
-If you just cloned this codebase and didn't use `npm create convex`, run:
+## Data model
+
+Every table is scoped to the signed-in account (`ownerId`) and read through a Convex index — tenants are fully isolated and queries stay O(your rows), not O(all rows).
 
 ```
+medicines  →  by_owner_name (ownerId, name)
+settings   →  by_owner      (ownerId)
+```
+
+Stock lives directly on the medicine (no per-lot tracking). Two quantities are tracked independently:
+- **On-hand** — the actively maintained book count; used for reorder and alert decisions
+- **Actual** — the last physical count; compared to on-hand to surface drift
+
+## Getting started
+
+```bash
 npm install
 npm run dev
 ```
 
-If you're reading this README on GitHub and want to use this template, run:
+This starts both the Next.js dev server and Convex's local backend via `concurrently`. Open [http://localhost:3000](http://localhost:3000).
+
+## Environment variables
+
+| Variable | Where set | Purpose |
+|---|---|---|
+| `CONVEX_DEPLOYMENT` | Auto-set by `convex dev` | Dev deployment URL |
+| `NEXT_PUBLIC_CONVEX_URL` | Auto-injected by `convex deploy` in production | Convex backend URL for the client |
+| `CONVEX_DEPLOY_KEY` | Vercel env vars | Allows Vercel to deploy Convex functions atomically |
+| `AUTH_*` | Convex dashboard → Environment Variables | Convex Auth secrets |
+| `RESEND_API_KEY` | Convex dashboard → Environment Variables | Email delivery for the weekly digest |
+| `SITE_URL` | Convex dashboard → Environment Variables | Base URL used in digest email links |
+
+## Deploying
+
+Vercel build command (set in Vercel project settings):
 
 ```
-npm create convex@latest -- -t nextjs-convexauth-shadcn
+npx convex deploy --cmd 'npm run build'
 ```
 
-## The app
+This deploys Convex functions to production first, then builds and deploys the Next.js frontend — both in a single atomic step. `NEXT_PUBLIC_CONVEX_URL` is injected automatically by the Convex CLI.
 
-The app is a basic multi-user chat. Walkthrough of the source code:
+## Project structure
 
-- [convex/auth.ts](./convex/auth.ts) configures the available authentication methods
-- [convex/messages.ts](./convex/messages.ts) is the chat backend implementation
-- [middleware.ts](./middleware.ts) determines which pages require sign-in
-- [app/layout.tsx](./app/layout.tsx) is the main app layout
-- [app/(splash)/page.tsx](<./app/(splash)/page.tsx>) is the splash page (doesn't require sign-in)
-- [app/product/layout.tsx](./app/product/layout.tsx) is the "product" layout for the [product page](./app/product/page.tsx) (requires sign-in)
-- [app/signin/page.tsx](./app/signin/page.tsx) is the sign-in page
-- [app/product/Chat/Chat.tsx](./app/product/Chat/Chat.tsx) is the chat frontend
-
-## Configuring other authentication methods
-
-To configure different authentication methods, see [Configuration](https://labs.convex.dev/auth/config) in the Convex Auth docs.
-
-## Learn more
-
-To learn more about developing your project with Convex, check out:
-
-- The [Tour of Convex](https://docs.convex.dev/get-started) for a thorough introduction to Convex principles.
-- The rest of [Convex docs](https://docs.convex.dev/) to learn about all Convex features.
-- [Stack](https://stack.convex.dev/) for in-depth articles on advanced topics.
-
-## Join the community
-
-Join thousands of developers building full-stack apps with Convex:
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-# Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
-
-- Join the [Convex Discord community](https://convex.dev/community) to get help in real-time.
-- Follow [Convex on GitHub](https://github.com/get-convex/), star and contribute to the open-source implementation of Convex.
+```
+app/
+  (app)/
+    page.tsx              # Dashboard
+    medicines/
+      page.tsx            # Paginated medicine list with search
+      new/page.tsx        # Add medicine form
+      [id]/page.tsx       # Medicine detail / edit
+    calendar/page.tsx     # Expiry calendar
+    settings/page.tsx     # Digest and alert settings
+convex/
+  schema.ts               # Database schema and indexes
+  medicines.ts            # CRUD + paginated list query
+  dashboard.ts            # Expiry alerts, low-stock, totals (streaming, no cap)
+  digest.ts               # Weekly digest content query
+  sendDigest.ts           # Node action: renders and sends the digest email
+  crons.ts                # Hourly cron that checks digest schedules
+  settings.ts             # Settings read/write
+  auth.ts / auth.config.ts
+  lib/
+    inventory.ts          # Expiry tier logic shared by dashboard and digest
+    digestEmail.ts        # HTML/text email templates
+    digest.ts             # isDigestDue schedule logic
+```
