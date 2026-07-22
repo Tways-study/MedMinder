@@ -1,8 +1,11 @@
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { requireAuth } from "./lib/guards";
 import { DEFAULT_ALERT_TIERS, expiryTier } from "./lib/inventory";
 import { medicineForm } from "./schema";
+
+type MedicineForm = Infer<typeof medicineForm>;
 
 const alertMedicine = v.object({
   medicineId: v.id("medicines"),
@@ -59,49 +62,79 @@ export const summary = query({
     const tiers = settings?.alertTiers ?? DEFAULT_ALERT_TIERS;
     const now = Date.now();
 
-    const medicines = await ctx.db
+    // One pass over this owner's inventory, accumulating only what the
+    // dashboard actually shows (the alerting and low-stock subsets) plus the
+    // running totals. Streaming the index this way means no arbitrary cap:
+    // every medicine is counted, and memory stays proportional to the number
+    // of *flagged* items rather than the whole shelf.
+    const alerts: Array<{
+      medicineId: Id<"medicines">;
+      medicineName: string;
+      strength?: string;
+      form: MedicineForm;
+      expiryDate: number;
+      onHandQuantity: number;
+      actualQuantity: number;
+      tier: "expired" | "critical" | "warning" | "watch";
+    }> = [];
+    const lowStock: Array<{
+      medicineId: Id<"medicines">;
+      name: string;
+      strength?: string;
+      form: MedicineForm;
+      onHandQuantity: number;
+      reorderPoint: number;
+    }> = [];
+    let count = 0;
+    let onHandUnits = 0;
+    let actualUnits = 0;
+
+    for await (const m of ctx.db
       .query("medicines")
-      .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId))
-      .take(2000);
+      .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId))) {
+      count += 1;
+      onHandUnits += m.onHandQuantity;
+      actualUnits += m.actualQuantity;
 
-    const alerts = medicines
-      .filter((m) => m.expiryDate !== undefined && expiryTier(m.expiryDate, now, tiers) !== "ok")
-      .map((m) => ({
-        medicineId: m._id,
-        medicineName: m.name,
-        strength: m.strength,
-        form: m.form,
-        expiryDate: m.expiryDate as number,
-        onHandQuantity: m.onHandQuantity,
-        actualQuantity: m.actualQuantity,
-        tier: expiryTier(m.expiryDate as number, now, tiers) as
-          | "expired"
-          | "critical"
-          | "warning"
-          | "watch",
-      }))
-      // Most urgent first: the medicine she can still do something about leads.
-      .sort((a, b) => a.expiryDate - b.expiryDate);
+      if (m.expiryDate !== undefined) {
+        const tier = expiryTier(m.expiryDate, now, tiers);
+        if (tier !== "ok") {
+          alerts.push({
+            medicineId: m._id,
+            medicineName: m.name,
+            strength: m.strength,
+            form: m.form,
+            expiryDate: m.expiryDate,
+            onHandQuantity: m.onHandQuantity,
+            actualQuantity: m.actualQuantity,
+            tier,
+          });
+        }
+      }
 
-    const lowStock = medicines
-      .filter((m) => m.onHandQuantity <= m.reorderPoint)
-      .map((m) => ({
-        medicineId: m._id,
-        name: m.name,
-        strength: m.strength,
-        form: m.form,
-        onHandQuantity: m.onHandQuantity,
-        reorderPoint: m.reorderPoint,
-      }))
-      .sort((a, b) => a.onHandQuantity - b.onHandQuantity);
+      if (m.onHandQuantity <= m.reorderPoint) {
+        lowStock.push({
+          medicineId: m._id,
+          name: m.name,
+          strength: m.strength,
+          form: m.form,
+          onHandQuantity: m.onHandQuantity,
+          reorderPoint: m.reorderPoint,
+        });
+      }
+    }
+
+    // Most urgent first: the medicine she can still do something about leads.
+    alerts.sort((a, b) => a.expiryDate - b.expiryDate);
+    lowStock.sort((a, b) => a.onHandQuantity - b.onHandQuantity);
 
     return {
       alerts,
       lowStock,
       totals: {
-        medicines: medicines.length,
-        onHandUnits: medicines.reduce((sum, m) => sum + m.onHandQuantity, 0),
-        actualUnits: medicines.reduce((sum, m) => sum + m.actualQuantity, 0),
+        medicines: count,
+        onHandUnits,
+        actualUnits,
       },
     };
   },

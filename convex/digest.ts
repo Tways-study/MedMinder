@@ -69,35 +69,40 @@ export const contents = internalQuery({
 
     const tiers = settings?.alertTiers ?? DEFAULT_ALERT_TIERS;
 
-    const medicines = await ctx.db
-      .query("medicines")
-      .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId))
-      .take(2000);
+    // Single pass over this owner's inventory — same reasoning as
+    // dashboard.ts. No cap, so a large shelf can't silently drop items from
+    // the email, and only the flagged subsets are held in memory.
+    const alerts: DigestAlert[] = [];
+    const lowStock: DigestLowStock[] = [];
 
-    const alerts: DigestAlert[] = medicines
-      .filter((m) => m.expiryDate !== undefined && expiryTier(m.expiryDate, now, tiers) !== "ok")
-      .map((m) => ({
-        medicineName: m.name,
-        strength: m.strength,
-        expiryLabel: formatExpiryDate(m.expiryDate as number),
-        expiryDistance: formatExpiryDistance(m.expiryDate as number, now),
-        onHandQuantity: m.onHandQuantity,
-        tier: expiryTier(m.expiryDate as number, now, tiers) as Exclude<
-          ReturnType<typeof expiryTier>,
-          "ok"
-        >,
-      }));
+    for await (const m of ctx.db
+      .query("medicines")
+      .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId))) {
+      if (m.expiryDate !== undefined) {
+        const tier = expiryTier(m.expiryDate, now, tiers);
+        if (tier !== "ok") {
+          alerts.push({
+            medicineName: m.name,
+            strength: m.strength,
+            expiryLabel: formatExpiryDate(m.expiryDate),
+            expiryDistance: formatExpiryDistance(m.expiryDate, now),
+            onHandQuantity: m.onHandQuantity,
+            tier,
+          });
+        }
+      }
+
+      if (m.onHandQuantity <= m.reorderPoint) {
+        lowStock.push({
+          name: m.name,
+          strength: m.strength,
+          onHandQuantity: m.onHandQuantity,
+          reorderPoint: m.reorderPoint,
+        });
+      }
+    }
 
     alerts.sort((a, b) => a.expiryDistance.localeCompare(b.expiryDistance));
-
-    const lowStock: DigestLowStock[] = medicines
-      .filter((m) => m.onHandQuantity <= m.reorderPoint)
-      .map((m) => ({
-        name: m.name,
-        strength: m.strength,
-        onHandQuantity: m.onHandQuantity,
-        reorderPoint: m.reorderPoint,
-      }));
 
     return {
       due,

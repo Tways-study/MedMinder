@@ -12,18 +12,34 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import { DEFAULT_ALERT_TIERS, expiryTier } from "@/convex/lib/inventory";
 import { formatQuantity } from "@/lib/format";
-import { useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const PAGE_SIZE = 30;
 
 export default function MedicinesPage() {
-  const medicines = useQuery(api.medicines.list);
+  const {
+    results: medicines,
+    status,
+    loadMore,
+  } = usePaginatedQuery(api.medicines.listPaged, {}, { initialNumItems: PAGE_SIZE });
   const [search, setSearch] = useState("");
   const now = Date.now();
 
+  const q = search.trim().toLowerCase();
+
+  // Client-side search only sees the rows already loaded, so while a search is
+  // active keep pulling pages until the whole shelf is in hand. At normal
+  // inventory sizes this is one page or none; it only does real work for the
+  // rare huge shelf, which is exactly when we want search to stay complete.
+  useEffect(() => {
+    if (q && status === "CanLoadMore") loadMore(PAGE_SIZE);
+  }, [q, status, loadMore]);
+
+  const loadingFirstPage = status === "LoadingFirstPage";
+
   const filtered = useMemo(() => {
-    if (!medicines) return undefined;
-    const q = search.trim().toLowerCase();
     if (!q) return medicines;
     // Brand and generic are both searched: she may know either.
     return medicines.filter(
@@ -32,7 +48,7 @@ export default function MedicinesPage() {
         m.genericName?.toLowerCase().includes(q) ||
         m.category?.toLowerCase().includes(q),
     );
-  }, [medicines, search]);
+  }, [medicines, q]);
 
   return (
     <Page>
@@ -46,7 +62,7 @@ export default function MedicinesPage() {
         }
       />
 
-      {medicines && medicines.length > 0 && (
+      {medicines.length > 0 && (
         <Input
           type="search"
           value={search}
@@ -57,9 +73,9 @@ export default function MedicinesPage() {
         />
       )}
 
-      {filtered === undefined && <CardSkeleton />}
+      {loadingFirstPage && <CardSkeleton />}
 
-      {filtered && filtered.length === 0 && medicines?.length === 0 && (
+      {!loadingFirstPage && medicines.length === 0 && (
         <EmptyState
           title="No medicines yet"
           body="Add the medicines you stock, with their expiry date and quantity."
@@ -71,14 +87,14 @@ export default function MedicinesPage() {
         />
       )}
 
-      {filtered && filtered.length === 0 && (medicines?.length ?? 0) > 0 && (
+      {!loadingFirstPage && filtered.length === 0 && medicines.length > 0 && (
         <EmptyState
           title="Nothing matches that"
           body={`No medicine matches "${search.trim()}". Check the spelling, or try the generic name.`}
         />
       )}
 
-      {filtered && filtered.length > 0 && (
+      {filtered.length > 0 && (
         <ul className="flex flex-col gap-3">
           {filtered.map((m) => {
             const low = m.onHandQuantity <= m.reorderPoint;
@@ -122,6 +138,21 @@ export default function MedicinesPage() {
             );
           })}
         </ul>
+      )}
+
+      {/* Manual paging for plain browsing; while searching we auto-load above. */}
+      {!q && status === "CanLoadMore" && (
+        <Button
+          variant="outline"
+          className="mt-1 self-center"
+          onClick={() => loadMore(PAGE_SIZE)}
+        >
+          Load more
+        </Button>
+      )}
+
+      {status === "LoadingMore" && (
+        <p className="mt-1 text-center text-sm text-muted-foreground">Loading…</p>
       )}
     </Page>
   );

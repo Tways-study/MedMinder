@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import {
@@ -40,6 +41,43 @@ export const list = query({
       .collect();
 
     return medicines.map(({ ownerId: _ownerId, ...rest }) => rest);
+  },
+});
+
+/**
+ * Paginated flavour of `list`, ordered by name via `by_owner_name` — the same
+ * ordering the list page has always shown. The full `list` query is kept for
+ * the dashboard, calendar, and optimistic-update paths that genuinely need the
+ * whole inventory at once; this one exists so the browse page can page through
+ * a large shelf instead of loading it all.
+ */
+export const listPaged = query({
+  args: { paginationOpts: paginationOptsValidator },
+  returns: v.object({
+    page: v.array(medicineDoc),
+    isDone: v.boolean(),
+    continueCursor: v.string(),
+    splitCursor: v.optional(v.union(v.string(), v.null())),
+    pageStatus: v.optional(
+      v.union(
+        v.literal("SplitRecommended"),
+        v.literal("SplitRequired"),
+        v.null(),
+      ),
+    ),
+  }),
+  handler: async (ctx, { paginationOpts }) => {
+    const ownerId = await requireAuth(ctx);
+
+    const result = await ctx.db
+      .query("medicines")
+      .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId))
+      .paginate(paginationOpts);
+
+    return {
+      ...result,
+      page: result.page.map(({ ownerId: _ownerId, ...rest }) => rest),
+    };
   },
 });
 
