@@ -3,12 +3,21 @@
 import { Field } from "@/components/medicine-form";
 import { CardSkeleton, Page, PageHeader } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { EmailChipInput } from "@/components/email-chip-input";
+import { TimezoneCombobox } from "@/components/timezone-combobox";
 import { api } from "@/convex/_generated/api";
-import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const DAYS = [
   "Sunday",
@@ -20,30 +29,39 @@ const DAYS = [
   "Saturday",
 ];
 
-// The zones a community pharmacy is plausibly in, plus whatever the browser says.
-const ZONES = [
-  "Asia/Manila",
-  "Asia/Singapore",
-  "Asia/Hong_Kong",
-  "Asia/Tokyo",
-  "Australia/Sydney",
-  "Europe/London",
-  "America/New_York",
-  "America/Los_Angeles",
-];
-
-const selectClass = cn(
-  "h-11 rounded-sm border border-input bg-background px-3 text-sm",
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-);
-
 export default function SettingsPage() {
   const settings = useQuery(api.settings.get);
   const update = useMutation(api.settings.update);
 
+  const [digestEnabled, setDigestEnabled] = useState(true);
+  const [digestEmails, setDigestEmails] = useState<string[]>([]);
+  const [digestDay, setDigestDay] = useState(1);
+  const [digestHour, setDigestHour] = useState(8);
+  const [timezone, setTimezone] = useState("Asia/Manila");
+  const [alertTiers, setAlertTiers] = useState({
+    critical: 30,
+    warning: 90,
+    watch: 180,
+  });
+
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Sync once when settings first load; ignore subsequent reactive updates
+  // so in-progress edits are not overwritten.
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (settings && !initialized.current) {
+      initialized.current = true;
+      setDigestEnabled(settings.digestEnabled);
+      setDigestEmails(settings.digestEmails);
+      setDigestDay(settings.digestDay);
+      setDigestHour(settings.digestHour);
+      setTimezone(settings.timezone);
+      setAlertTiers(settings.alertTiers);
+    }
+  }, [settings]);
 
   if (settings === undefined) {
     return (
@@ -54,28 +72,19 @@ export default function SettingsPage() {
     );
   }
 
-  const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const zones = [...new Set([...ZONES, browserZone, settings?.timezone].filter(Boolean))];
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setSaved(false);
-
-    const data = new FormData(event.currentTarget);
     setSaving(true);
     try {
       await update({
-        digestEnabled: data.get("digestEnabled") === "on",
-        digestEmail: String(data.get("digestEmail")),
-        digestDay: Number(data.get("digestDay")),
-        digestHour: Number(data.get("digestHour")),
-        timezone: String(data.get("timezone")),
-        alertTiers: {
-          critical: Number(data.get("critical")),
-          warning: Number(data.get("warning")),
-          watch: Number(data.get("watch")),
-        },
+        digestEnabled,
+        digestEmails,
+        digestDay,
+        digestHour,
+        timezone,
+        alertTiers,
       });
       setSaved(true);
     } catch (err) {
@@ -101,74 +110,63 @@ export default function SettingsPage() {
           <div>
             <h2 className="font-display text-lg font-medium">Weekly email</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              A summary of what is expiring, so nothing depends on remembering to
-              check.
+              A summary of what is expiring, so nothing depends on remembering
+              to check.
             </p>
           </div>
 
-          <label className="flex items-center gap-3 rounded-lg border bg-card p-4">
-            <input
-              type="checkbox"
-              name="digestEnabled"
-              defaultChecked={settings?.digestEnabled ?? true}
-              className="h-5 w-5 accent-primary"
+          <label className="flex items-center gap-3 rounded-lg border bg-card p-4 cursor-pointer">
+            <Checkbox
+              checked={digestEnabled}
+              onCheckedChange={(checked) => setDigestEnabled(!!checked)}
             />
             <span className="text-sm font-medium">Send the weekly summary</span>
           </label>
 
           <Field label="Send to">
-            <Input
-              name="digestEmail"
-              type="email"
-              required
-              defaultValue={settings?.digestEmail}
-              className="h-11"
-            />
+            <EmailChipInput value={digestEmails} onChange={setDigestEmails} />
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Day">
-              <select
-                name="digestDay"
-                defaultValue={settings?.digestDay ?? 1}
-                className={selectClass}
+              <Select
+                value={String(digestDay)}
+                onValueChange={(v) => setDigestDay(Number(v))}
               >
-                {DAYS.map((d, i) => (
-                  <option key={d} value={i}>
-                    {d}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-11">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DAYS.map((d, i) => (
+                    <SelectItem key={d} value={String(i)}>
+                      {d}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
 
             <Field label="Hour">
-              <select
-                name="digestHour"
-                defaultValue={settings?.digestHour ?? 8}
-                className={cn(selectClass, "font-data")}
+              <Select
+                value={String(digestHour)}
+                onValueChange={(v) => setDigestHour(Number(v))}
               >
-                {Array.from({ length: 24 }).map((_, h) => (
-                  <option key={h} value={h}>
-                    {String(h).padStart(2, "0")}:00
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-11 font-data">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 24 }).map((_, h) => (
+                    <SelectItem key={h} value={String(h)} className="font-data">
+                      {String(h).padStart(2, "0")}:00
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
           </div>
 
           <Field label="Timezone" hint="The hour above is read in this timezone.">
-            <select
-              name="timezone"
-              defaultValue={settings?.timezone ?? "Asia/Manila"}
-              className={selectClass}
-            >
-              {zones.map((z) => (
-                <option key={z} value={z}>
-                  {z}
-                  {z === browserZone ? " (this device)" : ""}
-                </option>
-              ))}
-            </select>
+            <TimezoneCombobox value={timezone} onChange={setTimezone} />
           </Field>
         </section>
 
@@ -181,44 +179,47 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <Field
-            label="Critical"
-            hint="Too late to return. Default 30 days."
-          >
+          <Field label="Critical" hint="Too late to return. Default 30 days.">
             <Input
-              name="critical"
               type="number"
               inputMode="numeric"
               min={1}
               step={1}
               required
-              defaultValue={settings?.alertTiers.critical ?? 30}
+              value={alertTiers.critical}
+              onChange={(e) =>
+                setAlertTiers((t) => ({ ...t, critical: Number(e.target.value) }))
+              }
               className="font-data h-11"
             />
           </Field>
 
           <Field label="Soon" hint="Still returnable to most suppliers. Default 90 days.">
             <Input
-              name="warning"
               type="number"
               inputMode="numeric"
               min={1}
               step={1}
               required
-              defaultValue={settings?.alertTiers.warning ?? 90}
+              value={alertTiers.warning}
+              onChange={(e) =>
+                setAlertTiers((t) => ({ ...t, warning: Number(e.target.value) }))
+              }
               className="font-data h-11"
             />
           </Field>
 
           <Field label="Watch" hint="Worth planning around. Default 180 days.">
             <Input
-              name="watch"
               type="number"
               inputMode="numeric"
               min={1}
               step={1}
               required
-              defaultValue={settings?.alertTiers.watch ?? 180}
+              value={alertTiers.watch}
+              onChange={(e) =>
+                setAlertTiers((t) => ({ ...t, watch: Number(e.target.value) }))
+              }
               className="font-data h-11"
             />
           </Field>
