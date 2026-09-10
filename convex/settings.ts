@@ -61,7 +61,7 @@ export const update = mutation({
 
     for (const email of args.digestEmails) {
       const trimmed = email.trim();
-      if (!trimmed || !trimmed.includes("@")) {
+      if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
         throw new ConvexError(`"${email}" does not look like an email address.`);
       }
     }

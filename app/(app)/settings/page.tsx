@@ -15,6 +15,7 @@ import {
 import { EmailChipInput } from "@/components/email-chip-input";
 import { TimezoneCombobox } from "@/components/timezone-combobox";
 import { api } from "@/convex/_generated/api";
+import { DEFAULT_ALERT_TIERS } from "@/convex/lib/inventory";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useEffect, useRef, useState } from "react";
@@ -38,11 +39,7 @@ export default function SettingsPage() {
   const [digestDay, setDigestDay] = useState(1);
   const [digestHour, setDigestHour] = useState(8);
   const [timezone, setTimezone] = useState("Asia/Manila");
-  const [alertTiers, setAlertTiers] = useState({
-    critical: 30,
-    warning: 90,
-    watch: 180,
-  });
+  const [alertTiers, setAlertTiers] = useState(DEFAULT_ALERT_TIERS);
 
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);

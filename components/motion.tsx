@@ -10,6 +10,7 @@ export function FadeSlideIn({
   children: ReactNode;
   className?: string;
 }) {
+  // Entry-only animation. Wrap with AnimatePresence if you need an exit.
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
