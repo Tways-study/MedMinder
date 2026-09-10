@@ -41,12 +41,18 @@ export default defineSchema({
     expiryDate: v.optional(v.number()),
     onHandQuantity: v.number(),
     actualQuantity: v.number(),
-  }).index("by_owner_name", ["ownerId", "name"]),
+  })
+    .index("by_owner_name", ["ownerId", "name"])
+    .searchIndex("search_by_name", {
+      searchField: "name",
+      filterFields: ["ownerId"],
+    }),
 
   settings: defineTable({
     ownerId: v.id("users"),
     digestEnabled: v.boolean(),
-    digestEmail: v.string(),
+    digestEmail: v.optional(v.string()),   // kept for existing rows; read via digestEmails
+    digestEmails: v.optional(v.array(v.string())),
     // 0 = Sunday, 1 = Monday, ... matching JS getDay().
     digestDay: v.number(),
     digestHour: v.number(),

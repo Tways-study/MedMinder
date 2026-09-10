@@ -11,7 +11,8 @@ const alertTiers = v.object({
 
 const settingsShape = v.object({
   digestEnabled: v.boolean(),
-  digestEmail: v.string(),
+  digestEmail: v.optional(v.string()),
+  digestEmails: v.optional(v.array(v.string())),
   digestDay: v.number(),
   digestHour: v.number(),
   timezone: v.string(),
