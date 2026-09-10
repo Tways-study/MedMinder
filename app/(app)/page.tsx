@@ -2,6 +2,7 @@
 
 import { MedicineCard } from "@/components/medicine-card";
 import { MedicineForm } from "@/components/medicine-form";
+import { ExpandCollapse, FadeSlideIn } from "@/components/motion";
 import {
   CardSkeleton,
   EmptyState,
@@ -10,6 +11,7 @@ import {
 } from "@/components/page-shell";
 import { tierLabel } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { api } from "@/convex/_generated/api";
@@ -88,8 +90,8 @@ export default function DashboardPage() {
       >
         {adding ? "Cancel" : "+ Add medicine"}
       </Button>
-      {adding && (
-        <div className="rounded-lg border bg-card p-4">
+      <ExpandCollapse show={adding}>
+        <Card className="p-4 mt-0">
           <MedicineForm
             submitLabel="Add medicine"
             onCancel={() => setAdding(false)}
@@ -98,8 +100,8 @@ export default function DashboardPage() {
               setAdding(false);
             }}
           />
-        </div>
-      )}
+        </Card>
+      </ExpandCollapse>
     </div>
   );
 
@@ -266,15 +268,16 @@ function OnHandTab({
             const medicine = medicineById.get(item.medicineId);
             if (!medicine) return null;
             return (
-              <MedicineCard
-                key={item.medicineId}
-                medicine={medicine}
-                activeKind="onHand"
-                tier={item.tier}
-                expiryDistance={formatExpiryDistance(item.expiryDate, now)}
-                isEditing={editingId === item.medicineId}
-                onToggleEdit={() => onToggleEdit(item.medicineId)}
-              />
+              <FadeSlideIn key={item.medicineId}>
+                <MedicineCard
+                  medicine={medicine}
+                  activeKind="onHand"
+                  tier={item.tier}
+                  expiryDistance={formatExpiryDistance(item.expiryDate, now)}
+                  isEditing={editingId === item.medicineId}
+                  onToggleEdit={() => onToggleEdit(item.medicineId)}
+                />
+              </FadeSlideIn>
             );
           })}
         </section>
@@ -302,17 +305,20 @@ function OnHandTab({
             const medicine = medicineById.get(m.medicineId);
             if (!medicine) return null;
             return (
-              <MedicineCard
-                key={m.medicineId}
-                medicine={medicine}
-                activeKind="onHand"
-                tier={undefined}
-                expiryDistance={
-                  medicine.expiryDate ? formatExpiryDistance(medicine.expiryDate, now) : undefined
-                }
-                isEditing={editingId === m.medicineId}
-                onToggleEdit={() => onToggleEdit(m.medicineId)}
-              />
+              <FadeSlideIn key={m.medicineId}>
+                <MedicineCard
+                  medicine={medicine}
+                  activeKind="onHand"
+                  tier={undefined}
+                  expiryDistance={
+                    medicine.expiryDate
+                      ? formatExpiryDistance(medicine.expiryDate, now)
+                      : undefined
+                  }
+                  isEditing={editingId === m.medicineId}
+                  onToggleEdit={() => onToggleEdit(m.medicineId)}
+                />
+              </FadeSlideIn>
             );
           })}
         </section>
@@ -369,15 +375,18 @@ function ActualTab({
       </div>
 
       {sorted.map((m) => (
-        <MedicineCard
-          key={m._id}
-          medicine={m}
-          activeKind="actual"
-          tier={tierByMedicine.get(m._id)}
-          expiryDistance={m.expiryDate ? formatExpiryDistance(m.expiryDate, now) : undefined}
-          isEditing={editingId === m._id}
-          onToggleEdit={() => onToggleEdit(m._id)}
-        />
+        <FadeSlideIn key={m._id}>
+          <MedicineCard
+            medicine={m}
+            activeKind="actual"
+            tier={tierByMedicine.get(m._id)}
+            expiryDistance={
+              m.expiryDate ? formatExpiryDistance(m.expiryDate, now) : undefined
+            }
+            isEditing={editingId === m._id}
+            onToggleEdit={() => onToggleEdit(m._id)}
+          />
+        </FadeSlideIn>
       ))}
     </section>
   );
