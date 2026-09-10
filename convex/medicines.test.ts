@@ -1,0 +1,59 @@
+import { convexTest } from "convex-test";
+import { expect, test } from "vitest";
+import { api } from "./_generated/api";
+import schema from "./schema";
+
+// convex-test runs mutations/queries in an isolated in-memory DB per test.
+//
+// @convex-dev/auth's getAuthUserId reads ctx.auth.getUserIdentity().subject
+// and treats the first segment (before "|") as the userId. To produce a valid
+// Id<"users"> we pre-insert a user row, then pass that real document ID as
+// withIdentity's `subject`. The tokenIdentifier can be anything unique.
+
+async function makeUser(t: ReturnType<typeof convexTest>, tag: string) {
+  const userId = await t.run(async (ctx) => {
+    return await ctx.db.insert("users" as any, { email: `${tag}@test.example` });
+  });
+  return t.withIdentity({ subject: userId, tokenIdentifier: `test:${userId}` });
+}
+
+test("searchByName returns medicines whose name matches the query", async () => {
+  const t = convexTest(schema);
+  const asUser = await makeUser(t, "pharmacist");
+
+  await asUser.mutation(api.medicines.create, {
+    name: "Amoxicillin",
+    form: "capsule",
+    reorderPoint: 10,
+    onHandQuantity: 50,
+    actualQuantity: 50,
+  });
+  await asUser.mutation(api.medicines.create, {
+    name: "Ibuprofen",
+    form: "tablet",
+    reorderPoint: 5,
+    onHandQuantity: 30,
+    actualQuantity: 30,
+  });
+
+  const results = await asUser.query(api.medicines.searchByName, { q: "amox" });
+  expect(results).toHaveLength(1);
+  expect(results[0].name).toBe("Amoxicillin");
+});
+
+test("searchByName does not return another owner's medicines", async () => {
+  const t = convexTest(schema);
+  const asUser1 = await makeUser(t, "user1");
+  const asUser2 = await makeUser(t, "user2");
+
+  await asUser1.mutation(api.medicines.create, {
+    name: "Paracetamol",
+    form: "tablet",
+    reorderPoint: 5,
+    onHandQuantity: 20,
+    actualQuantity: 20,
+  });
+
+  const results = await asUser2.query(api.medicines.searchByName, { q: "Para" });
+  expect(results).toHaveLength(0);
+});

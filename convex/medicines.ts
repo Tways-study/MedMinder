@@ -81,6 +81,21 @@ export const listPaged = query({
   },
 });
 
+export const searchByName = query({
+  args: { q: v.string() },
+  returns: v.array(medicineDoc),
+  handler: async (ctx, { q }) => {
+    const ownerId = await requireAuth(ctx);
+    const results = await ctx.db
+      .query("medicines")
+      .withSearchIndex("search_by_name", (search) =>
+        search.search("name", q).eq("ownerId", ownerId),
+      )
+      .collect();
+    return results.map(({ ownerId: _ownerId, ...rest }) => rest);
+  },
+});
+
 export const get = query({
   args: { medicineId: v.id("medicines") },
   returns: v.union(medicineDoc, v.null()),

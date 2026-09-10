@@ -51,18 +51,18 @@ export const maybeSend = internalAction({
       });
 
       if (!force && !digest.due) continue;
-      if (digest.email === null) continue;
+      if (digest.emails.length === 0) continue;
 
       await transporter.sendMail({
         from: `"MedMinder" <${gmailUser}>`,
-        to: digest.email,
+        to: digest.emails.join(", "),
         subject: digest.subject,
         html: digest.html,
         text: digest.text,
       });
 
       await ctx.runMutation(internal.digest.markSent, { ownerId, at: Date.now() });
-      sent.push(`${digest.email}: ${digest.subject}`);
+      sent.push(`${digest.emails.join(", ")}: ${digest.subject}`);
     }
 
     return sent.length === 0 ? "Nothing due." : `Sent to ${sent.join("; ")}`;

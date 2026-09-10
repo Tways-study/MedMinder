@@ -21,7 +21,7 @@ import {
  */
 export type DigestContents = {
   due: boolean;
-  email: string | null;
+  emails: string[];
   subject: string;
   html: string;
   text: string;
@@ -41,7 +41,7 @@ export const contents = internalQuery({
   args: { ownerId: v.id("users") },
   returns: v.object({
     due: v.boolean(),
-    email: v.union(v.string(), v.null()),
+    emails: v.array(v.string()),
     subject: v.string(),
     html: v.string(),
     text: v.string(),
@@ -104,9 +104,13 @@ export const contents = internalQuery({
 
     alerts.sort((a, b) => a.expiryDistance.localeCompare(b.expiryDistance));
 
+    const rawEmails =
+      settings?.digestEmails ??
+      (settings?.digestEmail ? [settings.digestEmail] : []);
+
     return {
       due,
-      email: settings?.digestEmail ?? null,
+      emails: rawEmails,
       subject: digestSubject(alerts),
       html: digestHtml(alerts, lowStock, APP_URL),
       text: digestText(alerts, lowStock, APP_URL),

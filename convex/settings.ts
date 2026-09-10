@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { assertNonEmpty, requireAuth } from "./lib/guards";
+import { requireAuth } from "./lib/guards";
 import { DEFAULT_ALERT_TIERS } from "./lib/inventory";
 
 const alertTiers = v.object({
@@ -11,8 +11,7 @@ const alertTiers = v.object({
 
 const settingsShape = v.object({
   digestEnabled: v.boolean(),
-  digestEmail: v.optional(v.string()),
-  digestEmails: v.optional(v.array(v.string())),
+  digestEmails: v.array(v.string()),
   digestDay: v.number(),
   digestHour: v.number(),
   timezone: v.string(),
@@ -31,15 +30,26 @@ export const get = query({
       .first();
     if (settings === null) return null;
 
-    const { _id, _creationTime, ownerId: _ownerId, ...rest } = settings;
-    return rest;
+    const {
+      _id,
+      _creationTime,
+      ownerId: _ownerId,
+      digestEmail,
+      digestEmails,
+      ...rest
+    } = settings;
+
+    return {
+      ...rest,
+      digestEmails: digestEmails ?? (digestEmail ? [digestEmail] : []),
+    };
   },
 });
 
 export const update = mutation({
   args: {
     digestEnabled: v.boolean(),
-    digestEmail: v.string(),
+    digestEmails: v.array(v.string()),
     digestDay: v.number(),
     digestHour: v.number(),
     timezone: v.string(),
@@ -49,9 +59,11 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const ownerId = await requireAuth(ctx);
 
-    const email = assertNonEmpty(args.digestEmail, "Digest email");
-    if (!email.includes("@")) {
-      throw new ConvexError("That does not look like an email address.");
+    for (const email of args.digestEmails) {
+      const trimmed = email.trim();
+      if (!trimmed || !trimmed.includes("@")) {
+        throw new ConvexError(`"${email}" does not look like an email address.`);
+      }
     }
 
     if (!Number.isInteger(args.digestDay) || args.digestDay < 0 || args.digestDay > 6) {
@@ -61,8 +73,6 @@ export const update = mutation({
       throw new ConvexError("Pick an hour between 0 and 23.");
     }
 
-    // Intl throws on a timezone it does not recognise, which would otherwise
-    // only surface later as a digest that silently never fires.
     try {
       new Intl.DateTimeFormat("en-US", { timeZone: args.timezone }).format(0);
     } catch {
@@ -75,9 +85,6 @@ export const update = mutation({
         throw new ConvexError(`${name} must be a whole number of days above zero.`);
       }
     }
-
-    // The tiers are a ramp. Out of order, a lot could match two tiers at once
-    // and the dashboard would group it by whichever check ran first.
     if (!(critical < warning && warning < watch)) {
       throw new ConvexError(
         "Tiers must increase: critical sooner than soon, soon sooner than watch.",
@@ -88,7 +95,9 @@ export const update = mutation({
       .query("settings")
       .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
       .first();
-    const patch = { ...args, digestEmail: email };
+
+    // digestEmail is cleared on first save via this mutation.
+    const patch = { ...args, digestEmail: undefined };
 
     if (existing === null) {
       await ctx.db.insert("settings", { ...patch, ownerId });
