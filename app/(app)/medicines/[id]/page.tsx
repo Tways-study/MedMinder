@@ -8,6 +8,7 @@ import {
   PageHeader,
 } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -28,11 +29,11 @@ function StatTile({
   flag?: string;
 }) {
   return (
-    <div className="min-w-[7.5rem] flex-1 rounded-lg border bg-card p-4">
+    <Card className="min-w-[7.5rem] flex-1 p-4">
       <p className="label-field">{label}</p>
       <p className="font-data mt-1 text-2xl font-medium leading-none">{value}</p>
       {flag && <p className="mt-1 text-xs font-medium text-primary">{flag}</p>}
-    </div>
+    </Card>
   );
 }
 
@@ -49,13 +50,13 @@ function VarianceTile({ variance }: { variance: number }) {
   }[sign];
 
   return (
-    <div className="min-w-[7.5rem] flex-1 rounded-lg border bg-card p-4">
+    <Card className="min-w-[7.5rem] flex-1 p-4">
       <p className="label-field">Variance</p>
       <p className={`font-data mt-1 text-2xl font-medium leading-none ${styles.value}`}>
         {valueStr}
       </p>
       <p className={`mt-1 text-xs font-medium ${styles.value}`}>{styles.label}</p>
-    </div>
+    </Card>
   );
 }
 

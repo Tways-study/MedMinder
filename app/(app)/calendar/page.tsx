@@ -1,5 +1,6 @@
 "use client";
 
+import { FadeSlideIn } from "@/components/motion";
 import {
   CardSkeleton,
   EmptyState,
@@ -241,26 +242,27 @@ export default function CalendarPage() {
             </p>
           ) : (
             selectedSorted.map((m) => (
-              <Link
-                key={m._id}
-                href={`/medicines/${m._id}`}
-                className="focus-card flex items-start justify-between gap-3 rounded-lg border bg-card p-4"
-              >
-                <div className="min-w-0">
-                  <p className="font-display text-base font-medium leading-snug">
-                    {m.name}
-                  </p>
-                  {(m.strength || m.form) && (
-                    <p className="mt-0.5 text-sm text-muted-foreground">
-                      {[m.strength, m.form].filter(Boolean).join(" · ")}
+              <FadeSlideIn key={m._id}>
+                <Link
+                  href={`/medicines/${m._id}`}
+                  className="focus-card flex items-start justify-between gap-3 rounded-lg border bg-card p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="font-display text-base font-medium leading-snug">
+                      {m.name}
                     </p>
-                  )}
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {formatExpiryDistance(m.expiryDate as number, now)}
-                  </p>
-                </div>
-                <TierBadge tier={m.tier} className="shrink-0" />
-              </Link>
+                    {(m.strength || m.form) && (
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        {[m.strength, m.form].filter(Boolean).join(" · ")}
+                      </p>
+                    )}
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {formatExpiryDistance(m.expiryDate as number, now)}
+                    </p>
+                  </div>
+                  <TierBadge tier={m.tier} className="shrink-0" />
+                </Link>
+              </FadeSlideIn>
             ))
           )}
         </section>

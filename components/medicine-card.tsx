@@ -8,6 +8,7 @@ import type { ExpiryTier } from "@/convex/lib/inventory";
 import { formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { MinusIcon, Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
+import { AnimatePresence, motion } from "framer-motion";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import Link from "next/link";
@@ -57,37 +58,6 @@ export function MedicineCard({
   const update = useMutation(api.medicines.update);
   const [formError, setFormError] = useState<string | null>(null);
 
-  if (isEditing) {
-    return (
-      <div className={cn("rounded-lg border bg-card p-4", className)}>
-        <MedicineForm
-          initial={medicine}
-          submitLabel="Save changes"
-          onCancel={onToggleEdit}
-          onSubmit={async (values) => {
-            setFormError(null);
-            try {
-              await update({ medicineId: medicine._id, ...values });
-              onToggleEdit();
-            } catch (err) {
-              setFormError(
-                err instanceof ConvexError
-                  ? String(err.data)
-                  : "Could not save. Check the details and try again.",
-              );
-              throw err;
-            }
-          }}
-        />
-        {formError && (
-          <p role="alert" className="mt-2 text-sm text-destructive">
-            {formError}
-          </p>
-        )}
-      </div>
-    );
-  }
-
   const activeQuantity =
     activeKind === "onHand" ? medicine.onHandQuantity : medicine.actualQuantity;
   const otherQuantity =
@@ -103,55 +73,100 @@ export function MedicineCard({
         }`;
 
   return (
-    <article className={cn("rounded-lg border bg-card p-4", className)}>
-      <div className="flex items-start justify-between gap-4">
-        <Link href={`/medicines/${medicine._id}`} className="focus-card min-w-0 flex-1 rounded-sm">
-          <h3 className="font-display text-lg font-medium leading-snug">{medicine.name}</h3>
-          {(medicine.strength || medicine.form) && (
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              {[medicine.strength, medicine.form].filter(Boolean).join(" · ")}
-            </p>
-          )}
-        </Link>
-
-        <button
-          type="button"
-          onClick={onToggleEdit}
-          aria-label={`Edit ${medicine.name}`}
-          className="focus-card flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+    <AnimatePresence mode="wait" initial={false}>
+      {isEditing ? (
+        <motion.div
+          key="edit"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className={cn("rounded-lg border bg-card p-4", className)}
         >
-          <Pencil1Icon className="h-4 w-4" />
-        </button>
-      </div>
-
-      {tier && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <TierBadge tier={tier} />
-          {expiryDistance && <span className="text-sm text-muted-foreground">{expiryDistance}</span>}
-        </div>
-      )}
-
-      <div className="mt-3 flex items-center justify-between border-t pt-3">
-        <QuantityStepper
-          medicineId={medicine._id}
-          kind={activeKind}
-          value={activeQuantity}
-        />
-        <div className="text-right">
-          <p className="label-field">{activeLabel}</p>
-          {driftText && (
-            <p
-              className={cn(
-                "mt-0.5 text-xs",
-                diff < 0 ? "text-tier-critical" : "text-tier-watch",
-              )}
-            >
-              {driftText}
+          <MedicineForm
+            initial={medicine}
+            submitLabel="Save changes"
+            onCancel={onToggleEdit}
+            onSubmit={async (values) => {
+              setFormError(null);
+              try {
+                await update({ medicineId: medicine._id, ...values });
+                onToggleEdit();
+              } catch (err) {
+                setFormError(
+                  err instanceof ConvexError
+                    ? String(err.data)
+                    : "Could not save. Check the details and try again.",
+                );
+                throw err;
+              }
+            }}
+          />
+          {formError && (
+            <p role="alert" className="mt-2 text-sm text-destructive">
+              {formError}
             </p>
           )}
-        </div>
-      </div>
-    </article>
+        </motion.div>
+      ) : (
+        <motion.article
+          key="view"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className={cn("rounded-lg border bg-card p-4", className)}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <Link href={`/medicines/${medicine._id}`} className="focus-card min-w-0 flex-1 rounded-sm">
+              <h3 className="font-display text-lg font-medium leading-snug">{medicine.name}</h3>
+              {(medicine.strength || medicine.form) && (
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  {[medicine.strength, medicine.form].filter(Boolean).join(" · ")}
+                </p>
+              )}
+            </Link>
+
+            <button
+              type="button"
+              onClick={onToggleEdit}
+              aria-label={`Edit ${medicine.name}`}
+              className="focus-card flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Pencil1Icon className="h-4 w-4" />
+            </button>
+          </div>
+
+          {tier && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <TierBadge tier={tier} />
+              {expiryDistance && <span className="text-sm text-muted-foreground">{expiryDistance}</span>}
+            </div>
+          )}
+
+          <div className="mt-3 flex items-center justify-between border-t pt-3">
+            <QuantityStepper
+              medicineId={medicine._id}
+              kind={activeKind}
+              value={activeQuantity}
+            />
+            <div className="text-right">
+              <p className="label-field">{activeLabel}</p>
+              {driftText && (
+                <p
+                  className={cn(
+                    "mt-0.5 text-xs",
+                    diff < 0 ? "text-tier-critical" : "text-tier-watch",
+                  )}
+                >
+                  {driftText}
+                </p>
+              )}
+            </div>
+          </div>
+        </motion.article>
+      )}
+    </AnimatePresence>
   );
 }
 
