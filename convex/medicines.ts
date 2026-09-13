@@ -81,18 +81,33 @@ export const listPaged = query({
   },
 });
 
+const SEARCH_LIMIT = 50;
+
+/**
+ * Case-insensitive substring match on name, generic name and SKU, so results
+ * narrow from the first keystroke. Convex's full-text index only matches whole
+ * words (prefix on the last one), which missed mid-word and generic-name input.
+ */
 export const searchByName = query({
   args: { q: v.string() },
   returns: v.array(medicineDoc),
   handler: async (ctx, { q }) => {
     const ownerId = await requireAuth(ctx);
-    const results = await ctx.db
+    const needle = q.trim().toLowerCase();
+    if (needle === "") return [];
+
+    const matches = [];
+    for await (const medicine of ctx.db
       .query("medicines")
-      .withSearchIndex("search_by_name", (search) =>
-        search.search("name", q).eq("ownerId", ownerId),
-      )
-      .collect();
-    return results.map(({ ownerId: _ownerId, ...rest }) => rest);
+      .withIndex("by_owner_name", (idx) => idx.eq("ownerId", ownerId))) {
+      const haystacks = [medicine.name, medicine.genericName, medicine.sku];
+      if (haystacks.some((h) => h?.toLowerCase().includes(needle))) {
+        const { ownerId: _ownerId, ...rest } = medicine;
+        matches.push(rest);
+        if (matches.length === SEARCH_LIMIT) break;
+      }
+    }
+    return matches;
   },
 });
 

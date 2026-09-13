@@ -36,9 +36,17 @@ export default function MedicinesPage() {
     q ? { q } : "skip",
   );
 
+  // Hold the previous matches while the next keystroke's query loads, so the
+  // list narrows in place instead of flashing back to a skeleton.
+  const [lastResults, setLastResults] = useState(searchResults);
+  if (searchResults !== undefined && searchResults !== lastResults) {
+    setLastResults(searchResults);
+  }
+  const shownResults = searchResults ?? lastResults;
+
   const isSearching = q.length > 0;
-  const displayedMedicines = isSearching ? (searchResults ?? []) : browseResults;
-  const isLoadingSearch = isSearching && searchResults === undefined;
+  const displayedMedicines = isSearching ? (shownResults ?? []) : browseResults;
+  const isLoadingSearch = isSearching && shownResults === undefined;
   const loadingFirstPage = !isSearching && status === "LoadingFirstPage";
 
   return (
@@ -78,7 +86,7 @@ export default function MedicinesPage() {
         />
       )}
 
-      {!isLoadingSearch && isSearching && searchResults?.length === 0 && (
+      {isSearching && searchResults?.length === 0 && (
         <EmptyState
           title="Nothing matches that"
           body={`No medicine matches "${search.trim()}". Check the spelling, or try the generic name.`}

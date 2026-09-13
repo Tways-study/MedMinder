@@ -57,3 +57,35 @@ test("searchByName does not return another owner's medicines", async () => {
   const results = await asUser2.query(api.medicines.searchByName, { q: "Para" });
   expect(results).toHaveLength(0);
 });
+
+test("searchByName matches partial text anywhere in name, generic name, or SKU", async () => {
+  const t = convexTest(schema);
+  const asUser = await makeUser(t, "partial");
+
+  await asUser.mutation(api.medicines.create, {
+    name: "Biogesic",
+    genericName: "Paracetamol",
+    sku: "BIO-500",
+    form: "tablet",
+    reorderPoint: 5,
+    onHandQuantity: 20,
+    actualQuantity: 20,
+  });
+  await asUser.mutation(api.medicines.create, {
+    name: "Amoxicillin",
+    form: "capsule",
+    reorderPoint: 10,
+    onHandQuantity: 50,
+    actualQuantity: 50,
+  });
+
+  const names = async (q: string) =>
+    (await asUser.query(api.medicines.searchByName, { q })).map((m) => m.name);
+
+  expect(await names("b")).toEqual(["Biogesic"]);
+  expect(await names("cillin")).toEqual(["Amoxicillin"]);
+  expect(await names("parac")).toEqual(["Biogesic"]);
+  expect(await names("o-50")).toEqual(["Biogesic"]);
+  expect(await names("  AMOX ")).toEqual(["Amoxicillin"]);
+  expect(await names("zzz")).toEqual([]);
+});

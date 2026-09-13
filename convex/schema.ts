@@ -42,11 +42,7 @@ export default defineSchema({
     onHandQuantity: v.number(),
     actualQuantity: v.number(),
   })
-    .index("by_owner_name", ["ownerId", "name"])
-    .searchIndex("search_by_name", {
-      searchField: "name",
-      filterFields: ["ownerId"],
-    }),
+    .index("by_owner_name", ["ownerId", "name"]),
 
   settings: defineTable({
     ownerId: v.id("users"),
