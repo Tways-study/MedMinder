@@ -98,6 +98,10 @@ export default function DashboardPage() {
             onSubmit={async (values) => {
               await create(values);
               setAdding(false);
+              // The form is tall, so saving leaves you mid-page. Back to the top
+              // to start the next one or see the new medicine in its tier.
+              const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+              window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
             }}
           />
         </Card>
