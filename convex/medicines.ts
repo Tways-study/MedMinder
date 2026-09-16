@@ -141,12 +141,22 @@ function validateFields(args: {
 }
 
 export const create = mutation({
-  args: medicineFields,
+  args: { ...medicineFields, force: v.optional(v.boolean()) },
   returns: v.id("medicines"),
-  handler: async (ctx, args) => {
+  handler: async (ctx, { force, ...args }) => {
     const ownerId = await requireAuth(ctx);
 
     const name = validateFields(args);
+
+    if (!force) {
+      const duplicate = await ctx.db
+        .query("medicines")
+        .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId).eq("name", name))
+        .first();
+      if (duplicate !== null) {
+        throw new ConvexError({ code: "DUPLICATE", name });
+      }
+    }
 
     return await ctx.db.insert("medicines", {
       ...args,
@@ -173,11 +183,19 @@ export const update = mutation({
       throw new ConvexError("That medicine no longer exists.");
     }
 
-    validateFields(args);
+    const name = validateFields(args);
+
+    const dup = await ctx.db
+      .query("medicines")
+      .withIndex("by_owner_name", (q) => q.eq("ownerId", ownerId).eq("name", name))
+      .first();
+    if (dup !== null && dup._id !== medicineId) {
+      throw new ConvexError(`A medicine named "${name}" already exists.`);
+    }
 
     await ctx.db.patch(medicineId, {
       ...args,
-      name: args.name.trim(),
+      name,
       sku: args.sku?.trim() || undefined,
       genericName: args.genericName?.trim() || undefined,
       strength: args.strength?.trim() || undefined,

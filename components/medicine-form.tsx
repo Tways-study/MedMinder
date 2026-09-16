@@ -119,10 +119,11 @@ export function MedicineForm({
       });
     } catch (err) {
       setError(
-        err instanceof ConvexError
-          ? String(err.data)
+        err instanceof ConvexError && typeof err.data === "string"
+          ? err.data
           : "Could not save. Check the details and try again.",
       );
+    } finally {
       setSaving(false);
     }
   }

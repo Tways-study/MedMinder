@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { ConvexError } from "convex/values";
 import type { ExpiryTier } from "@/convex/lib/inventory";
 import { formatExpiryDistance } from "@/convex/lib/inventory";
 import { formatQuantity } from "@/lib/format";
@@ -96,12 +97,24 @@ export default function DashboardPage() {
             submitLabel="Add medicine"
             onCancel={() => setAdding(false)}
             onSubmit={async (values) => {
-              await create(values);
-              setAdding(false);
-              // The form is tall, so saving leaves you mid-page. Back to the top
-              // to start the next one or see the new medicine in its tier.
-              const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-              window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+              try {
+                await create(values);
+                setAdding(false);
+                const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+              } catch (err) {
+                if (
+                  err instanceof ConvexError &&
+                  typeof err.data === "object" &&
+                  err.data !== null &&
+                  (err.data as Record<string, unknown>).code === "DUPLICATE"
+                ) {
+                  throw new ConvexError(
+                    `A medicine named "${(err.data as { name: string }).name}" already exists.`,
+                  );
+                }
+                throw err;
+              }
             }}
           />
         </Card>
