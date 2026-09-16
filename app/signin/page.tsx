@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { ConvexError } from "convex/values";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogoMark } from "@/components/logo-mark";
@@ -15,13 +14,11 @@ export default function SignInPage() {
   const router = useRouter();
 
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
-  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
     setSubmitting(true);
 
     const form = new FormData(event.currentTarget);
@@ -32,14 +29,8 @@ export default function SignInPage() {
         flow,
       });
       router.push("/");
-    } catch (err) {
-      setError(
-        err instanceof ConvexError
-          ? String(err.data)
-          : flow === "signUp"
-            ? "Could not create the account. Check the details and try again."
-            : "That email and password don't match an account.",
-      );
+    } catch {
+      // errors suppressed
     } finally {
       setSubmitting(false);
     }
@@ -140,12 +131,6 @@ export default function SignInPage() {
               )}
             </label>
 
-            {error !== null && (
-              <p role="alert" className="text-sm text-destructive">
-                {error}
-              </p>
-            )}
-
             <Button type="submit" disabled={submitting} className="h-11">
               {submitting ? (
                 "Working…"
@@ -162,7 +147,6 @@ export default function SignInPage() {
             <button
               type="button"
               onClick={() => {
-                setError(null);
                 setFlow(flow === "signUp" ? "signIn" : "signUp");
               }}
               className="text-sm text-muted-foreground underline-offset-4 hover:underline"
