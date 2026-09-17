@@ -56,6 +56,19 @@ npx convex deploy --cmd 'npm run build'
 
 This deploys Convex functions to production first, then builds and deploys the Next.js frontend — both in a single atomic step. `NEXT_PUBLIC_CONVEX_URL` is injected automatically by the Convex CLI.
 
+## Security
+
+A full codebase security audit was conducted on 2026-09-17. No exploitable vulnerabilities were found.
+
+Key controls verified:
+
+- **Tenant isolation** — every query and mutation is scoped to the authenticated `ownerId`; no cross-tenant data access is possible
+- **Ownership checks** — every document fetch verifies `medicine.ownerId === ownerId` before returning or mutating data
+- **No injection surface** — Convex's typed ORM has no raw query interpolation; no shell calls or file system operations exist
+- **No hardcoded secrets** — all credentials are read from environment variables
+- **Auth delegated to library** — password hashing and session management are handled entirely by `@convex-dev/auth`
+- **No XSS vectors** — no `dangerouslySetInnerHTML` or `eval` anywhere in the React codebase
+
 ## Project structure
 
 ```
