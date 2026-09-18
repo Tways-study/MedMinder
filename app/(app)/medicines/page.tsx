@@ -30,7 +30,7 @@ import {
   isLowStock,
   sortMedicines,
 } from "@/convex/lib/medicineFilters";
-import { normalizeQuery } from "@/convex/lib/search";
+import { parseSearch } from "@/convex/lib/search";
 import { formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { usePaginatedQuery, useQuery } from "convex/react";
@@ -74,12 +74,20 @@ export default function MedicinesPage() {
   const [filter, setFilter] = useState<MedicineFilter>(NO_FILTER);
   const [sort, setSort] = useState<MedicineSort>("expiry");
 
-  const needle = normalizeQuery(search);
+  // Status words typed into the search bar ("critical amox") filter just like
+  // the chips; whatever text is left searches names.
+  const parsed = parseSearch(search);
+  const needle = parsed.text;
   const isSearching = needle !== null;
+  const typedFilter: MedicineFilter = {
+    statuses: parsed.statuses,
+    lowStockOnly: parsed.lowStock,
+  };
+  const typedStatus = isFiltering(typedFilter);
   const filtering = isFiltering(filter);
   // Name order without filters is the index order, so it can page; anything
   // else needs the whole shelf in hand to filter or order it.
-  const usePaging = !isSearching && !filtering && sort === "name";
+  const usePaging = !isSearching && !filtering && !typedStatus && sort === "name";
 
   const {
     results: browseResults,
@@ -112,17 +120,22 @@ export default function MedicinesPage() {
 
   // Search keeps its best-match order; filters still narrow it.
   const source = isSearching ? shownResults : usePaging ? browseResults : allMedicines;
-  const displayedMedicines =
+  const filtered =
     source === undefined
       ? []
-      : isSearching
-        ? filterMedicines(source, filter, now, tiers)
-        : sortMedicines(filterMedicines(source, filter, now, tiers), sort);
+      : filterMedicines(
+          filterMedicines(source, filter, now, tiers),
+          typedFilter,
+          now,
+          tiers,
+        );
+  const displayedMedicines = isSearching ? filtered : sortMedicines(filtered, sort);
 
   const isLoading = usePaging ? status === "LoadingFirstPage" : source === undefined;
   const shelfIsEmpty =
     !isSearching &&
     !filtering &&
+    !typedStatus &&
     !isLoading &&
     (source?.length ?? 0) === 0;
   const trimmed = search.trim();
@@ -145,10 +158,27 @@ export default function MedicinesPage() {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, generic or SKU"
-            aria-label="Search medicines"
+            placeholder="Search by name, or type expired, critical, low stock…"
+            aria-label="Search medicines by name or status"
             className="h-11"
           />
+
+          {typedStatus && (
+            <div
+              aria-live="polite"
+              className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground"
+            >
+              <span>Only showing</span>
+              {parsed.statuses.map((s) =>
+                s === "none" ? (
+                  <PlainBadge key={s}>No expiry</PlainBadge>
+                ) : (
+                  <TierBadge key={s} tier={s} />
+                ),
+              )}
+              {parsed.lowStock && <PlainBadge>Low stock</PlainBadge>}
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center gap-1.5">
             <ToggleGroup
@@ -243,8 +273,8 @@ export default function MedicinesPage() {
           <EmptyState
             title="Nothing matches that"
             body={
-              filtering
-                ? `No medicine matches "${trimmed}" with these filters. Clear the filters to search the whole shelf.`
+              filtering || typedStatus
+                ? `No medicine with that status matches "${needle}". Clear the filters or status words to search the whole shelf.`
                 : `No medicine matches "${trimmed}". Check the spelling, or try the generic name.`
             }
           />
@@ -253,7 +283,14 @@ export default function MedicinesPage() {
             title="Nothing in these filters"
             body="No medicine on the shelf has this status right now."
             action={
-              <Button variant="outline" className="mt-1" onClick={() => setFilter(NO_FILTER)}>
+              <Button
+                variant="outline"
+                className="mt-1"
+                onClick={() => {
+                  setFilter(NO_FILTER);
+                  setSearch("");
+                }}
+              >
                 Clear filters
               </Button>
             }
@@ -284,11 +321,7 @@ export default function MedicinesPage() {
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         {tier && tier !== "ok" && <TierBadge tier={tier} />}
-                        {low && (
-                          <span className="rounded-sm bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
-                            Low stock
-                          </span>
-                        )}
+                        {low && <PlainBadge>Low stock</PlainBadge>}
                       </div>
                     </div>
 
@@ -320,6 +353,14 @@ export default function MedicinesPage() {
         <p className="mt-1 text-center text-sm text-muted-foreground">Loading…</p>
       )}
     </Page>
+  );
+}
+
+function PlainBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-sm bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+      {children}
+    </span>
   );
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MIN_SEARCH_LENGTH, matchRank, normalizeQuery } from "./search";
+import { MIN_SEARCH_LENGTH, matchRank, normalizeQuery, parseSearch } from "./search";
 
 const amox = { name: "Amoxicillin", genericName: "Amoxicillin trihydrate", sku: "AMX-500" };
 const coAmox = { name: "Co-Amoxiclav", genericName: undefined, sku: undefined };
@@ -38,5 +38,57 @@ describe("matchRank", () => {
 
   it("returns null when nothing matches", () => {
     expect(matchRank(biogesic, "zzz")).toBeNull();
+  });
+});
+
+describe("parseSearch", () => {
+  it("passes plain text through as the text query", () => {
+    expect(parseSearch("amox")).toEqual({ text: "amox", statuses: [], lowStock: false });
+  });
+
+  it("pulls status words out of the query", () => {
+    expect(parseSearch("expired")).toEqual({
+      text: null,
+      statuses: ["expired"],
+      lowStock: false,
+    });
+    expect(parseSearch("Critical amox")).toEqual({
+      text: "amox",
+      statuses: ["critical"],
+      lowStock: false,
+    });
+  });
+
+  it("accepts several statuses and the words the app shows", () => {
+    expect(parseSearch("expired critical soon watch").statuses).toEqual([
+      "expired",
+      "critical",
+      "warning",
+      "watch",
+    ]);
+    expect(parseSearch("in date").statuses).toEqual(["ok"]);
+    expect(parseSearch("no expiry").statuses).toEqual(["none"]);
+  });
+
+  it("reads 'low stock' and 'low' as the low-stock filter", () => {
+    expect(parseSearch("low stock para")).toEqual({
+      text: "para",
+      statuses: [],
+      lowStock: true,
+    });
+    expect(parseSearch("low").lowStock).toBe(true);
+  });
+
+  it("only takes whole words, so names containing a status word still search", () => {
+    expect(parseSearch("watchful").text).toBe("watchful");
+    expect(parseSearch("low-dose").text).toBe("low-dose");
+  });
+
+  it("applies the minimum length to what is left after status words", () => {
+    expect(parseSearch("critical a")).toEqual({
+      text: null,
+      statuses: ["critical"],
+      lowStock: false,
+    });
   });
 });
