@@ -1,0 +1,3 @@
+{
+  "buildCommand": "npx convex deploy --prod --cmd 'npm run build'"
+}
