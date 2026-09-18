@@ -86,8 +86,7 @@ The `makeUser` helper in test files inserts a real user row and returns an ident
 
 Vercel build command (defined in `vercel.json`, deploys Convex first then Next.js):
 ```
-npx convex deploy --prod --cmd 'npm run build'
+npx convex deploy --cmd 'npm run build'
 ```
-`--prod` is required by Convex CLI when `CONVEX_DEPLOY_KEY` is set.
 
 Environment variables for Convex functions (set in Convex dashboard, not Vercel): `RESEND_API_KEY`, `SITE_URL`, `AUTH_*`.

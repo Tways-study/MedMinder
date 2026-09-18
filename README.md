@@ -54,7 +54,7 @@ The build command is configured in `vercel.json`:
 npx convex deploy --prod --cmd 'npm run build'
 ```
 
-`--prod` is required by Convex CLI when `CONVEX_DEPLOY_KEY` is present; it explicitly confirms this is an intentional production deployment. This deploys Convex functions to production first, then builds and deploys the Next.js frontend — both in a single atomic step. `NEXT_PUBLIC_CONVEX_URL` is injected automatically by the Convex CLI.
+This deploys Convex functions to production first, then builds and deploys the Next.js frontend — both in a single atomic step. `NEXT_PUBLIC_CONVEX_URL` is injected automatically by the Convex CLI.
 
 ## Security
 
