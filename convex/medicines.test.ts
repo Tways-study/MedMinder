@@ -82,10 +82,36 @@ test("searchByName matches partial text anywhere in name, generic name, or SKU",
   const names = async (q: string) =>
     (await asUser.query(api.medicines.searchByName, { q })).map((m) => m.name);
 
-  expect(await names("b")).toEqual(["Biogesic"]);
+  expect(await names("b")).toEqual([]);
+  expect(await names("bi")).toEqual(["Biogesic"]);
   expect(await names("cillin")).toEqual(["Amoxicillin"]);
   expect(await names("parac")).toEqual(["Biogesic"]);
   expect(await names("o-50")).toEqual(["Biogesic"]);
   expect(await names("  AMOX ")).toEqual(["Amoxicillin"]);
   expect(await names("zzz")).toEqual([]);
+});
+
+test("searchByName ranks name matches first, then word starts, then mid-word", async () => {
+  const t = convexTest(schema);
+  const asUser = await makeUser(t, "ranking");
+
+  const add = (name: string, genericName?: string) =>
+    asUser.mutation(api.medicines.create, {
+      name,
+      genericName,
+      form: "tablet",
+      reorderPoint: 5,
+      onHandQuantity: 20,
+      actualQuantity: 20,
+    });
+  // Inserted in an order that name-sorting alone would get wrong.
+  await add("Co-Amoxiclav");
+  await add("Amoxil", "Amoxicillin");
+  await add("Bamox");
+  await add("Amox");
+
+  const names = (await asUser.query(api.medicines.searchByName, { q: "amox" })).map(
+    (m) => m.name,
+  );
+  expect(names).toEqual(["Amox", "Amoxil", "Co-Amoxiclav", "Bamox"]);
 });

@@ -19,6 +19,8 @@ import type * as lib_digest from "../lib/digest.js";
 import type * as lib_digestEmail from "../lib/digestEmail.js";
 import type * as lib_guards from "../lib/guards.js";
 import type * as lib_inventory from "../lib/inventory.js";
+import type * as lib_medicineFilters from "../lib/medicineFilters.js";
+import type * as lib_search from "../lib/search.js";
 import type * as medicines from "../medicines.js";
 import type * as seed from "../seed.js";
 import type * as sendDigest from "../sendDigest.js";
@@ -43,6 +45,8 @@ declare const fullApi: ApiFromModules<{
   "lib/digestEmail": typeof lib_digestEmail;
   "lib/guards": typeof lib_guards;
   "lib/inventory": typeof lib_inventory;
+  "lib/medicineFilters": typeof lib_medicineFilters;
+  "lib/search": typeof lib_search;
   medicines: typeof medicines;
   seed: typeof seed;
   sendDigest: typeof sendDigest;

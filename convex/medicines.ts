@@ -7,6 +7,7 @@ import {
   assertTimestamp,
   requireAuth,
 } from "./lib/guards";
+import { matchRank, normalizeQuery } from "./lib/search";
 import { medicineForm } from "./schema";
 
 const medicineFields = {
@@ -84,30 +85,32 @@ export const listPaged = query({
 const SEARCH_LIMIT = 50;
 
 /**
- * Case-insensitive substring match on name, generic name and SKU, so results
- * narrow from the first keystroke. Convex's full-text index only matches whole
- * words (prefix on the last one), which missed mid-word and generic-name input.
+ * Case-insensitive match on name, generic name and SKU, best match first (see
+ * `matchRank`). Convex's full-text index only matches whole words (prefix on
+ * the last one), which missed mid-word and generic-name input — so this scans
+ * the owner's shelf and ranks every match before trimming to the limit.
  */
 export const searchByName = query({
   args: { q: v.string() },
   returns: v.array(medicineDoc),
   handler: async (ctx, { q }) => {
     const ownerId = await requireAuth(ctx);
-    const needle = q.trim().toLowerCase();
-    if (needle === "") return [];
+    const needle = normalizeQuery(q);
+    if (needle === null) return [];
 
-    const matches = [];
+    const ranked = [];
     for await (const medicine of ctx.db
       .query("medicines")
       .withIndex("by_owner_name", (idx) => idx.eq("ownerId", ownerId))) {
-      const haystacks = [medicine.name, medicine.genericName, medicine.sku];
-      if (haystacks.some((h) => h?.toLowerCase().includes(needle))) {
+      const rank = matchRank(medicine, needle);
+      if (rank !== null) {
         const { ownerId: _ownerId, ...rest } = medicine;
-        matches.push(rest);
-        if (matches.length === SEARCH_LIMIT) break;
+        ranked.push({ rank, medicine: rest });
       }
     }
-    return matches;
+    // Stable sort, so equal ranks keep the index's name order.
+    ranked.sort((a, b) => a.rank - b.rank);
+    return ranked.slice(0, SEARCH_LIMIT).map((r) => r.medicine);
   },
 });
 

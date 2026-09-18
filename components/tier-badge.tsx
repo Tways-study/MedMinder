@@ -73,3 +73,8 @@ export function TierBadge({
 export function tierLabel(tier: ExpiryTier): string {
   return TIERS[tier].label;
 }
+
+/** The badge's icon and colours, for controls that need to match it. */
+export function tierStyle(tier: ExpiryTier) {
+  return TIERS[tier];
+}
