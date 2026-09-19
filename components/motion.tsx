@@ -11,6 +11,44 @@ import { type ReactNode, useEffect, useRef } from "react";
 */
 export const SPRING = { type: "spring", bounce: 0, duration: 0.35 } as const;
 
+/*
+  Hover/press feedback wants to read as instant, not as an entrance: SPRING's
+  0.35s response is tuned for things arriving on screen. This is about half
+  that, critically damped, no bounce, so a tile answers the cursor before the
+  user notices a delay.
+*/
+export const HOVER_SPRING = { type: "spring", bounce: 0, duration: 0.15 } as const;
+
+/*
+  Scale-only hover primitive for tile/row surfaces. Background/color feedback
+  stays a plain Tailwind `hover:` class on the child — framer-motion can't
+  animate a Tailwind utility directly, and a CSS pseudo-class is cheaper and
+  matches how every other hover/press state in this app already works.
+*/
+export function HoverScale({
+  children,
+  className,
+  scale = 1.02,
+  tapScale,
+}: {
+  children: ReactNode;
+  className?: string;
+  scale?: number;
+  /** Omit for non-clickable surfaces — a press animation implies an action. */
+  tapScale?: number;
+}) {
+  return (
+    <motion.div
+      whileHover={{ scale }}
+      whileTap={tapScale !== undefined ? { scale: tapScale } : undefined}
+      transition={HOVER_SPRING}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export function FadeSlideIn({
   children,
   className,

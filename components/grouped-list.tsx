@@ -84,7 +84,11 @@ export function GroupedListRow({
       ) : href ? (
         <Link
           href={href}
-          className={cn(ROW_BODY, "focus-card active:bg-pebble/60", className)}
+          className={cn(
+            ROW_BODY,
+            "focus-card transition-colors duration-100 ease-out hover:bg-pebble/30 active:bg-pebble/60",
+            className,
+          )}
         >
           {children}
         </Link>

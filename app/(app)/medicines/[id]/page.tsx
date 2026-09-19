@@ -1,5 +1,6 @@
 "use client";
 
+import { HoverScale } from "@/components/motion";
 import { MedicineForm } from "@/components/medicine-form";
 import {
   CardSkeleton,
@@ -29,11 +30,13 @@ function StatTile({
   flag?: string;
 }) {
   return (
-    <Card className="min-w-[7.5rem] flex-1 p-4">
-      <p className="label-field">{label}</p>
-      <p className="font-data mt-1 text-title font-semibold">{value}</p>
-      {flag && <p className="mt-1 text-caption font-medium text-link">{flag}</p>}
-    </Card>
+    <HoverScale scale={1.02} className="min-w-[7.5rem] flex-1">
+      <Card className="h-full p-4 transition-colors duration-100 ease-out hover:bg-pebble/30">
+        <p className="label-field">{label}</p>
+        <p className="font-data mt-1 text-title font-semibold">{value}</p>
+        {flag && <p className="mt-1 text-caption font-medium text-link">{flag}</p>}
+      </Card>
+    </HoverScale>
   );
 }
 
@@ -50,13 +53,15 @@ function VarianceTile({ variance }: { variance: number }) {
   }[sign];
 
   return (
-    <Card className="min-w-[7.5rem] flex-1 p-4">
-      <p className="label-field">Variance</p>
-      <p className={`font-data mt-1 text-title font-semibold ${styles.value}`}>
-        {valueStr}
-      </p>
-      <p className={`mt-1 text-caption font-medium ${styles.value}`}>{styles.label}</p>
-    </Card>
+    <HoverScale scale={1.02} className="min-w-[7.5rem] flex-1">
+      <Card className="h-full p-4 transition-colors duration-100 ease-out hover:bg-pebble/30">
+        <p className="label-field">Variance</p>
+        <p className={`font-data mt-1 text-title font-semibold ${styles.value}`}>
+          {valueStr}
+        </p>
+        <p className={`mt-1 text-caption font-medium ${styles.value}`}>{styles.label}</p>
+      </Card>
+    </HoverScale>
   );
 }
 

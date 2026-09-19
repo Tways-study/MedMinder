@@ -7,6 +7,7 @@ import {
   PageHeader,
 } from "@/components/page-shell";
 import { GroupedList, GroupedListRow } from "@/components/grouped-list";
+import { HoverScale } from "@/components/motion";
 import { TierBadge } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
@@ -209,34 +210,40 @@ export default function CalendarPage() {
             const isToday = key === todayKey;
 
             return (
-              <button
+              <HoverScale
                 key={key}
-                type="button"
-                onClick={() => setSelectedKey(key)}
-                aria-label={`${formatDate(Date.UTC(year, month, day))}${
-                  items ? `, ${items.length} expiring` : ""
-                }`}
-                aria-pressed={isSelected}
-                className={cn(
-                  "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-body-sm transition-colors active:bg-pebble",
-                  tint ?? "hover:bg-frost",
-                  isSelected && "ring-2 ring-ring",
-                )}
+                scale={1.012}
+                tapScale={0.97}
+                className="relative hover:z-10"
               >
-                <span
+                <button
+                  type="button"
+                  onClick={() => setSelectedKey(key)}
+                  aria-label={`${formatDate(Date.UTC(year, month, day))}${
+                    items ? `, ${items.length} expiring` : ""
+                  }`}
+                  aria-pressed={isSelected}
                   className={cn(
-                    "font-data leading-none",
-                    isToday && "font-semibold text-link",
+                    "focus-card flex h-full min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-body-sm transition-colors active:bg-pebble",
+                    tint ?? "hover:bg-frost",
+                    isSelected && "ring-2 ring-ring",
                   )}
                 >
-                  {day}
-                </span>
-                {items && (
-                  <span className="font-data text-[0.625rem] font-medium leading-none">
-                    {items.length}
+                  <span
+                    className={cn(
+                      "font-data leading-none",
+                      isToday && "font-semibold text-link",
+                    )}
+                  >
+                    {day}
                   </span>
-                )}
-              </button>
+                  {items && (
+                    <span className="font-data text-[0.625rem] font-medium leading-none">
+                      {items.length}
+                    </span>
+                  )}
+                </button>
+              </HoverScale>
             );
           })}
         </div>

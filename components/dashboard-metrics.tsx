@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { RollingNumber } from "@/components/motion";
+import { HoverScale, RollingNumber } from "@/components/motion";
 import { formatQuantity } from "@/lib/format";
 
 interface DashboardMetricsProps {
@@ -26,17 +26,19 @@ function MetricTile({
   valueClass?: string;
 }) {
   return (
-    <div className="bg-card p-4">
-      <p className="label-field">{label}</p>
-      <p className={cn("font-data mt-1 text-title font-semibold", valueClass)}>
-        {typeof value === "number" ? (
-          <RollingNumber value={value} format={formatQuantity} />
-        ) : (
-          value
-        )}
-      </p>
-      <p className="mt-1 text-caption text-muted-foreground">{note}</p>
-    </div>
+    <HoverScale scale={1.012} className="relative hover:z-10">
+      <div className="h-full bg-card p-4 transition-colors duration-100 ease-out hover:bg-pebble/30">
+        <p className="label-field">{label}</p>
+        <p className={cn("font-data mt-1 text-title font-semibold", valueClass)}>
+          {typeof value === "number" ? (
+            <RollingNumber value={value} format={formatQuantity} />
+          ) : (
+            value
+          )}
+        </p>
+        <p className="mt-1 text-caption text-muted-foreground">{note}</p>
+      </div>
+    </HoverScale>
   );
 }
 
