@@ -1,3 +1,11 @@
+"use client";
+
+// <Authenticated>/<AuthLoading>/<Unauthenticated> read Convex's client-side
+// auth context, so this layout needs a client boundary. Without it, Next
+// bundles the context read into the server graph, where React's
+// "react-server" export condition has no createContext — the build fails
+// with "TypeError: d.createContext is not a function" while collecting page
+// data, on whichever page the bundler happens to process first.
 import { AppNav } from "@/components/app-nav";
 import { LogoMark } from "@/components/logo-mark";
 import { CardSkeleton, Page } from "@/components/page-shell";
