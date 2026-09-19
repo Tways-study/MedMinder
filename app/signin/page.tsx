@@ -6,8 +6,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogoMark } from "@/components/logo-mark";
-import { Glow } from "@/components/ui/glow";
-import { ArrowRightIcon, EyeClosedIcon, EyeOpenIcon } from "@radix-ui/react-icons";
+import { EyeClosedIcon, EyeOpenIcon } from "@radix-ui/react-icons";
 
 export default function SignInPage() {
   const { signIn } = useAuthActions();
@@ -37,126 +36,95 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="relative flex min-h-[100dvh] w-full items-center justify-center overflow-hidden bg-background px-6 py-12">
+    <main className="flex min-h-[100dvh] w-full items-center justify-center bg-background px-5 py-12">
       {/*
-        Previously a two-panel split: a solid purple hero block plus a
-        separate white card. The glow sat on top of that same purple, so it
-        barely read as an effect: a purple bloom on a purple field. On the
-        page's own light background, the same bloom is a distinct, visible
-        event, which is the point of using it. One card now carries the whole
-        screen, and the glow lives in the space around it, the way the
-        component's own reference usage does.
-
-        The two ring circles from the split-panel version are gone: with the
-        glow finally visible for what it is, adding a second decorative
-        device on top would be competing for the same attention, not adding
-        to it.
+        Apple-ID-style: the mark, one line naming the task, and the form on a
+        single white surface. No glow, no shadow — the frost canvas and the
+        white panel are enough to say where to look.
       */}
-      <Glow
-        variant="center"
-        aria-hidden
-        className="pointer-events-none opacity-80 blur-3xl"
-      />
-
-      <div className="relative w-full max-w-sm motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 motion-safe:duration-700">
-        <div className="rounded-lg border bg-card p-6 shadow-lg shadow-primary/10 sm:p-8">
-          <div className="flex flex-col items-center gap-3 text-center">
-            <LogoMark className="h-11 w-11" color="hsl(var(--primary))" />
-            <div>
-              <p className="font-display text-2xl font-medium tracking-tight sm:text-3xl">
-                MedMinder
-              </p>
-              <p className="mx-auto mt-2 max-w-[30ch] text-sm text-muted-foreground">
-                Medicine inventory and expiry tracking for community
-                pharmacies.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 flex flex-col gap-2 border-t pt-6">
-            {/* Names the task: the brand block above already said who this is. */}
-            <h1 className="min-h-8 font-display text-xl font-medium tracking-tight">
-              {flow === "signUp" ? "Create your account" : "Sign in"}
+      <div className="w-full max-w-sm motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-500">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <LogoMark className="h-12 w-12" color="hsl(var(--primary))" />
+          <div>
+            <h1 className="font-display text-title font-semibold">
+              {flow === "signUp" ? "Create your account" : "Sign in to MedMinder"}
             </h1>
-            <p className="min-h-10 text-sm text-muted-foreground">
+            <p className="mx-auto mt-2 max-w-[32ch] text-body font-light text-muted-foreground">
               {flow === "signUp"
                 ? "Each account gets its own private pharmacy inventory."
-                : "Enter your pharmacy inventory."}
+                : "Medicine inventory and expiry tracking for your pharmacy."}
             </p>
           </div>
-
-          <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-            <label className="flex flex-col gap-1.5">
-              <span className="label-field">Email</span>
-              <Input
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="pharmacist@example.com"
-                required
-                className="h-11 border-transparent bg-secondary placeholder:text-muted-foreground"
-              />
-            </label>
-
-            <label className="flex flex-col gap-1.5">
-              <span className="label-field">Password</span>
-              <div className="relative">
-                <Input
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete={
-                    flow === "signUp" ? "new-password" : "current-password"
-                  }
-                  required
-                  className="h-11 border-transparent bg-secondary pr-11"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                  className="absolute inset-y-0 right-0 flex h-11 w-11 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {showPassword ? (
-                    <EyeClosedIcon className="h-4 w-4" />
-                  ) : (
-                    <EyeOpenIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              {flow === "signUp" && (
-                <span className="text-xs text-muted-foreground">
-                  At least 10 characters.
-                </span>
-              )}
-            </label>
-
-            <Button type="submit" disabled={submitting} className="h-11">
-              {submitting ? (
-                "Working…"
-              ) : flow === "signUp" ? (
-                "Create account"
-              ) : (
-                <span className="inline-flex items-center gap-1.5">
-                  Sign in
-                  <ArrowRightIcon className="h-4 w-4" />
-                </span>
-              )}
-            </Button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setFlow(flow === "signUp" ? "signIn" : "signUp");
-              }}
-              className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-            >
-              {flow === "signUp"
-                ? "Already have an account? Sign in"
-                : "Don't have an account? Sign up"}
-            </button>
-          </form>
         </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="mt-8 flex flex-col gap-4 rounded-lg bg-card p-5 sm:p-6"
+        >
+          <label className="flex flex-col gap-1.5">
+            <span className="label-field">Email</span>
+            <Input
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="pharmacist@example.com"
+              required
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="label-field">Password</span>
+            <div className="relative">
+              <Input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete={
+                  flow === "signUp" ? "new-password" : "current-password"
+                }
+                required
+                className="pr-11"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {showPassword ? (
+                  <EyeClosedIcon className="h-4 w-4" />
+                ) : (
+                  <EyeOpenIcon className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            {flow === "signUp" && (
+              <span className="text-footnote text-muted-foreground">
+                At least 10 characters.
+              </span>
+            )}
+          </label>
+
+          <Button type="submit" disabled={submitting} className="mt-2 w-full">
+            {submitting
+              ? "Working…"
+              : flow === "signUp"
+                ? "Create account"
+                : "Sign in"}
+          </Button>
+        </form>
+
+        <button
+          type="button"
+          onClick={() => {
+            setFlow(flow === "signUp" ? "signIn" : "signUp");
+          }}
+          className="mx-auto mt-6 block rounded-full px-3 py-2 text-body-sm text-link underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {flow === "signUp"
+            ? "Already have an account? Sign in"
+            : "Don't have an account? Create one"}
+        </button>
       </div>
     </main>
   );

@@ -96,7 +96,7 @@ export default function NewMedicinePage() {
             </DialogDescription>
           </DialogHeader>
           {forceError && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-body-sm text-destructive">
               {forceError}
             </p>
           )}

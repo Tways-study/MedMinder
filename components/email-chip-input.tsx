@@ -52,7 +52,7 @@ export function EmailChipInput({
     <div className="flex flex-col gap-1.5">
       <div
         className={cn(
-          "flex min-h-11 flex-wrap items-center gap-1.5 rounded-sm border border-input bg-background px-3 py-2 cursor-text",
+          "flex min-h-11 flex-wrap items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-2 cursor-text focus-within:border-transparent focus-within:ring-2 focus-within:ring-ring",
           "focus-within:outline-none focus-within:ring-2 focus-within:ring-ring",
           error && "border-destructive",
         )}
@@ -61,7 +61,7 @@ export function EmailChipInput({
         {value.map((email) => (
           <span
             key={email}
-            className="flex items-center gap-1 rounded-sm bg-secondary px-2 py-0.5 text-sm font-medium text-secondary-foreground"
+            className="flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-body-sm font-medium text-secondary-foreground"
           >
             {email}
             <button
@@ -71,7 +71,7 @@ export function EmailChipInput({
                 removeEmail(email);
               }}
               aria-label={`Remove ${email}`}
-              className="ml-0.5 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="ml-0.5 rounded-full text-muted-foreground transition-colors hover:text-foreground"
             >
               <Cross2Icon className="h-3 w-3" />
             </button>
@@ -90,10 +90,10 @@ export function EmailChipInput({
             if (draft) addEmail(draft);
           }}
           placeholder={value.length === 0 ? "Add email address…" : ""}
-          className="min-w-[12rem] flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          className="min-w-[12rem] flex-1 bg-transparent text-body-sm outline-none placeholder:text-muted-foreground"
         />
       </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-caption text-destructive">{error}</p>}
     </div>
   );
 }

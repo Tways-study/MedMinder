@@ -2,7 +2,6 @@ import { AppNav } from "@/components/app-nav";
 import { LogoMark } from "@/components/logo-mark";
 import { CardSkeleton, Page } from "@/components/page-shell";
 import { RedirectToSignIn } from "@/components/redirect-to-sign-in";
-import { Glow } from "@/components/ui/glow";
 import { UserMenu } from "@/components/UserMenu";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import Link from "next/link";
@@ -11,18 +10,14 @@ import type { ReactNode } from "react";
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-[100dvh] sm:pl-56">
-      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
-        <Glow variant="top" className="opacity-20 blur-3xl" />
-      </div>
-      <header className="flex items-center justify-between gap-4 px-5 pb-3 pt-5">
-        {/*
-          The wordmark used to reuse .label-field, the 11px uppercase caption
-          class built for field names on a dispensing label. Right class,
-          wrong job: a persistent header needs to read as a mark, not a caption.
-        */}
+      {/*
+        A translucent bar pinned to the top: content scrolls under it and stays
+        faintly visible, so the page never feels cut off by chrome.
+      */}
+      <header className="material sticky top-0 z-30 flex items-center justify-between gap-4 px-5 py-2">
         <Link
           href="/"
-          className="focus-card flex items-center gap-2 font-display text-xl font-medium tracking-tight"
+          className="focus-card flex items-center gap-2 rounded-full py-1 pr-2 text-body font-semibold"
         >
           <LogoMark className="h-6 w-6" color="hsl(var(--primary))" />
           MedMinder

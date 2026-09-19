@@ -8,6 +8,7 @@ import type { ExpiryTier } from "@/convex/lib/inventory";
 import { formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { MinusIcon, Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
+import { RollingNumber, SPRING } from "@/components/motion";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
@@ -80,8 +81,8 @@ export function MedicineCard({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          className={cn("rounded-lg border bg-card p-4", className)}
+          transition={SPRING}
+          className={cn("px-4 py-3.5", className)}
         >
           <MedicineForm
             initial={medicine}
@@ -103,7 +104,7 @@ export function MedicineCard({
             }}
           />
           {formError && (
-            <p role="alert" className="mt-2 text-sm text-destructive">
+            <p role="alert" className="mt-2 text-body-sm text-destructive">
               {formError}
             </p>
           )}
@@ -114,14 +115,14 @@ export function MedicineCard({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          className={cn("rounded-lg border bg-card p-4", className)}
+          transition={SPRING}
+          className={cn("px-4 py-3.5", className)}
         >
           <div className="flex items-start justify-between gap-4">
-            <Link href={`/medicines/${medicine._id}`} className="focus-card min-w-0 flex-1 rounded-sm">
-              <h3 className="font-display text-lg font-medium leading-snug">{medicine.name}</h3>
+            <Link href={`/medicines/${medicine._id}`} className="focus-card min-w-0 flex-1 rounded-lg">
+              <h3 className="text-body font-semibold">{medicine.name}</h3>
               {(medicine.strength || medicine.form) && (
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <p className="mt-0.5 text-body-sm text-muted-foreground">
                   {[medicine.strength, medicine.form].filter(Boolean).join(" · ")}
                 </p>
               )}
@@ -131,7 +132,7 @@ export function MedicineCard({
               type="button"
               onClick={onToggleEdit}
               aria-label={`Edit ${medicine.name}`}
-              className="focus-card flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="focus-card flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-link transition-colors hover:bg-pebble/60 active:bg-pebble"
             >
               <Pencil1Icon className="h-4 w-4" />
             </button>
@@ -140,7 +141,7 @@ export function MedicineCard({
           {tier && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <TierBadge tier={tier} />
-              {expiryDistance && <span className="text-sm text-muted-foreground">{expiryDistance}</span>}
+              {expiryDistance && <span className="text-body-sm text-muted-foreground">{expiryDistance}</span>}
             </div>
           )}
 
@@ -155,7 +156,7 @@ export function MedicineCard({
               {driftText && (
                 <p
                   className={cn(
-                    "mt-0.5 text-xs",
+                    "mt-0.5 text-caption",
                     diff < 0 ? "text-tier-critical" : "text-tier-watch",
                   )}
                 >
@@ -222,6 +223,9 @@ function QuantityStepper({
   }
 
   function nudge(delta: number) {
+    // A short tick on phones that support it: the count changed, and the
+    // hand should know without looking. Silent where vibrate is unsupported.
+    navigator.vibrate?.(8);
     commit(Math.max(0, value + delta));
   }
 
@@ -246,7 +250,7 @@ function QuantityStepper({
             setTyping(false);
           }
         }}
-        className="font-data h-11 w-20 rounded-sm border border-input bg-background px-2 text-lg touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="font-data h-11 w-20 rounded-lg border border-input bg-card px-2 text-subheading touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
     );
   }
@@ -257,7 +261,7 @@ function QuantityStepper({
         type="button"
         onClick={() => nudge(-1)}
         aria-label="Decrease"
-        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-95 active:bg-pebble motion-reduce:active:scale-100"
       >
         <MinusIcon className="h-4 w-4" />
       </button>
@@ -267,15 +271,16 @@ function QuantityStepper({
           setDraft(String(value));
           setTyping(true);
         }}
-        className="font-data h-11 min-w-[3.5rem] touch-manipulation rounded-sm text-center text-lg font-medium transition-colors hover:bg-secondary"
+        aria-label={`${formatQuantity(value)}, tap to type an exact count`}
+        className="font-data flex h-11 min-w-[3.5rem] touch-manipulation items-center justify-center rounded-full px-2 text-subheading font-semibold transition-colors hover:bg-pebble/60 active:bg-pebble"
       >
-        {formatQuantity(value)}
+        <RollingNumber value={value} format={formatQuantity} />
       </button>
       <button
         type="button"
         onClick={() => nudge(1)}
         aria-label="Increase"
-        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-95 active:bg-pebble motion-reduce:active:scale-100"
       >
         <PlusIcon className="h-4 w-4" />
       </button>

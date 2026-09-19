@@ -18,7 +18,7 @@ import { api } from "@/convex/_generated/api";
 import { DEFAULT_ALERT_TIERS } from "@/convex/lib/inventory";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 const DAYS = [
   "Sunday",
@@ -103,140 +103,176 @@ export default function SettingsPage() {
       />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-        <section className="flex flex-col gap-5">
-          <div>
-            <h2 className="font-display text-lg font-medium">Weekly email</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              A summary of what is expiring, so nothing depends on remembering
-              to check.
-            </p>
-          </div>
+        {/* Apple Settings pattern: a header on the canvas, the controls on one white group. */}
+        <section className="flex flex-col gap-2">
+          <SectionHeader title="Weekly email">
+            A summary of what is expiring, so nothing depends on remembering to
+            check.
+          </SectionHeader>
 
-          <label className="flex items-center gap-3 rounded-lg border bg-card p-4 cursor-pointer">
-            <Checkbox
-              checked={digestEnabled}
-              onCheckedChange={(checked) => setDigestEnabled(!!checked)}
-            />
-            <span className="text-sm font-medium">Send the weekly summary</span>
-          </label>
+          <div className="flex flex-col gap-5 rounded-lg bg-card p-4">
+            <label className="-mx-4 -mt-4 flex min-h-11 cursor-pointer items-center justify-between gap-3 border-b px-4 py-3 active:bg-pebble/60">
+              <span className="text-body">Send the weekly summary</span>
+              <Checkbox
+                checked={digestEnabled}
+                onCheckedChange={(checked) => setDigestEnabled(!!checked)}
+              />
+            </label>
 
-          <Field label="Send to">
-            <EmailChipInput value={digestEmails} onChange={setDigestEmails} />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Day">
-              <Select
-                value={String(digestDay)}
-                onValueChange={(v) => setDigestDay(Number(v))}
-              >
-                <SelectTrigger className="h-11">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DAYS.map((d, i) => (
-                    <SelectItem key={d} value={String(i)}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Field label="Send to">
+              <EmailChipInput value={digestEmails} onChange={setDigestEmails} />
             </Field>
 
-            <Field label="Hour">
-              <Select
-                value={String(digestHour)}
-                onValueChange={(v) => setDigestHour(Number(v))}
-              >
-                <SelectTrigger className="h-11 font-data">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 24 }).map((_, h) => (
-                    <SelectItem key={h} value={String(h)} className="font-data">
-                      {String(h).padStart(2, "0")}:00
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Day">
+                <Select
+                  value={String(digestDay)}
+                  onValueChange={(v) => setDigestDay(Number(v))}
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DAYS.map((d, i) => (
+                      <SelectItem key={d} value={String(i)}>
+                        {d}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+
+              <Field label="Hour">
+                <Select
+                  value={String(digestHour)}
+                  onValueChange={(v) => setDigestHour(Number(v))}
+                >
+                  <SelectTrigger className="h-11 font-data">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 24 }).map((_, h) => (
+                      <SelectItem
+                        key={h}
+                        value={String(h)}
+                        className="font-data"
+                      >
+                        {String(h).padStart(2, "0")}:00
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
+
+            <Field
+              label="Timezone"
+              hint="The hour above is read in this timezone."
+            >
+              <TimezoneCombobox value={timezone} onChange={setTimezone} />
             </Field>
           </div>
-
-          <Field label="Timezone" hint="The hour above is read in this timezone.">
-            <TimezoneCombobox value={timezone} onChange={setTimezone} />
-          </Field>
         </section>
 
-        <section className="flex flex-col gap-5 border-t pt-6">
-          <div>
-            <h2 className="font-display text-lg font-medium">Expiry alerts</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              How many days ahead each warning starts. Each must be sooner than
-              the one below it.
-            </p>
+        <section className="flex flex-col gap-2">
+          <SectionHeader title="Expiry alerts">
+            How many days ahead each warning starts. Each must be sooner than
+            the one below it.
+          </SectionHeader>
+
+          <div className="flex flex-col gap-5 rounded-lg bg-card p-4">
+            <Field label="Critical" hint="Too late to return. Default 30 days.">
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                required
+                value={alertTiers.critical}
+                onChange={(e) =>
+                  setAlertTiers((t) => ({
+                    ...t,
+                    critical: Number(e.target.value),
+                  }))
+                }
+                className="font-data h-11"
+              />
+            </Field>
+
+            <Field
+              label="Soon"
+              hint="Still returnable to most suppliers. Default 90 days."
+            >
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                required
+                value={alertTiers.warning}
+                onChange={(e) =>
+                  setAlertTiers((t) => ({
+                    ...t,
+                    warning: Number(e.target.value),
+                  }))
+                }
+                className="font-data h-11"
+              />
+            </Field>
+
+            <Field
+              label="Watch"
+              hint="Worth planning around. Default 180 days."
+            >
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                required
+                value={alertTiers.watch}
+                onChange={(e) =>
+                  setAlertTiers((t) => ({
+                    ...t,
+                    watch: Number(e.target.value),
+                  }))
+                }
+                className="font-data h-11"
+              />
+            </Field>
           </div>
-
-          <Field label="Critical" hint="Too late to return. Default 30 days.">
-            <Input
-              type="number"
-              inputMode="numeric"
-              min={1}
-              step={1}
-              required
-              value={alertTiers.critical}
-              onChange={(e) =>
-                setAlertTiers((t) => ({ ...t, critical: Number(e.target.value) }))
-              }
-              className="font-data h-11"
-            />
-          </Field>
-
-          <Field label="Soon" hint="Still returnable to most suppliers. Default 90 days.">
-            <Input
-              type="number"
-              inputMode="numeric"
-              min={1}
-              step={1}
-              required
-              value={alertTiers.warning}
-              onChange={(e) =>
-                setAlertTiers((t) => ({ ...t, warning: Number(e.target.value) }))
-              }
-              className="font-data h-11"
-            />
-          </Field>
-
-          <Field label="Watch" hint="Worth planning around. Default 180 days.">
-            <Input
-              type="number"
-              inputMode="numeric"
-              min={1}
-              step={1}
-              required
-              value={alertTiers.watch}
-              onChange={(e) =>
-                setAlertTiers((t) => ({ ...t, watch: Number(e.target.value) }))
-              }
-              className="font-data h-11"
-            />
-          </Field>
         </section>
 
         {error && (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-body-sm text-destructive">
             {error}
           </p>
         )}
         {saved && !error && (
-          <p role="status" className="text-sm text-tier-ok">
+          <p role="status" className="text-body-sm text-tier-ok">
             Settings saved.
           </p>
         )}
 
-        <Button type="submit" disabled={saving} className="h-11">
+        <Button type="submit" disabled={saving}>
           {saving ? "Saving…" : "Save settings"}
         </Button>
       </form>
     </Page>
+  );
+}
+
+function SectionHeader({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="px-1">
+      <h2 className="font-display text-subheading font-semibold">{title}</h2>
+      <p className="mt-0.5 text-body-sm text-muted-foreground">{children}</p>
+    </div>
   );
 }

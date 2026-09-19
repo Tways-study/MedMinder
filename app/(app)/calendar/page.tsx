@@ -1,12 +1,12 @@
 "use client";
 
-import { FadeSlideIn } from "@/components/motion";
 import {
   CardSkeleton,
   EmptyState,
   Page,
   PageHeader,
 } from "@/components/page-shell";
+import { GroupedList, GroupedListRow } from "@/components/grouped-list";
 import { TierBadge } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
@@ -70,7 +70,9 @@ export default function CalendarPage() {
 
   const [viewMonth, setViewMonth] = useState(todayUtc);
   const [selectedKey, setSelectedKey] = useState(() =>
-    toDateInput(Date.UTC(todayUtc().year, todayUtc().month, new Date().getUTCDate())),
+    toDateInput(
+      Date.UTC(todayUtc().year, todayUtc().month, new Date().getUTCDate()),
+    ),
   );
 
   if (medicines === undefined || settings === undefined) {
@@ -95,7 +97,10 @@ export default function CalendarPage() {
     if (m.expiryDate === undefined) continue;
     datedCount++;
     const key = toDateInput(m.expiryDate);
-    const entry: DayMedicine = { ...m, tier: expiryTier(m.expiryDate, now, tiers) };
+    const entry: DayMedicine = {
+      ...m,
+      tier: expiryTier(m.expiryDate, now, tiers),
+    };
     const bucket = byDay.get(key);
     if (bucket) bucket.push(entry);
     else byDay.set(key, [entry]);
@@ -121,11 +126,14 @@ export default function CalendarPage() {
   const { year, month } = viewMonth;
   const firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-  const monthLabel = new Date(Date.UTC(year, month, 1)).toLocaleDateString("en-GB", {
-    timeZone: "UTC",
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = new Date(Date.UTC(year, month, 1)).toLocaleDateString(
+    "en-GB",
+    {
+      timeZone: "UTC",
+      month: "long",
+      year: "numeric",
+    },
+  );
 
   function step(delta: number) {
     setViewMonth(({ year, month }) => {
@@ -142,7 +150,8 @@ export default function CalendarPage() {
 
   const selectedItems = selectedKey ? (byDay.get(selectedKey) ?? []) : [];
   const selectedSorted = [...selectedItems].sort(
-    (a, b) => TIER_RANK[b.tier] - TIER_RANK[a.tier] || a.name.localeCompare(b.name),
+    (a, b) =>
+      TIER_RANK[b.tier] - TIER_RANK[a.tier] || a.name.localeCompare(b.name),
   );
 
   return (
@@ -157,22 +166,24 @@ export default function CalendarPage() {
         }
       />
 
-      <div className="rounded-lg border bg-card p-4">
+      <div className="rounded-lg bg-card p-4">
         <div className="mb-4 flex items-center justify-between">
           <button
             type="button"
             onClick={() => step(-1)}
             aria-label="Previous month"
-            className="focus-card flex h-11 w-11 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="focus-card flex h-11 w-11 items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-95 active:bg-pebble motion-reduce:active:scale-100"
           >
             <ChevronLeftIcon className="h-5 w-5" />
           </button>
-          <h2 className="font-display text-lg font-medium">{monthLabel}</h2>
+          <h2 className="font-display text-subheading font-semibold">
+            {monthLabel}
+          </h2>
           <button
             type="button"
             onClick={() => step(1)}
             aria-label="Next month"
-            className="focus-card flex h-11 w-11 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="focus-card flex h-11 w-11 items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-95 active:bg-pebble motion-reduce:active:scale-100"
           >
             <ChevronRightIcon className="h-5 w-5" />
           </button>
@@ -207,15 +218,15 @@ export default function CalendarPage() {
                 }`}
                 aria-pressed={isSelected}
                 className={cn(
-                  "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-sm py-1.5 text-sm transition-colors",
-                  tint ?? "hover:bg-secondary",
+                  "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-body-sm transition-colors active:bg-pebble",
+                  tint ?? "hover:bg-frost",
                   isSelected && "ring-2 ring-ring",
                 )}
               >
                 <span
                   className={cn(
                     "font-data leading-none",
-                    isToday && "font-bold text-primary",
+                    isToday && "font-semibold text-link",
                   )}
                 >
                   {day}
@@ -231,42 +242,36 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {selectedKey && (
-        <section className="flex flex-col gap-3">
-          <h3 className="font-display text-lg font-medium">
-            {formatDate(fromDateInput(selectedKey))}
-          </h3>
-          {selectedSorted.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+      {selectedKey &&
+        (selectedSorted.length === 0 ? (
+          <section className="flex flex-col gap-2">
+            <h3 className="px-1 font-display text-subheading font-semibold">
+              {formatDate(fromDateInput(selectedKey))}
+            </h3>
+            <p className="px-1 text-body-sm text-muted-foreground">
               Nothing expires on this day.
             </p>
-          ) : (
-            selectedSorted.map((m) => (
-              <FadeSlideIn key={m._id}>
-                <Link
-                  href={`/medicines/${m._id}`}
-                  className="focus-card flex items-start justify-between gap-3 rounded-lg border bg-card p-4"
-                >
-                  <div className="min-w-0">
-                    <p className="font-display text-base font-medium leading-snug">
-                      {m.name}
+          </section>
+        ) : (
+          <GroupedList title={formatDate(fromDateInput(selectedKey))}>
+            {selectedSorted.map((m) => (
+              <GroupedListRow key={m._id} href={`/medicines/${m._id}`}>
+                <div className="min-w-0">
+                  <p className="text-body font-semibold">{m.name}</p>
+                  {(m.strength || m.form) && (
+                    <p className="mt-0.5 text-body-sm text-muted-foreground">
+                      {[m.strength, m.form].filter(Boolean).join(" · ")}
                     </p>
-                    {(m.strength || m.form) && (
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        {[m.strength, m.form].filter(Boolean).join(" · ")}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {formatExpiryDistance(m.expiryDate as number, now)}
-                    </p>
-                  </div>
-                  <TierBadge tier={m.tier} className="shrink-0" />
-                </Link>
-              </FadeSlideIn>
-            ))
-          )}
-        </section>
-      )}
+                  )}
+                  <p className="mt-1 text-body-sm text-muted-foreground">
+                    {formatExpiryDistance(m.expiryDate as number, now)}
+                  </p>
+                </div>
+                <TierBadge tier={m.tier} className="shrink-0 self-center" />
+              </GroupedListRow>
+            ))}
+          </GroupedList>
+        ))}
     </Page>
   );
 }

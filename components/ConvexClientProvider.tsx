@@ -2,6 +2,7 @@
 
 import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
 import { ConvexReactClient } from "convex/react";
+import { MotionConfig } from "framer-motion";
 import { ReactNode } from "react";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!, {
@@ -15,7 +16,8 @@ export default function ConvexClientProvider({
 }) {
   return (
     <ConvexAuthNextjsProvider client={convex}>
-      {children}
+      {/* Reduced motion keeps opacity changes and drops movement. */}
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
     </ConvexAuthNextjsProvider>
   );
 }

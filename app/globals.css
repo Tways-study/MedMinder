@@ -3,11 +3,15 @@
 @tailwind utilities;
 
 /*
-  MedMinder — purple pastel apothecary.
+  MedMinder — purple pastel apothecary, with Apple's restraint.
 
   The palette is anchored on gentian violet, a real pharmacy antiseptic dye, so
   the purple comes from the subject rather than from decoration. Surfaces are
   violet-tinted rather than cream: this is a dispensary, not a bakery.
+
+  The structure borrows Apple's discipline: grouped surfaces instead of shadows,
+  pills for anything pressed, one accent that means "act here". Orchid is that
+  accent; everything else is tinted neutral.
 
   Every text pairing below is measured against the surface it actually sits on,
   not eyeballed. Pastels fail contrast easily.
@@ -19,24 +23,15 @@
 @layer base {
   :root {
     /* Palette */
-    --paper: 280 33.3% 96.5%; /* #F7F3F9 */
-    --surface: 280 60% 99%; /* #FDFBFE */
-    --lilac: 272.3 35.1% 92.7%; /* #EDE6F3 */
+    --paper: 280 33.3% 96.5%; /* #F7F3F9 — canvas */
+    --surface: 280 60% 99%; /* #FDFBFE — grouped surfaces */
+    --lilac: 272.3 35.1% 92.7%; /* #EDE6F3 — secondary fills, selected rows */
     --hairline: 271.4 33.3% 87.6%; /* #E0D5EA — decorative only, no WCAG floor */
-    --input-line: 269 29% 60.8%; /* #9A7EB8 — 3.16:1, meets WCAG 1.4.11 */
-    --orchid: 263.6 36.2% 45.5%; /* #6B4A9E — 6.18:1 on paper */
+    --input-line: 269 29% 60.8%; /* #9A7EB8 — 3.37:1 on surface, meets WCAG 1.4.11 */
+    --orchid: 263.6 36.2% 45.5%; /* #6B4A9E — 6.18:1 on paper, 5.56:1 on lilac */
     --amethyst: 263.8 29.3% 51.2%; /* #7B5EA7 — 4.78:1 on paper */
     --ink: 262.5 18.2% 17.3%; /* #2A2434 — 13.67:1 on paper */
-    --muted-ink: 270 9% 43.5%; /* #6F6579 — 5.02:1 on paper */
-
-    /*
-      Aliases for the Glow component's own token names. Deliberately mapped to
-      the existing orchid/amethyst rather than the orange values Glow ships
-      with by default — one accent color for the whole app, not a second hue
-      introduced by a single component.
-    */
-    --brand: var(--orchid);
-    --brand-foreground: var(--amethyst);
+    --muted-ink: 270 9% 43.5%; /* #6F6579 — 5.02:1 on paper, 4.51:1 on lilac */
 
     /*
       Expiry tiers.
@@ -67,6 +62,7 @@
     --popover-foreground: var(--ink);
     --primary: var(--orchid);
     --primary-foreground: var(--paper);
+    --link: var(--orchid);
     --secondary: var(--lilac);
     --secondary-foreground: var(--orchid);
     --muted: var(--lilac);
@@ -79,8 +75,20 @@
     --input: var(--input-line);
     --ring: var(--orchid);
 
-    /* Shape rule: surfaces 12px (lg), controls 8px (sm). Nothing else. */
-    --radius: 0.75rem;
+    /* Names the layout uses for canvas and pressed fills. */
+    --frost: var(--paper);
+    --pebble: var(--lilac);
+
+    /*
+      Shape rule: surfaces 8px, everything you press is a full pill.
+      Nothing else.
+    */
+    --radius: 0.5rem;
+
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter),
+      system-ui, sans-serif;
+    --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+      var(--font-inter), system-ui, sans-serif;
   }
 }
 
@@ -90,29 +98,29 @@
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: var(--font-karla), ui-sans-serif, system-ui, sans-serif;
+    @apply bg-background text-body text-foreground;
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
   }
 
   /*
     Lot numbers, expiry dates and quantities are compared down a column and
-    against a physical box, so they are set in mono with tabular figures.
+    against a physical box, so they use the system face's tabular figures —
+    aligned columns without dropping into a monospace.
   */
   .font-data {
-    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-family: var(--font-sans);
     font-variant-numeric: tabular-nums;
   }
 
+  /* Display cut for titles; tracking comes from the type scale. */
   .font-display {
-    font-family: var(--font-petrona), ui-serif, Georgia, serif;
+    font-family: var(--font-display);
   }
 
-  /*
-    Field labels on a dispensing label: small, letterspaced, quiet.
-    Functional, not decorative — each one names the value beneath it.
-  */
+  /* Names the value beneath it: small, sentence case, quiet. */
   .label-field {
-    @apply text-[0.6875rem] uppercase tracking-[0.12em] text-muted-foreground;
+    @apply text-footnote text-muted-foreground;
   }
 
   /*
@@ -121,7 +129,25 @@
     outline. Focus should look the same everywhere it lands.
   */
   .focus-card {
-    @apply rounded-lg outline-none ring-offset-2 ring-offset-background
-      focus-visible:ring-2 focus-visible:ring-ring;
+    @apply outline-none ring-inset focus-visible:ring-2 focus-visible:ring-ring;
+  }
+
+  /*
+    Floating chrome is a translucent material: content scrolls under it and
+    stays faintly visible. When the person asks for less transparency, it
+    becomes a solid surface instead.
+  */
+  .material {
+    background-color: hsl(var(--surface) / 0.72);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .material {
+      background-color: hsl(var(--surface));
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
   }
 }

@@ -8,7 +8,7 @@ import {
 } from "@/components/page-shell";
 import { TierBadge, tierStyle } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { GroupedList, GroupedListRow } from "@/components/grouped-list";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -34,6 +34,7 @@ import { parseSearch } from "@/convex/lib/search";
 import { formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { usePaginatedQuery, useQuery } from "convex/react";
+import { ChevronRightIcon } from "@radix-ui/react-icons";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -56,9 +57,12 @@ const SORT_LABELS: Record<MedicineSort, string> = {
 
 // Written out in full so Tailwind can see them; they mirror TierBadge's fills.
 const CHIP_ON: Record<Exclude<ExpiryStatus, "none">, string> = {
-  expired: "data-[state=on]:bg-tier-expired-bg data-[state=on]:text-tier-expired",
-  critical: "data-[state=on]:bg-tier-critical-bg data-[state=on]:text-tier-critical",
-  warning: "data-[state=on]:bg-tier-warning-bg data-[state=on]:text-tier-warning",
+  expired:
+    "data-[state=on]:bg-tier-expired-bg data-[state=on]:text-tier-expired",
+  critical:
+    "data-[state=on]:bg-tier-critical-bg data-[state=on]:text-tier-critical",
+  warning:
+    "data-[state=on]:bg-tier-warning-bg data-[state=on]:text-tier-warning",
   watch: "data-[state=on]:bg-tier-watch-bg data-[state=on]:text-tier-watch",
   ok: "data-[state=on]:bg-tier-ok-bg data-[state=on]:text-tier-ok",
 };
@@ -67,7 +71,7 @@ const NO_FILTER: MedicineFilter = { statuses: [], lowStockOnly: false };
 
 // Shared by every chip so status and low-stock toggles read as one control row.
 const CHIP =
-  "h-9 gap-1.5 rounded-sm border border-input px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted data-[state=on]:border-transparent";
+  "h-9 gap-1.5 rounded-full border border-border bg-card px-3 text-footnote font-medium text-foreground hover:bg-card data-[state=on]:border-transparent";
 
 export default function MedicinesPage() {
   const [search, setSearch] = useState("");
@@ -87,17 +91,16 @@ export default function MedicinesPage() {
   const filtering = isFiltering(filter);
   // Name order without filters is the index order, so it can page; anything
   // else needs the whole shelf in hand to filter or order it.
-  const usePaging = !isSearching && !filtering && !typedStatus && sort === "name";
+  const usePaging =
+    !isSearching && !filtering && !typedStatus && sort === "name";
 
   const {
     results: browseResults,
     status,
     loadMore,
-  } = usePaginatedQuery(
-    api.medicines.listPaged,
-    usePaging ? {} : "skip",
-    { initialNumItems: PAGE_SIZE },
-  );
+  } = usePaginatedQuery(api.medicines.listPaged, usePaging ? {} : "skip", {
+    initialNumItems: PAGE_SIZE,
+  });
   const allMedicines = useQuery(
     api.medicines.list,
     !isSearching && !usePaging ? {} : "skip",
@@ -119,7 +122,11 @@ export default function MedicinesPage() {
   const shownResults = searchResults ?? lastResults;
 
   // Search keeps its best-match order; filters still narrow it.
-  const source = isSearching ? shownResults : usePaging ? browseResults : allMedicines;
+  const source = isSearching
+    ? shownResults
+    : usePaging
+      ? browseResults
+      : allMedicines;
   const filtered =
     source === undefined
       ? []
@@ -129,9 +136,13 @@ export default function MedicinesPage() {
           now,
           tiers,
         );
-  const displayedMedicines = isSearching ? filtered : sortMedicines(filtered, sort);
+  const displayedMedicines = isSearching
+    ? filtered
+    : sortMedicines(filtered, sort);
 
-  const isLoading = usePaging ? status === "LoadingFirstPage" : source === undefined;
+  const isLoading = usePaging
+    ? status === "LoadingFirstPage"
+    : source === undefined;
   const shelfIsEmpty =
     !isSearching &&
     !filtering &&
@@ -160,13 +171,12 @@ export default function MedicinesPage() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, or type expired, critical, low stock…"
             aria-label="Search medicines by name or status"
-            className="h-11"
           />
 
           {typedStatus && (
             <div
               aria-live="polite"
-              className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground"
+              className="flex flex-wrap items-center gap-1.5 text-body-sm text-muted-foreground"
             >
               <span>Only showing</span>
               {parsed.statuses.map((s) =>
@@ -186,7 +196,10 @@ export default function MedicinesPage() {
               aria-label="Filter by expiry"
               value={filter.statuses}
               onValueChange={(statuses) =>
-                setFilter((f) => ({ ...f, statuses: statuses as ExpiryStatus[] }))
+                setFilter((f) => ({
+                  ...f,
+                  statuses: statuses as ExpiryStatus[],
+                }))
               }
               className="flex-wrap justify-start gap-1.5"
             >
@@ -212,14 +225,17 @@ export default function MedicinesPage() {
             </Toggle>
           </div>
 
-          <div className="flex min-h-9 items-center justify-between gap-3 text-sm text-muted-foreground">
+          <div className="flex min-h-9 items-center justify-between gap-3 text-body-sm text-muted-foreground">
             {isSearching ? (
               <span>Best match first</span>
             ) : (
-              <Select value={sort} onValueChange={(v) => setSort(v as MedicineSort)}>
+              <Select
+                value={sort}
+                onValueChange={(v) => setSort(v as MedicineSort)}
+              >
                 <SelectTrigger
                   aria-label="Sort medicines"
-                  className="h-9 w-auto gap-2 border-none px-0 shadow-none focus:ring-0 focus-visible:ring-1"
+                  className="h-9 w-auto gap-2 rounded-full border-none bg-transparent px-0 text-body-sm focus-visible:ring-2"
                 >
                   <span>Sort by</span>
                   <span className="font-medium text-foreground">
@@ -243,7 +259,6 @@ export default function MedicinesPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 px-2"
                   onClick={() => setFilter(NO_FILTER)}
                 >
                   Clear filters
@@ -268,7 +283,9 @@ export default function MedicinesPage() {
         />
       )}
 
-      {!isLoading && !shelfIsEmpty && displayedMedicines.length === 0 &&
+      {!isLoading &&
+        !shelfIsEmpty &&
+        displayedMedicines.length === 0 &&
         (isSearching ? (
           <EmptyState
             title="Nothing matches that"
@@ -298,45 +315,50 @@ export default function MedicinesPage() {
         ))}
 
       {displayedMedicines.length > 0 && (
-        <ul className="flex flex-col gap-3">
+        <GroupedList>
           {displayedMedicines.map((m) => {
             const low = isLowStock(m);
             const tier =
-              m.expiryDate === undefined ? null : expiryTier(m.expiryDate, now, tiers);
+              m.expiryDate === undefined
+                ? null
+                : expiryTier(m.expiryDate, now, tiers);
+            const flagged = (tier && tier !== "ok") || low;
 
             return (
-              <li key={m._id}>
-                <Card className="overflow-hidden p-0 transition-colors hover:border-input">
-                  <Link
-                    href={`/medicines/${m._id}`}
-                    className="focus-card flex items-start justify-between gap-4 p-4"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-display text-lg font-medium leading-snug">
-                        {m.name}
-                      </p>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        {[m.strength, m.form].filter(Boolean).join(" · ")}
-                        {m.genericName ? ` · ${m.genericName}` : ""}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {tier && tier !== "ok" && <TierBadge tier={tier} />}
-                        {low && <PlainBadge>Low stock</PlainBadge>}
-                      </div>
+              <GroupedListRow key={m._id} href={`/medicines/${m._id}`}>
+                <div className="min-w-0">
+                  <p className="text-body font-semibold">{m.name}</p>
+                  <p className="mt-0.5 text-body-sm text-muted-foreground">
+                    {[m.strength, m.form].filter(Boolean).join(" · ")}
+                    {m.genericName ? ` · ${m.genericName}` : ""}
+                  </p>
+                  {flagged && (
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      {tier && tier !== "ok" && <TierBadge tier={tier} />}
+                      {low && <PlainBadge>Low stock</PlainBadge>}
                     </div>
+                  )}
+                </div>
 
-                    <div className="shrink-0 text-right">
-                      <p className="font-data text-xl font-medium leading-none">
-                        {formatQuantity(m.onHandQuantity)}
-                      </p>
-                      <p className="label-field mt-1">On hand</p>
-                    </div>
-                  </Link>
-                </Card>
-              </li>
+                <div className="flex shrink-0 items-center gap-2 self-center">
+                  <div className="text-right">
+                    <p className="font-data text-subheading font-semibold">
+                      {formatQuantity(m.onHandQuantity)}
+                    </p>
+                    <p className="text-caption text-muted-foreground">
+                      On hand
+                    </p>
+                  </div>
+                  {/* The iOS cue that a row opens something. */}
+                  <ChevronRightIcon
+                    aria-hidden
+                    className="h-4 w-4 text-muted-foreground/70"
+                  />
+                </div>
+              </GroupedListRow>
             );
           })}
-        </ul>
+        </GroupedList>
       )}
 
       {usePaging && status === "CanLoadMore" && (
@@ -350,7 +372,9 @@ export default function MedicinesPage() {
       )}
 
       {usePaging && status === "LoadingMore" && (
-        <p className="mt-1 text-center text-sm text-muted-foreground">Loading…</p>
+        <p className="mt-1 text-center text-body-sm text-muted-foreground">
+          Loading…
+        </p>
       )}
     </Page>
   );
@@ -358,7 +382,7 @@ export default function MedicinesPage() {
 
 function PlainBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-sm bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+    <span className="rounded-full bg-secondary px-2.5 py-1 text-caption font-medium text-secondary-foreground">
       {children}
     </span>
   );
