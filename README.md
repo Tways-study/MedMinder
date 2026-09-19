@@ -1,8 +1,25 @@
-# MedMinder
+<h1 align="center">MedMinder</h1>
 
-A personal medicine inventory tracker for pharmacists and clinics. Track stock levels, expiry dates, and reorder points across your entire shelf — with a weekly email digest so nothing slips through.
+---
 
-Built with [Convex](https://convex.dev/), [Next.js](https://nextjs.org/), [Convex Auth](https://labs.convex.dev/auth), [Tailwind CSS](https://tailwindcss.com/), and [shadcn/ui](https://ui.shadcn.com/).
+<p align="center"><em>"Track. Manage. Never Run Out."</em></p>
+
+<p align="center">
+  A personal medicine inventory tracker for pharmacists and clinics — track stock levels, expiry dates, and reorder points across your entire shelf, with a weekly digest so nothing slips through.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js 15" />
+  <img src="https://img.shields.io/badge/React-19-149ECA?style=flat-square&logo=react&logoColor=white" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript 5" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-v3-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS v3" />
+  <img src="https://img.shields.io/badge/Convex-1-EE342F?style=flat-square&logo=convex&logoColor=white" alt="Convex 1" />
+  <img src="https://img.shields.io/badge/License-None-lightgrey?style=flat-square" alt="License: None" />
+</p>
+
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=nextjs,react,ts,tailwind" alt="Next.js, React, TypeScript, Tailwind CSS" />
+</p>
 
 ## Features
 
