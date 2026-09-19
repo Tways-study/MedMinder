@@ -27,7 +27,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           href="/"
           className="focus-card flex items-center gap-2 rounded-full py-1 pr-2 text-body font-semibold"
         >
-          <LogoMark className="h-6 w-6" color="hsl(var(--primary))" />
+          <LogoMark className="h-6 w-6" />
           MedMinder
         </Link>
         <UserMenu />

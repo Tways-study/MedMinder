@@ -44,7 +44,7 @@ export default function SignInPage() {
       */}
       <div className="w-full max-w-sm motion-safe:animate-in motion-safe:fade-in-0 motion-safe:duration-500">
         <div className="flex flex-col items-center gap-4 text-center">
-          <LogoMark className="h-12 w-12" color="hsl(var(--primary))" />
+          <LogoMark className="h-12 w-12" />
           <div>
             <h1 className="font-display text-title font-semibold">
               {flow === "signUp" ? "Create your account" : "Sign in to MedMinder"}
