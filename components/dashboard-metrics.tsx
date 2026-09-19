@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { RollingNumber } from "@/components/motion";
 import { formatQuantity } from "@/lib/format";
 
 interface DashboardMetricsProps {
@@ -25,12 +26,16 @@ function MetricTile({
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-lg border bg-card p-4">
+    <div className="bg-card p-4">
       <p className="label-field">{label}</p>
-      <p className={cn("font-data mt-1 text-2xl font-medium leading-none", valueClass)}>
-        {typeof value === "number" ? formatQuantity(value) : value}
+      <p className={cn("font-data mt-1 text-title font-semibold", valueClass)}>
+        {typeof value === "number" ? (
+          <RollingNumber value={value} format={formatQuantity} />
+        ) : (
+          value
+        )}
       </p>
-      <p className="mt-1 text-xs text-muted-foreground">{note}</p>
+      <p className="mt-1 text-caption text-muted-foreground">{note}</p>
     </div>
   );
 }
@@ -47,7 +52,9 @@ export function DashboardMetrics({
   const activeUnits = activeTab === "onHand" ? onHandUnits : actualUnits;
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    // One grouped block, not four cards: the 1px gap over a hairline-coloured
+    // backing draws the dividers, so the tiles read as a single summary.
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-border sm:grid-cols-4">
       <MetricTile
         label="Total stock"
         value={activeUnits}

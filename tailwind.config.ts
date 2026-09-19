@@ -49,11 +49,10 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        orchid: "hsl(var(--orchid))",
-        amethyst: "hsl(var(--amethyst))",
-        // Aliases consumed by the Glow component; see app/globals.css.
-        brand: "hsl(var(--brand))",
-        "brand-foreground": "hsl(var(--brand-foreground))",
+        // The accent as text or outline (orchid); --primary is the same hue as a fill.
+        link: "hsl(var(--link))",
+        frost: "hsl(var(--frost))",
+        pebble: "hsl(var(--pebble))",
         // Expiry severity ramp. Paired fg/bg so a badge can never be assembled
         // from a mismatched combination.
         tier: {
@@ -79,15 +78,32 @@ export default {
           },
         },
       },
+      // No elevation on surfaces. The one exception is chrome that floats over
+      // content — menus, popovers, dialogs — which needs separation to read.
+      boxShadow: {
+        float: "0 8px 30px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.04)",
+      },
+      // Two shapes only: 8px surfaces, full pills for anything pressed.
       borderRadius: {
+        sm: "var(--radius)",
+        md: "var(--radius)",
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        xl: "var(--radius)",
       },
       fontFamily: {
-        display: ["var(--font-petrona)", "ui-serif", "Georgia", "serif"],
-        sans: ["var(--font-karla)", "ui-sans-serif", "system-ui", "sans-serif"],
-        data: ["var(--font-plex-mono)", "ui-monospace", "monospace"],
+        sans: ["var(--font-sans)"],
+        display: ["var(--font-display)"],
+      },
+      // Tracking is size-specific: tighter as type grows, never one value for
+      // every size. Leading runs the other way — loose for body, tight for titles.
+      fontSize: {
+        caption: ["0.75rem", { lineHeight: "1.33", letterSpacing: "-0.01em" }],
+        footnote: ["0.8125rem", { lineHeight: "1.38", letterSpacing: "-0.006em" }],
+        "body-sm": ["0.875rem", { lineHeight: "1.43", letterSpacing: "-0.016em" }],
+        body: ["1.0625rem", { lineHeight: "1.47", letterSpacing: "-0.022em" }],
+        subheading: ["1.3125rem", { lineHeight: "1.24", letterSpacing: "-0.012em" }],
+        title: ["1.75rem", { lineHeight: "1.14", letterSpacing: "-0.014em" }],
+        "large-title": ["2.125rem", { lineHeight: "1.12", letterSpacing: "-0.024em" }],
       },
     },
   },

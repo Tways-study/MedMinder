@@ -31,8 +31,8 @@ function StatTile({
   return (
     <Card className="min-w-[7.5rem] flex-1 p-4">
       <p className="label-field">{label}</p>
-      <p className="font-data mt-1 text-2xl font-medium leading-none">{value}</p>
-      {flag && <p className="mt-1 text-xs font-medium text-primary">{flag}</p>}
+      <p className="font-data mt-1 text-title font-semibold">{value}</p>
+      {flag && <p className="mt-1 text-caption font-medium text-link">{flag}</p>}
     </Card>
   );
 }
@@ -44,18 +44,18 @@ function VarianceTile({ variance }: { variance: number }) {
     variance > 0 ? `+${formatQuantity(variance)}` : formatQuantity(variance);
 
   const styles = {
-    positive: { value: "text-[color:var(--tier-ok-fg)]", label: "Surplus" },
-    negative: { value: "text-[color:var(--tier-critical-fg)]", label: "Deficit" },
+    positive: { value: "text-tier-ok", label: "Surplus" },
+    negative: { value: "text-tier-critical", label: "Deficit" },
     equal: { value: "text-muted-foreground", label: "Balanced" },
   }[sign];
 
   return (
     <Card className="min-w-[7.5rem] flex-1 p-4">
       <p className="label-field">Variance</p>
-      <p className={`font-data mt-1 text-2xl font-medium leading-none ${styles.value}`}>
+      <p className={`font-data mt-1 text-title font-semibold ${styles.value}`}>
         {valueStr}
       </p>
-      <p className={`mt-1 text-xs font-medium ${styles.value}`}>{styles.label}</p>
+      <p className={`mt-1 text-caption font-medium ${styles.value}`}>{styles.label}</p>
     </Card>
   );
 }
@@ -154,11 +154,11 @@ export default function MedicineDetailPage() {
       </div>
 
       {medicine.notes && (
-        <p className="rounded-lg border bg-card p-4 text-sm">{medicine.notes}</p>
+        <p className="rounded-lg border bg-card p-4 text-body-sm">{medicine.notes}</p>
       )}
 
       {error && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-body-sm text-destructive">
           {error}
         </p>
       )}
@@ -178,7 +178,7 @@ export default function MedicineDetailPage() {
         ) : (
           <div className="flex flex-col gap-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium">
+              <span className="text-body-sm font-medium">
                 Type <span className="font-data">{medicine.name}</span> to confirm
               </span>
               <Input
@@ -224,7 +224,7 @@ export default function MedicineDetailPage() {
             </div>
           </div>
         )}
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 text-caption text-muted-foreground">
           This removes the medicine and its stock numbers. It cannot be undone.
         </p>
       </section>

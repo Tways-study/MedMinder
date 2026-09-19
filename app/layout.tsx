@@ -1,32 +1,17 @@
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Karla, Petrona } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
 /*
-  Petrona for headings: a warm, slightly irregular serif that reads hand-set
-  rather than corporate, which is the register of an apothecary label. Used at
-  heading sizes only — never for data.
+  The system face comes first: on an iPhone or Mac that is SF Pro, with its
+  optical sizes and tracking tables. Inter only fills in on devices without
+  it, so it is loaded as a fallback, not as the identity.
 */
-const petrona = Petrona({
-  variable: "--font-petrona",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  display: "swap",
-});
-
-/* Karla for body: a grotesque with enough character to not read as a default. */
-const karla = Karla({
-  variable: "--font-karla",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-/* Plex Mono for lot numbers, expiry dates and quantities — tabular figures. */
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-plex-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
   display: "swap",
 });
 
@@ -49,10 +34,9 @@ export default function RootLayout({
 }>) {
   return (
     <ConvexAuthNextjsServerProvider>
-      <html lang="en">
-        <body
-          className={`${petrona.variable} ${karla.variable} ${plexMono.variable} antialiased`}
-        >
+      {/* On <html>, not <body>: --font-sans on :root references --font-inter. */}
+      <html lang="en" className={inter.variable}>
+        <body className="antialiased">
           <ConvexClientProvider>{children}</ConvexClientProvider>
         </body>
       </html>

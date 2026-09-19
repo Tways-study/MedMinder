@@ -45,14 +45,14 @@ export function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-body-sm font-medium">{label}</span>
       {children}
       {/* Hint above error: the hint explains, the error corrects. */}
       {hint && !error && (
-        <span className="text-xs text-muted-foreground">{hint}</span>
+        <span className="text-footnote text-muted-foreground">{hint}</span>
       )}
       {error && (
-        <span role="alert" className="text-xs text-destructive">
+        <span role="alert" className="text-footnote text-destructive">
           {error}
         </span>
       )}
@@ -174,7 +174,7 @@ export function MedicineForm({
             name="form"
             defaultValue={initial?.form ?? "tablet"}
             className={cn(
-              "h-11 rounded-sm border border-input bg-background px-3 text-sm",
+              "h-11 rounded-lg border border-input bg-card px-3.5 text-body",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             )}
           >
@@ -263,7 +263,7 @@ export function MedicineForm({
       </Field>
 
       {error && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="text-body-sm text-destructive">
           {error}
         </p>
       )}

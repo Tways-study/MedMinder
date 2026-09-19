@@ -1,5 +1,6 @@
 "use client";
 
+import { SPRING } from "@/components/motion";
 import { cn } from "@/lib/utils";
 import {
   ArchiveIcon,
@@ -7,6 +8,7 @@ import {
   DashboardIcon,
   GearIcon,
 } from "@radix-ui/react-icons";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -34,7 +36,9 @@ export function AppNav() {
     <nav
       aria-label="Main"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 backdrop-blur",
+        // A translucent material, not an opaque strip: the list scrolls
+        // under it and stays faintly visible (solid under reduced transparency).
+        "material fixed inset-x-0 bottom-0 z-40 border-t border-border/70",
         "pb-[env(safe-area-inset-bottom)]",
         "sm:inset-y-0 sm:right-auto sm:w-56 sm:border-r sm:border-t-0 sm:pb-0",
       )}
@@ -49,15 +53,30 @@ export function AppNav() {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   // 56px tall: a thumb target, not a mouse target.
-                  "flex h-14 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium transition-colors",
-                  "sm:h-11 sm:flex-row sm:justify-start sm:gap-3 sm:rounded-sm sm:px-3 sm:text-sm",
+                  "focus-card relative flex h-14 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium transition-colors",
+                  "sm:h-11 sm:flex-row sm:justify-start sm:gap-3 sm:rounded-lg sm:px-3 sm:text-body-sm",
+                  // Selected state is the one place the accent appears in
+                  // chrome; orchid holds 5.5:1 even on the lilac highlight.
                   active
-                    ? "text-primary sm:bg-secondary"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "text-link"
+                    : "text-muted-foreground hover:text-foreground active:bg-pebble/40",
                 )}
               >
-                <Icon className="h-5 w-5 shrink-0" aria-hidden />
-                {label}
+                {/*
+                  One highlight that glides to the new page rather than
+                  blinking off and on, so the rail shows where you moved from.
+                  Desktop only: a phone tab bar marks the active tab by colour.
+                */}
+                {active && (
+                  <motion.span
+                    layoutId="nav-active"
+                    transition={SPRING}
+                    aria-hidden
+                    className="absolute inset-0 hidden rounded-lg bg-pebble/60 sm:block"
+                  />
+                )}
+                <Icon className="relative h-5 w-5 shrink-0" aria-hidden />
+                <span className="relative">{label}</span>
               </Link>
             </li>
           );
