@@ -68,10 +68,10 @@ This starts both the Next.js dev server and Convex's local backend via `concurre
 The build command is configured in `vercel.json`:
 
 ```
-npx convex deploy --prod --cmd 'npm run build'
+if [ "$VERCEL_ENV" = "production" ]; then npx convex deploy --cmd 'npm run build'; else npm run build; fi
 ```
 
-This deploys Convex functions to production first, then builds and deploys the Next.js frontend — both in a single atomic step. `NEXT_PUBLIC_CONVEX_URL` is injected automatically by the Convex CLI.
+Production builds (`main`) deploy Convex functions first, then build and deploy the Next.js frontend, in a single atomic step. Preview builds skip the Convex deploy and reuse the existing `NEXT_PUBLIC_CONVEX_URL` — this avoids pushing a preview branch's schema/functions to the live production deployment, which a production-scoped `CONVEX_DEPLOY_KEY` cannot do anyway. `NEXT_PUBLIC_CONVEX_URL` is injected automatically by the Convex CLI on production builds.
 
 ## Security
 
@@ -98,6 +98,7 @@ app/
       [id]/page.tsx       # Medicine detail / edit
     calendar/page.tsx     # Expiry calendar
     settings/page.tsx     # Digest and alert settings
+  signin/page.tsx         # Branded split-layout sign-in
 convex/
   schema.ts               # Database schema and indexes
   medicines.ts            # CRUD + paginated list query
@@ -106,9 +107,21 @@ convex/
   sendDigest.ts           # Node action: renders and sends the digest email
   crons.ts                # Hourly cron that checks digest schedules
   settings.ts             # Settings read/write
+  http.ts                 # HTTP endpoints
   auth.ts / auth.config.ts
   lib/
     inventory.ts          # Expiry tier logic shared by dashboard and digest
+    search.ts             # Medicine name search/ranking
+    medicineFilters.ts    # Status-word filtering for the list search bar
+    dates.ts              # Date/timezone helpers
     digestEmail.ts        # HTML/text email templates
     digest.ts             # isDigestDue schedule logic
+    guards.ts             # Auth guard helpers
+components/
+  motion.tsx              # Shared Framer Motion primitives (springs, HoverScale, RollingNumber)
+  grouped-list.tsx        # iOS-style grouped list surface
+  logo-mark.tsx           # Brand icon
+  ui/                     # shadcn/ui primitives
 ```
+
+See `PRODUCT.md` and `DESIGN.md` for the product brief and design system (palette, type scale, components, accessibility rules).
