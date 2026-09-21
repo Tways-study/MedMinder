@@ -37,9 +37,13 @@ export function HoverScale({
   /** Omit for non-clickable surfaces — a press animation implies an action. */
   tapScale?: number;
 }) {
+  const prefersHover =
+    typeof window !== "undefined" &&
+    window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
   return (
     <motion.div
-      whileHover={{ scale }}
+      whileHover={prefersHover ? { scale } : undefined}
       whileTap={tapScale !== undefined ? { scale: tapScale } : undefined}
       transition={HOVER_SPRING}
       className={className}
@@ -52,16 +56,18 @@ export function HoverScale({
 export function FadeSlideIn({
   children,
   className,
+  delay = 0,
 }: {
   children: ReactNode;
   className?: string;
+  delay?: number;
 }) {
   // Entry-only animation. Wrap with AnimatePresence if you need an exit.
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={SPRING}
+      transition={{ ...SPRING, delay }}
       className={className}
     >
       {children}

@@ -132,7 +132,7 @@ export function MedicineCard({
               type="button"
               onClick={onToggleEdit}
               aria-label={`Edit ${medicine.name}`}
-              className="focus-card flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-link transition-colors hover:bg-pebble/60 active:bg-pebble"
+              className="focus-card flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 ease-out hover:bg-pebble/60 active:scale-[0.97] active:bg-pebble motion-reduce:active:scale-100"
             >
               <Pencil1Icon className="h-4 w-4" />
             </button>
@@ -261,7 +261,7 @@ function QuantityStepper({
         type="button"
         onClick={() => nudge(-1)}
         aria-label="Decrease"
-        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-95 active:bg-pebble motion-reduce:active:scale-100"
+        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-[0.97] active:bg-pebble motion-reduce:active:scale-100"
       >
         <MinusIcon className="h-4 w-4" />
       </button>
@@ -280,7 +280,7 @@ function QuantityStepper({
         type="button"
         onClick={() => nudge(1)}
         aria-label="Increase"
-        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-95 active:bg-pebble motion-reduce:active:scale-100"
+        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-[0.97] active:bg-pebble motion-reduce:active:scale-100"
       >
         <PlusIcon className="h-4 w-4" />
       </button>

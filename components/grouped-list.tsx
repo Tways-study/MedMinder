@@ -86,7 +86,7 @@ export function GroupedListRow({
           href={href}
           className={cn(
             ROW_BODY,
-            "focus-card transition-colors duration-100 ease-out hover:bg-pebble/30 active:bg-pebble/60",
+            "focus-card [&:not(:active)]:transition-colors [&:not(:active)]:duration-100 [&:not(:active)]:ease-out hover:bg-pebble/30 active:bg-pebble/60",
             className,
           )}
         >

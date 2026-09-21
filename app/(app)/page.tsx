@@ -193,7 +193,7 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setSearch("")}
               aria-label="Clear search"
-              className="absolute inset-y-0 right-0 flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="absolute inset-y-0 right-0 flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-[transform,color] duration-100 ease-out hover:text-foreground active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Cross2Icon className="h-4 w-4" />
             </button>
@@ -294,12 +294,12 @@ function OnHandTab({
           count={items.length}
           description={TIER_BLURB[tier]}
         >
-          {items.map((item) => {
+          {items.map((item, index) => {
             const medicine = medicineById.get(item.medicineId);
             if (!medicine) return null;
             return (
               <GroupedListRow key={item.medicineId} bare>
-                <FadeSlideIn>
+                <FadeSlideIn delay={Math.min(index, 8) * 0.03}>
                   <MedicineCard
                     medicine={medicine}
                     activeKind="onHand"
@@ -321,12 +321,12 @@ function OnHandTab({
           count={filteredLowStock.length}
           description="At or below the reorder point you set."
         >
-          {filteredLowStock.map((m) => {
+          {filteredLowStock.map((m, index) => {
             const medicine = medicineById.get(m.medicineId);
             if (!medicine) return null;
             return (
               <GroupedListRow key={m.medicineId} bare>
-                <FadeSlideIn>
+                <FadeSlideIn delay={Math.min(index, 8) * 0.03}>
                   <MedicineCard
                     medicine={medicine}
                     activeKind="onHand"
@@ -388,9 +388,9 @@ function ActualTab({
       count={sorted.length}
       description="Walk the shelf and update counts as you go."
     >
-      {sorted.map((m) => (
+      {sorted.map((m, index) => (
         <GroupedListRow key={m._id} bare>
-          <FadeSlideIn>
+          <FadeSlideIn delay={Math.min(index, 8) * 0.03}>
             <MedicineCard
               medicine={m}
               activeKind="actual"
