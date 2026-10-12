@@ -1,19 +1,30 @@
 "use client";
 
-import { MedicineForm, type MedicineFormValues } from "@/components/medicine-form";
-import { TierBadge } from "@/components/tier-badge";
+import {
+  MedicineForm,
+  type MedicineFormValues,
+} from "@/components/medicine-form";
+import { StampBadge } from "@/components/stamp-badge";
+import { tierClasses } from "@/components/tier-badge";
+import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { ExpiryTier } from "@/convex/lib/inventory";
 import { formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { MinusIcon, Pencil1Icon, PlusIcon } from "@radix-ui/react-icons";
-import { RollingNumber, SPRING } from "@/components/motion";
-import { AnimatePresence, motion } from "framer-motion";
+import { Minus, Pencil, Plus } from "lucide-react";
+import { toast } from "sonner";
+import {
+  RollingNumber,
+  usePressFeedback,
+  useStampIn,
+} from "@/components/motion";
+import { gsap, useGSAP } from "@/lib/gsap";
+import { DUR, EASE, MOTION_OK } from "@/lib/motion";
 import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export type MedicineCardData = {
   _id: Id<"medicines">;
@@ -73,17 +84,44 @@ export function MedicineCard({
           activeKind === "onHand" ? "actual count" : "on hand"
         }`;
 
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const skipFirst = useRef(true);
+  const stampRef = useRef<HTMLSpanElement>(null);
+  const isLow = medicine.onHandQuantity <= medicine.reorderPoint;
+  // Stamps thunk in just after the row has landed (rows stagger in first).
+  useStampIn(stampRef, {
+    delay: 0.15,
+    enabled: !isEditing && (!!tier || isLow),
+  });
+
+  // View <-> edit swap: the incoming side fades up 6px. Not on first mount.
+  useGSAP(
+    () => {
+      if (skipFirst.current) {
+        skipFirst.current = false;
+        return;
+      }
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap.from(wrapRef.current, {
+          autoAlpha: 0,
+          y: 6,
+          duration: DUR.base,
+          ease: EASE.out,
+          clearProps: "transform,opacity,visibility",
+        });
+      });
+      return () => mm.revert();
+    },
+    { scope: wrapRef, dependencies: [isEditing] },
+  );
+
+  const meta = [medicine.form, medicine.strength].filter(Boolean).join(" · ");
+
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <div ref={wrapRef} data-stamp-card>
       {isEditing ? (
-        <motion.div
-          key="edit"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={SPRING}
-          className={cn("px-4 py-3.5", className)}
-        >
+        <div className={cn("px-4 py-4", className)}>
           <MedicineForm
             initial={medicine}
             submitLabel="Save changes"
@@ -92,6 +130,7 @@ export function MedicineCard({
               setFormError(null);
               try {
                 await update({ medicineId: medicine._id, ...values });
+                toast.success(`Saved ${values.name}`);
                 onToggleEdit();
               } catch (err) {
                 setFormError(
@@ -99,75 +138,111 @@ export function MedicineCard({
                     ? String(err.data)
                     : "Could not save. Check the details and try again.",
                 );
+                toast.error("Could not save changes");
                 throw err;
               }
             }}
           />
           {formError && (
-            <p role="alert" className="mt-2 text-body-sm text-destructive">
+            <p role="alert" className="mt-2 text-sm text-destructive">
               {formError}
             </p>
           )}
-        </motion.div>
+        </div>
       ) : (
-        <motion.article
-          key="view"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={SPRING}
-          className={cn("px-4 py-3.5", className)}
+        <article
+          className={cn(
+            "flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6",
+            className,
+          )}
         >
-          <div className="flex items-start justify-between gap-4">
-            <Link href={`/medicines/${medicine._id}`} className="focus-card min-w-0 flex-1 rounded-lg">
-              <h3 className="text-body font-semibold">{medicine.name}</h3>
-              {(medicine.strength || medicine.form) && (
-                <p className="mt-0.5 text-body-sm text-muted-foreground">
-                  {[medicine.strength, medicine.form].filter(Boolean).join(" · ")}
+          <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <Link
+                href={`/medicines/${medicine._id}`}
+                className="focus-card -mx-1 block rounded-md px-1 hover:underline"
+              >
+                <h3 className="truncate text-sm font-medium">
+                  {medicine.name}
+                </h3>
+              </Link>
+              {meta && (
+                <p className="mt-0.5 truncate font-mono text-2xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                  {meta}
                 </p>
               )}
-            </Link>
+              {(tier || isLow || expiryDistance) && (
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  {(tier || isLow) && (
+                    <span ref={stampRef} className="inline-flex gap-2">
+                      {tier && (
+                        <StampBadge tier={tier} size="sm" seed={medicine._id} />
+                      )}
+                      {isLow && (
+                        <StampBadge
+                          tier="low"
+                          size="sm"
+                          seed={`${medicine._id}-low`}
+                        />
+                      )}
+                    </span>
+                  )}
+                  {expiryDistance && (
+                    <span className="font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
+                      {expiryDistance}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={onToggleEdit}
               aria-label={`Edit ${medicine.name}`}
-              className="focus-card flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 ease-out hover:bg-pebble/60 active:scale-[0.97] active:bg-pebble motion-reduce:active:scale-100"
+              className="shrink-0 text-muted-foreground hover:text-foreground sm:hidden"
             >
-              <Pencil1Icon className="h-4 w-4" />
-            </button>
+              <Pencil className="size-4" strokeWidth={1.75} aria-hidden />
+            </Button>
           </div>
 
-          {tier && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <TierBadge tier={tier} />
-              {expiryDistance && <span className="text-body-sm text-muted-foreground">{expiryDistance}</span>}
-            </div>
-          )}
-
-          <div className="mt-3 flex items-center justify-between border-t pt-3">
-            <QuantityStepper
-              medicineId={medicine._id}
-              kind={activeKind}
-              value={activeQuantity}
-            />
-            <div className="text-right">
-              <p className="label-field">{activeLabel}</p>
+          <div className="flex items-center justify-between gap-3 sm:justify-end">
+            <div className="min-w-0 sm:text-right">
+              <p className="label-caps">{activeLabel}</p>
               {driftText && (
                 <p
                   className={cn(
-                    "mt-0.5 text-caption",
-                    diff < 0 ? "text-tier-critical" : "text-tier-watch",
+                    "mt-0.5 text-xs",
+                    diff < 0
+                      ? tierClasses("critical").fg
+                      : tierClasses("watch").fg,
                   )}
                 >
                   {driftText}
                 </p>
               )}
             </div>
+            <QuantityStepper
+              medicineId={medicine._id}
+              kind={activeKind}
+              value={activeQuantity}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={onToggleEdit}
+              aria-label={`Edit ${medicine.name}`}
+              className="hidden shrink-0 text-muted-foreground hover:text-foreground sm:inline-flex"
+            >
+              <Pencil className="size-4" strokeWidth={1.75} aria-hidden />
+            </Button>
           </div>
-        </motion.article>
+        </article>
       )}
-    </AnimatePresence>
+    </div>
   );
 }
 
@@ -193,7 +268,10 @@ function QuantityStepper({
         localStore.setQuery(
           api.medicines.get,
           { medicineId },
-          { ...current, [kind === "onHand" ? "onHandQuantity" : "actualQuantity"]: quantity },
+          {
+            ...current,
+            [kind === "onHand" ? "onHandQuantity" : "actualQuantity"]: quantity,
+          },
         );
       }
       const list = localStore.getQuery(api.medicines.list, {});
@@ -203,7 +281,11 @@ function QuantityStepper({
           {},
           list.map((m) =>
             m._id === medicineId
-              ? { ...m, [kind === "onHand" ? "onHandQuantity" : "actualQuantity"]: quantity }
+              ? {
+                  ...m,
+                  [kind === "onHand" ? "onHandQuantity" : "actualQuantity"]:
+                    quantity,
+                }
               : m,
           ),
         );
@@ -211,6 +293,7 @@ function QuantityStepper({
     },
   );
 
+  const press = usePressFeedback();
   const [typing, setTyping] = useState(false);
   const [draft, setDraft] = useState(String(value));
 
@@ -219,7 +302,10 @@ function QuantityStepper({
       setDraft(String(value));
       return;
     }
-    void setStock({ medicineId, kind, quantity: next });
+    setStock({ medicineId, kind, quantity: next }).catch(() => {
+      setDraft(String(value));
+      toast.error("Could not update the count. Try again.");
+    });
   }
 
   function nudge(delta: number) {
@@ -250,21 +336,27 @@ function QuantityStepper({
             setTyping(false);
           }
         }}
-        className="font-data h-11 w-20 rounded-lg border border-input bg-card px-2 text-subheading touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="font-data h-11 w-24 touch-manipulation rounded-md border border-input bg-card px-2 text-center text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-8"
       />
     );
   }
 
+  const STEP_BTN =
+    "size-11 touch-manipulation transition-colors active:scale-100 sm:size-8";
+
   return (
     <div className="flex items-center gap-1">
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon-sm"
         onClick={() => nudge(-1)}
         aria-label="Decrease"
-        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-[0.97] active:bg-pebble motion-reduce:active:scale-100"
+        className={STEP_BTN}
+        {...press}
       >
-        <MinusIcon className="h-4 w-4" />
-      </button>
+        <Minus className="size-4" strokeWidth={1.75} aria-hidden />
+      </Button>
       <button
         type="button"
         onClick={() => {
@@ -272,18 +364,21 @@ function QuantityStepper({
           setTyping(true);
         }}
         aria-label={`${formatQuantity(value)}, tap to type an exact count`}
-        className="font-data flex h-11 min-w-[3.5rem] touch-manipulation items-center justify-center rounded-full px-2 text-subheading font-semibold transition-colors hover:bg-pebble/60 active:bg-pebble"
+        className="font-data flex h-11 w-14 touch-manipulation items-center justify-center rounded-md px-2 text-base font-semibold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-muted sm:h-8"
       >
         <RollingNumber value={value} format={formatQuantity} />
       </button>
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon-sm"
         onClick={() => nudge(1)}
         aria-label="Increase"
-        className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-[0.97] active:bg-pebble motion-reduce:active:scale-100"
+        className={STEP_BTN}
+        {...press}
       >
-        <PlusIcon className="h-4 w-4" />
-      </button>
+        <Plus className="size-4" strokeWidth={1.75} aria-hidden />
+      </Button>
     </div>
   );
 }

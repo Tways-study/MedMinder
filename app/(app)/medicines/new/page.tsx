@@ -3,6 +3,7 @@
 import { MedicineForm, type MedicineFormValues } from "@/components/medicine-form";
 import { Page, PageHeader } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
+import { FadeSlideIn } from "@/components/motion";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,8 @@ import { ConvexError } from "convex/values";
 import { useMutation } from "convex/react";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 function isDuplicateError(err: unknown): err is ConvexError<{ code: string; name: string }> {
   return (
@@ -43,6 +46,7 @@ export default function NewMedicinePage() {
     try {
       const id = await create({ ...pendingValuesRef.current, force: true });
       setShowDialog(false);
+      toast.success("Medicine added");
       router.push(`/medicines/${id}`);
     } catch (err) {
       setForceError(
@@ -58,27 +62,48 @@ export default function NewMedicinePage() {
   return (
     <Page>
       <PageHeader
+        eyebrow="Inventory"
         title="Add medicine"
-        subtitle="Lots and expiry dates come in later, with each delivery."
+        description="Lots and expiry dates come in later, with each delivery."
       />
-      <MedicineForm
-        submitLabel="Add medicine"
-        onCancel={() => router.back()}
-        onSubmit={async (values) => {
-          try {
-            const id = await create(values);
-            router.push(`/medicines/${id}`);
-          } catch (err) {
-            if (isDuplicateError(err)) {
-              pendingValuesRef.current = values;
-              setDuplicateName(err.data.name);
-              setShowDialog(true);
-            } else {
-              throw err;
-            }
-          }
-        }}
-      />
+      <FadeSlideIn>
+        <section
+          data-stamp-card
+          className="max-w-3xl rounded-lg border bg-card text-card-foreground shadow-xs dark:shadow-none"
+        >
+          <header className="flex items-center gap-2.5 px-5 py-3 sm:px-6">
+            <span
+              aria-hidden
+              className="font-serif text-2xl leading-none text-primary"
+            >
+              ℞
+            </span>
+            <p className="label-caps">New entry</p>
+          </header>
+          <div className="perforation" aria-hidden />
+          <div className="p-5 sm:p-6">
+            <MedicineForm
+              submitLabel="Add medicine"
+              onCancel={() => router.back()}
+              onSubmit={async (values) => {
+                try {
+                  const id = await create(values);
+                  toast.success("Medicine added");
+                  router.push(`/medicines/${id}`);
+                } catch (err) {
+                  if (isDuplicateError(err)) {
+                    pendingValuesRef.current = values;
+                    setDuplicateName(err.data.name);
+                    setShowDialog(true);
+                  } else {
+                    throw err;
+                  }
+                }
+              }}
+            />
+          </div>
+        </section>
+      </FadeSlideIn>
 
       <Dialog
         open={showDialog}
@@ -96,7 +121,7 @@ export default function NewMedicinePage() {
             </DialogDescription>
           </DialogHeader>
           {forceError && (
-            <p role="alert" className="text-body-sm text-destructive">
+            <p role="alert" className="text-sm text-destructive">
               {forceError}
             </p>
           )}
@@ -105,6 +130,7 @@ export default function NewMedicinePage() {
               Cancel
             </Button>
             <Button onClick={handleForceCreate} disabled={forceSaving}>
+              {forceSaving && <Loader2 className="animate-spin" aria-hidden />}
               {forceSaving ? "Adding…" : "Add anyway"}
             </Button>
           </DialogFooter>

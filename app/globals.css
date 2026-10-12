@@ -3,92 +3,112 @@
 @tailwind utilities;
 
 /*
-  MedMinder — purple pastel apothecary, with Apple's restraint.
+  MedMinder design system: neutral zinc surfaces, one violet accent, and a
+  traffic-light expiry ramp (red / orange / amber / sky / emerald).
 
-  The palette is anchored on gentian violet, a real pharmacy antiseptic dye, so
-  the purple comes from the subject rather than from decoration. Surfaces are
-  violet-tinted rather than cream: this is a dispensary, not a bakery.
+  Tokens are HSL channels (hex in the trailing comment) so Tailwind can apply
+  alpha with `bg-primary/90`. Light and dark share names; `.dark` is toggled
+  by next-themes.
 
-  The structure borrows Apple's discipline: grouped surfaces instead of shadows,
-  pills for anything pressed, one accent that means "act here". Orchid is that
-  accent; everything else is tinted neutral.
-
-  Every text pairing below is measured against the surface it actually sits on,
-  not eyeballed. Pastels fail contrast easily.
-
-  Theme is locked to light. This is a single-purpose tool read under pharmacy
-  lighting; a half-built dark mode would be worse than none.
+  WCAG contrast, measured (text pairs need >= 4.5:1):
+    light  foreground/background 16.97, foreground/card 17.72,
+           muted-foreground/background 5.21, /card 5.44, /muted 4.95,
+           primary-foreground/primary 6.57, accent-foreground/accent 9.15,
+           destructive/background 4.63, destructive-foreground/destructive 4.83
+           tier fg on tier bg: expired 5.91, critical 4.88, warning 4.84,
+           watch 5.57, ok 5.21
+    dark   foreground/background 19.06, foreground/card 18.07,
+           muted-foreground/background 7.76, /card 7.36, /muted 6.91,
+           primary-foreground/primary 6.20, accent-foreground/accent 10.81,
+           destructive/background 7.19, destructive-foreground/destructive 6.40
+           tier fg on tier bg: expired 8.90, critical 9.60, warning 10.83,
+           watch 9.67, ok 10.52
+  Light muted-foreground is #696971 rather than zinc-500 (#71717A), which
+  measured 4.34:1 on the muted fill. Dark tier backgrounds are the hue at 12%
+  over the card colour, pre-mixed because HSL channel tokens cannot carry alpha.
+  Tier is never colour alone: always icon + word + colour.
 */
 
 @layer base {
   :root {
-    /* Palette */
-    --paper: 280 33.3% 96.5%; /* #F7F3F9 — canvas */
-    --surface: 280 60% 99%; /* #FDFBFE — grouped surfaces */
-    --lilac: 272.3 35.1% 92.7%; /* #EDE6F3 — secondary fills, selected rows */
-    --hairline: 271.4 33.3% 87.6%; /* #E0D5EA — decorative only, no WCAG floor */
-    --input-line: 269 29% 60.8%; /* #9A7EB8 — 3.37:1 on surface, meets WCAG 1.4.11 */
-    --orchid: 263.6 36.2% 45.5%; /* #6B4A9E — 6.18:1 on paper, 5.56:1 on lilac */
-    --amethyst: 263.8 29.3% 51.2%; /* #7B5EA7 — 4.78:1 on paper */
-    --ink: 262.5 18.2% 17.3%; /* #2A2434 — 13.67:1 on paper */
-    --muted-ink: 270 9% 43.5%; /* #6F6579 — 5.02:1 on paper, 4.51:1 on lilac */
+    --background: 0 0% 98%; /* #FAFAFA */
+    --foreground: 240 5.9% 10%; /* #18181B */
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 240 5.9% 10%; /* #18181B */
+    --popover: 0 0% 100%; /* #FFFFFF */
+    --popover-foreground: 240 5.9% 10%; /* #18181B */
+    --primary: 262.3 38.8% 47.5%; /* #6D4AA8 */
+    --primary-foreground: 0 0% 100%; /* #FFFFFF */
+    --secondary: 240 4.8% 95.9%; /* #F4F4F5 */
+    --secondary-foreground: 240 5.9% 10%; /* #18181B */
+    --muted: 240 4.8% 95.9%; /* #F4F4F5 */
+    --muted-foreground: 240 3.7% 42.7%; /* #696971 */
+    --accent: 261.8 52.4% 95.9%; /* #F3EFFA */
+    --accent-foreground: 261.5 46.3% 34.3%; /* #4C2F80 */
+    --destructive: 0 72.2% 50.6%; /* #DC2626 */
+    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+    --border: 240 5.9% 90%; /* #E4E4E7 */
+    --input: 240 4.9% 83.9%; /* #D4D4D8 */
+    --ring: 262.3 38.8% 47.5%; /* #6D4AA8 */
 
-    /*
-      Expiry tiers.
+    --tier-expired: 0 73.7% 41.8%; /* #B91C1C */
+    --tier-expired-bg: 0 85.7% 97.3%; /* #FEF2F2 */
+    --tier-expired-border: 0 96.3% 89.4%; /* #FECACA */
+    --tier-critical: 17.5 88.3% 40.4%; /* #C2410C */
+    --tier-critical-bg: 33.3 100% 96.5%; /* #FFF7ED */
+    --tier-critical-border: 32.1 97.7% 83.1%; /* #FED7AA */
+    --tier-warning: 26 90.5% 37.1%; /* #B45309 */
+    --tier-warning-bg: 48 100% 96.1%; /* #FFFBEB */
+    --tier-warning-border: 48 96.6% 76.7%; /* #FDE68A */
+    --tier-watch: 201.3 96.3% 32.2%; /* #0369A1 */
+    --tier-watch-bg: 204 100% 97.1%; /* #F0F9FF */
+    --tier-watch-border: 200.6 94.4% 86.1%; /* #BAE6FD */
+    --tier-ok: 162.9 93.5% 24.3%; /* #047857 */
+    --tier-ok-bg: 151.8 81% 95.9%; /* #ECFDF5 */
+    --tier-ok-border: 152.4 76% 80.4%; /* #A7F3D0 */
 
-      Badge foregrounds all sit in a narrow dark band. That is forced, not
-      chosen: holding 4.5:1 against a pastel background caps luminance at about
-      0.15, so a wide light-to-dark ramp and AA contrast cannot both exist here.
-      Colour therefore never carries tier on its own — every badge also has an
-      icon and a word, which is what actually makes it accessible.
-    */
-    --tier-expired-fg: 336.2 41.7% 34.3%; /* #7C3350 — 7.19:1 on its bg */
-    --tier-expired-bg: 341.2 50% 93.7%;
-    --tier-critical-fg: 13.1 49.5% 43.5%; /* #A65038 — 4.73:1 */
-    --tier-critical-bg: 18.3 74.2% 93.9%;
-    --tier-warning-fg: 38.9 50.6% 34.1%; /* #83642B — 4.88:1 */
-    --tier-warning-bg: 42.5 63.2% 92.5%;
-    --tier-watch-fg: 223 20.4% 44.3%; /* #5A6788 — 4.8:1 */
-    --tier-watch-bg: 221.5 41.9% 93.9%;
-    --tier-ok-fg: 136.6 15.7% 36.3%; /* #4E6B56 — 5.06:1 */
-    --tier-ok-bg: 133.3 23.1% 92.4%;
+    --radius: 0.625rem; /* 10px: cards, dialogs. md = 8px, sm = 6px */
+    color-scheme: light;
+  }
 
-    /* shadcn semantic tokens, mapped onto the palette above. */
-    --background: var(--paper);
-    --foreground: var(--ink);
-    --card: var(--surface);
-    --card-foreground: var(--ink);
-    --popover: var(--surface);
-    --popover-foreground: var(--ink);
-    --primary: var(--orchid);
-    --primary-foreground: var(--paper);
-    --link: var(--orchid);
-    --secondary: var(--lilac);
-    --secondary-foreground: var(--orchid);
-    --muted: var(--lilac);
-    --muted-foreground: var(--muted-ink);
-    --accent: var(--lilac);
-    --accent-foreground: var(--orchid);
-    --destructive: var(--tier-expired-fg);
-    --destructive-foreground: var(--paper);
-    --border: var(--hairline);
-    --input: var(--input-line);
-    --ring: var(--orchid);
+  .dark {
+    --background: 240 10% 3.9%; /* #09090B */
+    --foreground: 0 0% 98%; /* #FAFAFA */
+    --card: 240 5.6% 7.1%; /* #111113 */
+    --card-foreground: 0 0% 98%; /* #FAFAFA */
+    --popover: 240 5.6% 7.1%; /* #111113 */
+    --popover-foreground: 0 0% 98%; /* #FAFAFA */
+    --primary: 261.3 51.6% 70%; /* #A78BDA */
+    --primary-foreground: 240 5.9% 10%; /* #18181B */
+    --secondary: 240 5.9% 10%; /* #18181B */
+    --secondary-foreground: 0 0% 98%; /* #FAFAFA */
+    --muted: 240 5.9% 10%; /* #18181B */
+    --muted-foreground: 240 5% 64.9%; /* #A1A1AA */
+    --accent: 254.1 24.6% 13.5%; /* #1E1A2B */
+    --accent-foreground: 261 57.1% 86.3%; /* #D6C8F0 */
+    --destructive: 0 90.6% 70.8%; /* #F87171 */
+    --destructive-foreground: 240 5.9% 10%; /* #18181B */
+    --border: 240 3.7% 15.9%; /* #27272A */
+    --input: 240 5.3% 26.1%; /* #3F3F46 */
+    --ring: 261.3 51.6% 70%; /* #A78BDA */
 
-    /* Names the layout uses for canvas and pressed fills. */
-    --frost: var(--paper);
-    --pebble: var(--lilac);
+    --tier-expired: 0 93.5% 81.8%; /* #FCA5A5 */
+    --tier-expired-bg: 354.3 31.3% 13.1%; /* #2C1719 */
+    --tier-expired-border: 357.7 44.8% 22.7%; /* #542022 */
+    --tier-critical: 30.7 97.2% 72.4%; /* #FDBA74 */
+    --tier-critical-bg: 23.1 40.6% 12.5%; /* #2D1D13 */
+    --tier-critical-border: 23.3 62.6% 21%; /* #572E14 */
+    --tier-warning: 45.9 96.7% 64.5%; /* #FCD34D */
+    --tier-warning-bg: 36.9 41.9% 12.2%; /* #2C2212 */
+    --tier-warning-border: 37.1 66.7% 20%; /* #553B11 */
+    --tier-watch: 199.4 95.5% 73.9%; /* #7DD3FC */
+    --tier-watch-bg: 201.4 45.2% 12.2%; /* #11232D */
+    --tier-watch-border: 199.7 67.7% 19.4%; /* #103D53 */
+    --tier-ok: 156.2 71.6% 66.9%; /* #6EE7B7 */
+    --tier-ok-bg: 165 37% 10.6%; /* #112520 */
+    --tier-ok-border: 162 59.5% 16.5%; /* #114334 */
 
-    /*
-      Shape rule: surfaces 8px, everything you press is a full pill.
-      Nothing else.
-    */
-    --radius: 0.5rem;
-
-    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter),
-      system-ui, sans-serif;
-    --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display",
-      var(--font-inter), system-ui, sans-serif;
+    color-scheme: dark;
   }
 }
 
@@ -98,56 +118,59 @@
   }
 
   body {
-    @apply bg-background text-body text-foreground;
-    font-family: var(--font-sans);
-    font-optical-sizing: auto;
+    @apply bg-background font-sans text-foreground antialiased;
   }
 
-  /*
-    Lot numbers, expiry dates and quantities are compared down a column and
-    against a physical box, so they use the system face's tabular figures —
-    aligned columns without dropping into a monospace.
-  */
+  /* Quantities, dates and KPIs: compared down a column, so mono + tabular. */
   .font-data {
-    font-family: var(--font-sans);
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Display cut for titles; tracking comes from the type scale. */
-  .font-display {
-    font-family: var(--font-display);
-  }
-
-  /* Names the value beneath it: small, sentence case, quiet. */
-  .label-field {
-    @apply text-footnote text-muted-foreground;
+    @apply font-mono tabular-nums;
   }
 
   /*
-    Card-sized links wrap their own layout, so they miss the ring that shadcn
-    builds into Button and Input and fall back to the browser's hairline
-    outline. Focus should look the same everywhere it lands.
+    Card-sized links wrap their own layout, so they miss the ring that Button
+    and Input build in. Focus should look the same everywhere it lands.
   */
   .focus-card {
     @apply outline-none ring-inset focus-visible:ring-2 focus-visible:ring-ring;
   }
 
-  /*
-    Floating chrome is a translucent material: content scrolls under it and
-    stays faintly visible. When the person asks for less transparency, it
-    becomes a solid surface instead.
-  */
-  .material {
-    background-color: hsl(var(--surface) / 0.72);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    backdrop-filter: saturate(180%) blur(20px);
+  /* Apothecary label: mono uppercase caption for field labels and eyebrows. */
+  .label-caps {
+    @apply font-mono text-2xs font-medium uppercase tracking-[0.12em] text-muted-foreground;
   }
+}
 
-  @media (prefers-reduced-transparency: reduce) {
-    .material {
-      background-color: hsl(var(--surface));
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-    }
+@layer components {
+  /*
+    Tear line between a label's header and body. Place it as a full-bleed
+    element (no horizontal margin) directly inside a bordered bg-card box.
+    The two notches take the page background so they read as cut-outs; each
+    circle is clipped to its inner half so only the arc inside the card shows.
+  */
+  .perforation {
+    position: relative;
+    height: 0;
+    border-top: 1.5px dashed hsl(var(--border));
+  }
+  .perforation::before,
+  .perforation::after {
+    content: "";
+    position: absolute;
+    top: -9.5px;
+    width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+    pointer-events: none;
+  }
+  .perforation::before {
+    left: -9.5px;
+    clip-path: inset(0 0 0 50%);
+  }
+  .perforation::after {
+    right: -9.5px;
+    clip-path: inset(0 50% 0 0);
   }
 }

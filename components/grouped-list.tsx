@@ -3,9 +3,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 /*
-  The iOS grouped list: one white rounded block per group on the frost canvas,
-  rows split by hairlines that start after the leading padding (inset), so the
-  group reads as one object rather than a stack of separate cards.
+  A bordered card list: one rounded card per group, rows split by divide-y.
+  The header sits inside the card so a group reads as one object.
 */
 export function GroupedList({
   title,
@@ -16,54 +15,53 @@ export function GroupedList({
   className,
 }: {
   title?: ReactNode;
-  /** Shown beside the title in tabular figures. */
+  /** Shown at the end of the header rule in zero-padded mono (03). */
   count?: number;
   description?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
+  const hasHeader = Boolean(title || description);
   return (
-    <section className={cn("flex flex-col gap-2", className)}>
-      {(title || description) && (
-        <div className="px-1">
+    <section
+      className={cn(
+        "overflow-hidden rounded-lg border bg-card shadow-xs dark:shadow-none",
+        className,
+      )}
+    >
+      {hasHeader && (
+        <div className="flex flex-col gap-1 border-b px-4 py-3">
           {title && (
-            <h2 className="font-display text-subheading font-semibold">
-              {title}
+            <h2 className="label-caps flex items-center gap-3">
+              <span className="shrink-0">{title}</span>
+              <span aria-hidden className="h-px min-w-4 flex-1 bg-border" />
               {count !== undefined && (
                 <span
-                  className="font-data ml-2 text-body font-normal text-muted-foreground"
+                  className="font-data shrink-0"
                   aria-label={`${count} ${count === 1 ? "medicine" : "medicines"}`}
                 >
-                  {count}
+                  {String(count).padStart(2, "0")}
                 </span>
               )}
             </h2>
           )}
           {description && (
-            <p className="mt-0.5 text-body-sm text-muted-foreground">
-              {description}
-            </p>
+            <p className="text-sm text-muted-foreground">{description}</p>
           )}
         </div>
       )}
-      <ul className="overflow-hidden rounded-lg bg-card">{children}</ul>
+      <ul className="divide-y">{children}</ul>
       {footer && (
-        <p className="px-1 text-footnote text-muted-foreground">{footer}</p>
+        <p className="border-t px-4 py-2.5 text-xs text-muted-foreground">
+          {footer}
+        </p>
       )}
     </section>
   );
 }
 
-/*
-  Inset hairline via a pseudo-element on every row after the first. The tap
-  highlight lands on pointer-down (`active:`) with no transition delay — the
-  row answers the finger, not the release.
-*/
-const ROW =
-  "relative block before:absolute before:inset-x-0 before:left-4 before:top-0 before:h-px before:bg-border [&:first-child]:before:hidden";
-
-const ROW_BODY = "flex min-h-11 items-start justify-between gap-4 px-4 py-3.5";
+const ROW_BODY = "flex min-h-11 items-start justify-between gap-4 px-4 py-3";
 
 export function GroupedListRow({
   href,
@@ -78,7 +76,7 @@ export function GroupedListRow({
   className?: string;
 }) {
   return (
-    <li className={cn(ROW, bare && className)}>
+    <li className={cn(bare && className)}>
       {bare ? (
         children
       ) : href ? (
@@ -86,7 +84,7 @@ export function GroupedListRow({
           href={href}
           className={cn(
             ROW_BODY,
-            "focus-card [&:not(:active)]:transition-colors [&:not(:active)]:duration-100 [&:not(:active)]:ease-out hover:bg-pebble/30 active:bg-pebble/60",
+            "focus-card transition-colors duration-100 ease-out hover:bg-muted/50 focus-visible:bg-muted active:bg-muted",
             className,
           )}
         >

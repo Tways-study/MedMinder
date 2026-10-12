@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CheckIcon, ChevronDownIcon } from "@radix-ui/react-icons";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Command,
@@ -16,7 +16,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 
 const TIMEZONES = Intl.supportedValuesOf("timeZone").sort();
 
@@ -28,21 +27,33 @@ export function TimezoneCombobox({
   onChange: (tz: string) => void;
 }) {
   const [open, setOpen] = React.useState(false);
+  const listId = React.useId();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <button
+          type="button"
           role="combobox"
           aria-expanded={open}
-          className="h-11 w-full justify-between font-normal"
+          aria-controls={listId}
+          aria-haspopup="listbox"
+          className={cn(
+            "flex h-11 w-full items-center justify-between gap-2 whitespace-nowrap rounded-md border border-input bg-card px-3 py-2 text-left text-base font-normal ring-offset-background sm:h-9 sm:text-sm",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
+            !value && "text-muted-foreground",
+          )}
         >
           <span className="truncate">{value || "Select timezone…"}</span>
-          <ChevronDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+          <ChevronsUpDown
+            className="size-4 shrink-0 text-muted-foreground"
+            strokeWidth={1.75}
+            aria-hidden
+          />
+        </button>
       </PopoverTrigger>
       <PopoverContent
+        id={listId}
         className="w-[--radix-popover-trigger-width] p-0"
         align="start"
       >
@@ -60,9 +71,10 @@ export function TimezoneCombobox({
                     setOpen(false);
                   }}
                 >
-                  <CheckIcon
+                  <Check
+                    aria-hidden
                     className={cn(
-                      "mr-2 h-4 w-4",
+                      "mr-2 size-4",
                       value === tz ? "opacity-100" : "opacity-0",
                     )}
                   />

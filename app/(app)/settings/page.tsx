@@ -1,8 +1,14 @@
 "use client";
 
-import { Field } from "@/components/medicine-form";
 import { CardSkeleton, Page, PageHeader } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +24,9 @@ import { api } from "@/convex/_generated/api";
 import { DEFAULT_ALERT_TIERS } from "@/convex/lib/inventory";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
+import { Loader2 } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 const DAYS = [
   "Sunday",
@@ -28,6 +36,26 @@ const DAYS = [
   "Thursday",
   "Friday",
   "Saturday",
+];
+
+type TierKey = "critical" | "warning" | "watch";
+
+const TIER_FIELDS: { key: TierKey; label: string; hint: string }[] = [
+  {
+    key: "critical",
+    label: "Critical",
+    hint: "Too late to return. Default 30 days.",
+  },
+  {
+    key: "warning",
+    label: "Soon",
+    hint: "Still returnable to most suppliers. Default 90 days.",
+  },
+  {
+    key: "watch",
+    label: "Watch",
+    hint: "Worth planning around. Default 180 days.",
+  },
 ];
 
 export default function SettingsPage() {
@@ -42,7 +70,6 @@ export default function SettingsPage() {
   const [alertTiers, setAlertTiers] = useState(DEFAULT_ALERT_TIERS);
 
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Sync once when settings first load; ignore subsequent reactive updates
@@ -62,8 +89,8 @@ export default function SettingsPage() {
 
   if (settings === undefined) {
     return (
-      <Page>
-        <PageHeader title="Settings" />
+      <Page className="max-w-3xl">
+        <PageHeader eyebrow="PREFERENCES" title="Settings" />
         <CardSkeleton count={2} />
       </Page>
     );
@@ -72,7 +99,6 @@ export default function SettingsPage() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setSaved(false);
     setSaving(true);
     try {
       await update({
@@ -83,53 +109,69 @@ export default function SettingsPage() {
         timezone,
         alertTiers,
       });
-      setSaved(true);
+      toast.success("Settings saved");
     } catch (err) {
-      setError(
+      const message =
         err instanceof ConvexError
           ? String(err.data)
-          : "Could not save. Nothing was changed.",
-      );
+          : "Could not save. Nothing was changed.";
+      setError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Page>
+    <Page className="max-w-3xl">
       <PageHeader
+        eyebrow="PREFERENCES"
         title="Settings"
-        subtitle="What counts as urgent, and when to be told."
+        description="What counts as urgent, and when to be told."
       />
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-        {/* Apple Settings pattern: a header on the canvas, the controls on one white group. */}
-        <section className="flex flex-col gap-2">
-          <SectionHeader title="Weekly email">
-            A summary of what is expiring, so nothing depends on remembering to
-            check.
-          </SectionHeader>
-
-          <div className="flex flex-col gap-5 rounded-lg bg-card p-4">
-            <label className="-mx-4 -mt-4 flex min-h-11 cursor-pointer items-center justify-between gap-3 border-b px-4 py-3 active:bg-pebble/60">
-              <span className="text-body">Send the weekly summary</span>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <Card>
+          <CardHeader>
+            <p className="label-caps flex items-center gap-2">
+              <span aria-hidden className="font-serif text-lg leading-none text-primary normal-case">
+                ℞
+              </span>
+              Weekly digest
+            </p>
+            <CardTitle>What is on the shelf, once a week</CardTitle>
+            <CardDescription>
+              A summary of what is expiring, so nothing depends on remembering
+              to check.
+            </CardDescription>
+          </CardHeader>
+          <div className="perforation" aria-hidden />
+          <CardContent className="flex flex-col gap-5 pt-5">
+            <div className="flex items-center gap-3">
               <Checkbox
+                id="digest-enabled"
                 checked={digestEnabled}
                 onCheckedChange={(checked) => setDigestEnabled(!!checked)}
               />
-            </label>
+              <label
+                htmlFor="digest-enabled"
+                className="cursor-pointer text-sm font-medium"
+              >
+                Send the weekly summary
+              </label>
+            </div>
 
             <Field label="Send to">
               <EmailChipInput value={digestEmails} onChange={setDigestEmails} />
             </Field>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Day">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Day" htmlFor="digest-day">
                 <Select
                   value={String(digestDay)}
                   onValueChange={(v) => setDigestDay(Number(v))}
                 >
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger id="digest-day">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -142,12 +184,12 @@ export default function SettingsPage() {
                 </Select>
               </Field>
 
-              <Field label="Hour">
+              <Field label="Hour" htmlFor="digest-hour">
                 <Select
                   value={String(digestHour)}
                   onValueChange={(v) => setDigestHour(Number(v))}
                 >
-                  <SelectTrigger className="h-11 font-data">
+                  <SelectTrigger id="digest-hour" className="font-data">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -171,108 +213,91 @@ export default function SettingsPage() {
             >
               <TimezoneCombobox value={timezone} onChange={setTimezone} />
             </Field>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
-        <section className="flex flex-col gap-2">
-          <SectionHeader title="Expiry alerts">
-            How many days ahead each warning starts. Each must be sooner than
-            the one below it.
-          </SectionHeader>
-
-          <div className="flex flex-col gap-5 rounded-lg bg-card p-4">
-            <Field label="Critical" hint="Too late to return. Default 30 days.">
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                step={1}
-                required
-                value={alertTiers.critical}
-                onChange={(e) =>
-                  setAlertTiers((t) => ({
-                    ...t,
-                    critical: Number(e.target.value),
-                  }))
-                }
-                className="font-data h-11"
-              />
-            </Field>
-
-            <Field
-              label="Soon"
-              hint="Still returnable to most suppliers. Default 90 days."
-            >
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                step={1}
-                required
-                value={alertTiers.warning}
-                onChange={(e) =>
-                  setAlertTiers((t) => ({
-                    ...t,
-                    warning: Number(e.target.value),
-                  }))
-                }
-                className="font-data h-11"
-              />
-            </Field>
-
-            <Field
-              label="Watch"
-              hint="Worth planning around. Default 180 days."
-            >
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={1}
-                step={1}
-                required
-                value={alertTiers.watch}
-                onChange={(e) =>
-                  setAlertTiers((t) => ({
-                    ...t,
-                    watch: Number(e.target.value),
-                  }))
-                }
-                className="font-data h-11"
-              />
-            </Field>
-          </div>
-        </section>
+        <Card>
+          <CardHeader>
+            <p className="label-caps">Alert thresholds</p>
+            <CardTitle>Expiry alert tiers</CardTitle>
+            <CardDescription>
+              How many days ahead each warning starts. Each must be sooner than
+              the one below it.
+            </CardDescription>
+          </CardHeader>
+          <div className="perforation" aria-hidden />
+          <CardContent className="flex flex-col gap-5 pt-5">
+            {TIER_FIELDS.map(({ key, label, hint }) => (
+              <Field
+                key={key}
+                label={label}
+                hint={hint}
+                htmlFor={`tier-${key}`}
+              >
+                <div className="relative">
+                  <Input
+                    id={`tier-${key}`}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    step={1}
+                    required
+                    value={alertTiers[key]}
+                    onChange={(e) =>
+                      setAlertTiers((t) => ({
+                        ...t,
+                        [key]: Number(e.target.value),
+                      }))
+                    }
+                    className="font-data pr-16"
+                  />
+                  <span
+                    aria-hidden
+                    className="label-caps pointer-events-none absolute inset-y-0 right-3 flex items-center"
+                  >
+                    DAYS
+                  </span>
+                </div>
+              </Field>
+            ))}
+          </CardContent>
+        </Card>
 
         {error && (
-          <p role="alert" className="text-body-sm text-destructive">
+          <p role="alert" className="text-sm text-destructive">
             {error}
           </p>
         )}
-        {saved && !error && (
-          <p role="status" className="text-body-sm text-tier-ok">
-            Settings saved.
-          </p>
-        )}
 
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving…" : "Save settings"}
-        </Button>
+        <div className="flex justify-end">
+          <Button type="submit" disabled={saving}>
+            {saving && <Loader2 className="animate-spin" aria-hidden />}
+            {saving ? "Saving…" : "Save settings"}
+          </Button>
+        </div>
       </form>
     </Page>
   );
 }
 
-function SectionHeader({
-  title,
+function Field({
+  label,
+  hint,
+  htmlFor,
   children,
 }: {
-  title: string;
+  label: string;
+  hint?: string;
+  htmlFor?: string;
   children: ReactNode;
 }) {
   return (
-    <div className="px-1">
-      <h2 className="font-display text-subheading font-semibold">{title}</h2>
-      <p className="mt-0.5 text-body-sm text-muted-foreground">{children}</p>
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={htmlFor} className="label-caps">
+        {label}
+      </label>
+      {children}
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }

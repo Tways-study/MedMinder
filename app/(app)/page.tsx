@@ -3,8 +3,7 @@
 import { GroupedList, GroupedListRow } from "@/components/grouped-list";
 import { MedicineCard } from "@/components/medicine-card";
 import { MedicineForm } from "@/components/medicine-form";
-import { ExpandCollapse, FadeSlideIn, SPRING } from "@/components/motion";
-import { motion } from "framer-motion";
+import { ExpandCollapse } from "@/components/motion";
 import {
   CardSkeleton,
   EmptyState,
@@ -14,6 +13,8 @@ import {
 import { tierLabel } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { LabelField, RxLabel } from "@/components/rx-label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { api } from "@/convex/_generated/api";
@@ -21,11 +22,20 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { ConvexError } from "convex/values";
 import type { ExpiryTier } from "@/convex/lib/inventory";
 import { formatExpiryDistance } from "@/convex/lib/inventory";
-import { formatQuantity } from "@/lib/format";
 import type { FunctionReturnType } from "convex/server";
 import { useMutation, useQuery } from "convex/react";
-import { Cross2Icon } from "@radix-ui/react-icons";
-import { useState } from "react";
+import {
+  PackageOpen,
+  PackageSearch,
+  Plus,
+  ShieldCheck,
+  Search,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { DUR, EASE, MOTION_OK, STAGGER } from "@/lib/motion";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { DashboardMetrics } from "@/components/dashboard-metrics";
 
@@ -49,8 +59,45 @@ const TIER_BLURB: Record<Exclude<ExpiryTier, "ok">, string> = {
 
 type Tab = "onHand" | "actual";
 
-const SEGMENT =
-  "relative h-9 flex-1 rounded-full text-body-sm font-medium text-foreground hover:bg-transparent data-[state=on]:bg-transparent";
+/**
+ * Rows rise in as they scroll into view, staggered per batch. GroupedList owns
+ * its <ul>, so this animates the <li> rows from outside rather than putting a
+ * wrapper element inside the list.
+ */
+function RowReveal({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      const root = ref.current;
+      if (!root) return;
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        const rows = Array.from(
+          root.querySelectorAll<HTMLElement>(":scope > section > ul > li"),
+        );
+        if (!rows.length) return;
+        gsap.set(rows, { y: 10, autoAlpha: 0 });
+        ScrollTrigger.batch(rows, {
+          start: "top 96%",
+          once: true,
+          onEnter: (batch) =>
+            gsap.to(batch, {
+              y: 0,
+              autoAlpha: 1,
+              duration: DUR.enter,
+              ease: EASE.out,
+              stagger: STAGGER,
+              overwrite: "auto",
+              clearProps: "transform,opacity,visibility",
+            }),
+        });
+      });
+      return () => mm.revert();
+    },
+    { scope: ref },
+  );
+  return <div ref={ref}>{children}</div>;
+}
 
 export default function DashboardPage() {
   const summary = useQuery(api.dashboard.summary);
@@ -62,11 +109,47 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<Id<"medicines"> | null>(null);
+  // Set after mount so server and client markup match.
+  const [today, setToday] = useState<string | null>(null);
+  useEffect(() => {
+    setToday(
+      new Date().toLocaleDateString(undefined, {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    );
+  }, []);
+  const eyebrow = today ?? " ";
 
   if (summary === undefined || medicines === undefined) {
     return (
       <Page>
-        <PageHeader title="Today" />
+        <PageHeader
+          eyebrow={eyebrow}
+          title="Today"
+          description="Checking the shelf…"
+        />
+        <div aria-hidden>
+          <RxLabel title="Shelf report">
+            {["Total stock", "Expiry watch", "Running low", "Count drift"].map(
+              (label) => (
+                <LabelField
+                  key={label}
+                  label={label}
+                  mono={false}
+                  value={
+                    <>
+                      <Skeleton className="h-7 w-14" />
+                      <Skeleton className="mt-2 h-3 w-24 opacity-70" />
+                    </>
+                  }
+                />
+              ),
+            )}
+          </RxLabel>
+        </div>
         <CardSkeleton count={3} />
       </Page>
     );
@@ -91,60 +174,78 @@ export default function DashboardPage() {
   }
 
   const addPanel = (
-    <div className="flex flex-col gap-3">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => setAdding((v) => !v)}
-      >
-        {adding ? "Cancel" : "+ Add medicine"}
-      </Button>
-      <ExpandCollapse show={adding}>
-        <Card className="p-4 mt-0">
-          <MedicineForm
-            submitLabel="Add medicine"
-            onCancel={() => setAdding(false)}
-            onSubmit={async (values) => {
-              try {
-                await create(values);
-                setAdding(false);
-                const reduceMotion = window.matchMedia(
-                  "(prefers-reduced-motion: reduce)",
-                ).matches;
-                window.scrollTo({
-                  top: 0,
-                  behavior: reduceMotion ? "auto" : "smooth",
-                });
-              } catch (err) {
-                if (
-                  err instanceof ConvexError &&
-                  typeof err.data === "object" &&
-                  err.data !== null &&
-                  (err.data as Record<string, unknown>).code === "DUPLICATE"
-                ) {
-                  throw new ConvexError(
-                    `A medicine named "${(err.data as { name: string }).name}" already exists.`,
-                  );
-                }
-                throw err;
+    <ExpandCollapse open={adding}>
+      <Card className="mt-0 p-4">
+        <MedicineForm
+          submitLabel="Add medicine"
+          onCancel={() => setAdding(false)}
+          onSubmit={async (values) => {
+            try {
+              await create(values);
+              setAdding(false);
+              toast.success(`Added ${values.name}`);
+              const reduceMotion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)",
+              ).matches;
+              window.scrollTo({
+                top: 0,
+                behavior: reduceMotion ? "auto" : "smooth",
+              });
+            } catch (err) {
+              if (
+                err instanceof ConvexError &&
+                typeof err.data === "object" &&
+                err.data !== null &&
+                (err.data as Record<string, unknown>).code === "DUPLICATE"
+              ) {
+                const message = `A medicine named "${(err.data as { name: string }).name}" already exists.`;
+                toast.error(message);
+                throw new ConvexError(message);
               }
-            }}
-          />
-        </Card>
-      </ExpandCollapse>
-    </div>
+              toast.error("Could not add the medicine");
+              throw err;
+            }
+          }}
+        />
+      </Card>
+    </ExpandCollapse>
+  );
+
+  const addButton = (
+    <Button
+      type="button"
+      variant={adding ? "outline" : "default"}
+      onClick={() => setAdding((v) => !v)}
+    >
+      {adding ? <X aria-hidden /> : <Plus aria-hidden />}
+      {adding ? "Cancel" : "Add medicine"}
+    </Button>
   );
 
   return (
     <Page>
       <PageHeader
+        eyebrow={eyebrow}
         title="Today"
-        subtitle={
-          nothingStocked
-            ? undefined
-            : `${formatQuantity(summary.totals.medicines)} ${summary.totals.medicines === 1 ? "medicine" : "medicines"} · ${formatQuantity(tab === "onHand" ? summary.totals.onHandUnits : summary.totals.actualUnits)} units`
+        description={
+          nothingStocked ? (
+            "Nothing on the shelf yet."
+          ) : summary.alerts.length > 0 ? (
+            <>
+              <span className="font-serif text-lg italic text-foreground">
+                {summary.alerts.length}{" "}
+                {summary.alerts.length === 1 ? "needs" : "need"} attention
+              </span>
+              , most urgent first.
+            </>
+          ) : (
+            "Everything on the shelf is in order."
+          )
         }
+        actions={addButton}
       />
+
+      {addPanel}
 
       {!nothingStocked && (
         <DashboardMetrics
@@ -155,58 +256,63 @@ export default function DashboardPage() {
           lowStockCount={summary.lowStock.length}
           discrepancyCount={discrepancyCount}
           activeTab={tab}
+          right={
+            <ToggleGroup
+              type="single"
+              value={tab}
+              onValueChange={(v) => v && setTab(v as Tab)}
+              aria-label="Which count to show"
+            >
+              <ToggleGroupItem value="onHand">On hand</ToggleGroupItem>
+              <ToggleGroupItem value="actual">Actual</ToggleGroupItem>
+            </ToggleGroup>
+          }
         />
       )}
 
       {!nothingStocked && (
-        <ToggleGroup
-          type="single"
-          value={tab}
-          onValueChange={(v) => v && setTab(v as Tab)}
-          aria-label="Which count to show"
-          className="w-full rounded-full bg-pebble/70 p-1"
-        >
-          {/* iOS segmented control: the selected segment is a raised white thumb. */}
-          <ToggleGroupItem value="onHand" className={SEGMENT}>
-            {tab === "onHand" && <SegmentThumb />}
-            <span className="relative">On hand</span>
-          </ToggleGroupItem>
-          <ToggleGroupItem value="actual" className={SEGMENT}>
-            {tab === "actual" && <SegmentThumb />}
-            <span className="relative">Actual</span>
-          </ToggleGroupItem>
-        </ToggleGroup>
-      )}
-
-      {!nothingStocked && (
-        <div className="relative">
-          <Input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search medicines"
-            aria-label="Search medicines"
-            className="pr-11 [&::-webkit-search-cancel-button]:appearance-none"
-          />
-          {searching && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              aria-label="Clear search"
-              className="absolute inset-y-0 right-0 flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-[transform,color] duration-100 ease-out hover:text-foreground active:scale-[0.97] motion-reduce:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Cross2Icon className="h-4 w-4" />
-            </button>
-          )}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              strokeWidth={1.75}
+              aria-hidden
+            />
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search medicines"
+              aria-label="Search medicines"
+              className="pl-9 pr-10 [&::-webkit-search-cancel-button]:appearance-none"
+            />
+            {searching && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-0.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-4" strokeWidth={1.75} aria-hidden />
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
-      {addPanel}
-
       {nothingStocked && !adding && (
         <EmptyState
+          icon={PackageOpen}
           title="Nothing on the shelf yet"
-          body="Add the medicines you stock, with their expiry date and quantity. Expiry alerts start from there."
+          description="Add the medicines you stock, with their expiry date and quantity. Expiry alerts start from there."
+          action={
+            <Button type="button" onClick={() => setAdding(true)}>
+              <Plus aria-hidden />
+              Add medicine
+            </Button>
+          }
         />
       )}
 
@@ -275,31 +381,32 @@ function OnHandTab({
         summary.alerts.length === 0 &&
         summary.totals.medicines > 0 && (
           <EmptyState
-            title="Nothing expiring soon"
-            body="Nothing on the shelf expires within six months. This is the screen you want to be boring."
+            icon={ShieldCheck}
+            title="All in date"
+            description="Nothing on the shelf expires within six months. A quiet shelf is the goal."
           />
         )}
 
       {noMatches && (
         <EmptyState
+          icon={PackageSearch}
           title="Nothing matches that"
-          body={`No medicine matches "${search}". Check the spelling and try again.`}
+          description={`No medicine matches "${search}". Check the spelling and try again.`}
         />
       )}
 
       {grouped.map(({ tier, items }) => (
-        <GroupedList
-          key={tier}
-          title={tierLabel(tier)}
-          count={items.length}
-          description={TIER_BLURB[tier]}
-        >
-          {items.map((item, index) => {
-            const medicine = medicineById.get(item.medicineId);
-            if (!medicine) return null;
-            return (
-              <GroupedListRow key={item.medicineId} bare>
-                <FadeSlideIn delay={Math.min(index, 8) * 0.03}>
+        <RowReveal key={tier}>
+          <GroupedList
+            title={tierLabel(tier)}
+            count={items.length}
+            description={TIER_BLURB[tier]}
+          >
+            {items.map((item) => {
+              const medicine = medicineById.get(item.medicineId);
+              if (!medicine) return null;
+              return (
+                <GroupedListRow key={item.medicineId} bare>
                   <MedicineCard
                     medicine={medicine}
                     activeKind="onHand"
@@ -308,25 +415,25 @@ function OnHandTab({
                     isEditing={editingId === item.medicineId}
                     onToggleEdit={() => onToggleEdit(item.medicineId)}
                   />
-                </FadeSlideIn>
-              </GroupedListRow>
-            );
-          })}
-        </GroupedList>
+                </GroupedListRow>
+              );
+            })}
+          </GroupedList>
+        </RowReveal>
       ))}
 
       {filteredLowStock.length > 0 && (
-        <GroupedList
-          title="Running low"
-          count={filteredLowStock.length}
-          description="At or below the reorder point you set."
-        >
-          {filteredLowStock.map((m, index) => {
-            const medicine = medicineById.get(m.medicineId);
-            if (!medicine) return null;
-            return (
-              <GroupedListRow key={m.medicineId} bare>
-                <FadeSlideIn delay={Math.min(index, 8) * 0.03}>
+        <RowReveal>
+          <GroupedList
+            title="Running low"
+            count={filteredLowStock.length}
+            description="At or below the reorder point you set."
+          >
+            {filteredLowStock.map((m) => {
+              const medicine = medicineById.get(m.medicineId);
+              if (!medicine) return null;
+              return (
+                <GroupedListRow key={m.medicineId} bare>
                   <MedicineCard
                     medicine={medicine}
                     activeKind="onHand"
@@ -339,11 +446,11 @@ function OnHandTab({
                     isEditing={editingId === m.medicineId}
                     onToggleEdit={() => onToggleEdit(m.medicineId)}
                   />
-                </FadeSlideIn>
-              </GroupedListRow>
-            );
-          })}
-        </GroupedList>
+                </GroupedListRow>
+              );
+            })}
+          </GroupedList>
+        </RowReveal>
       )}
     </>
   );
@@ -374,8 +481,9 @@ function ActualTab({
   if (searching && sorted.length === 0) {
     return (
       <EmptyState
+        icon={PackageSearch}
         title="Nothing matches that"
-        body={`No medicine matches "${search}". Check the spelling and try again.`}
+        description={`No medicine matches "${search}". Check the spelling and try again.`}
       />
     );
   }
@@ -383,14 +491,14 @@ function ActualTab({
   if (sorted.length === 0) return null;
 
   return (
-    <GroupedList
-      title="All medicines"
-      count={sorted.length}
-      description="Walk the shelf and update counts as you go."
-    >
-      {sorted.map((m, index) => (
-        <GroupedListRow key={m._id} bare>
-          <FadeSlideIn delay={Math.min(index, 8) * 0.03}>
+    <RowReveal>
+      <GroupedList
+        title="All medicines"
+        count={sorted.length}
+        description="Walk the shelf and update counts as you go."
+      >
+        {sorted.map((m) => (
+          <GroupedListRow key={m._id} bare>
             <MedicineCard
               medicine={m}
               activeKind="actual"
@@ -403,21 +511,9 @@ function ActualTab({
               isEditing={editingId === m._id}
               onToggleEdit={() => onToggleEdit(m._id)}
             />
-          </FadeSlideIn>
-        </GroupedListRow>
-      ))}
-    </GroupedList>
-  );
-}
-
-/* The raised white thumb slides between segments instead of jumping. */
-function SegmentThumb() {
-  return (
-    <motion.span
-      layoutId="segment-thumb"
-      transition={SPRING}
-      aria-hidden
-      className="absolute inset-0 rounded-full bg-card shadow-[0_1px_3px_hsl(var(--ink)/0.14)]"
-    />
+          </GroupedListRow>
+        ))}
+      </GroupedList>
+    </RowReveal>
   );
 }
