@@ -14,19 +14,21 @@ MedMinder tracks medicine inventory and expiry for a pharmacy or clinic: stock l
 
 ## Brand Personality
 
-Calm, precise, trustworthy. The voice of a well-run dispensary, not a startup dashboard — confidence through restraint and correctness, not enthusiasm. Gentian violet (the palette's anchor) is a real pharmacy antiseptic dye, chosen because the purple comes from the subject matter, not from decoration.
+Calm, precise, trustworthy: a modern clinical tool. The voice of a well-run dispensary, not a startup dashboard; confidence through restraint and correctness, not enthusiasm. Gentian violet (the palette's anchor) is a real pharmacy antiseptic dye, chosen because the purple comes from the subject matter, not from decoration. It is kept as the one accent, and it means "act here".
 
 ## Anti-references
 
-Not a generic SaaS dashboard: no identical rounded-card grids, no uniform soft-gray card shadows, no gradient washes as decoration, no interchangeable-with-any-other-tool look. The existing system already rejects this (grouped surfaces instead of shadows, pills for pressed elements, one accent color that means "act here") — new work should extend that discipline, not drift back toward SaaS-template defaults.
+Not a generic SaaS dashboard: no identical rounded-card grids, no decorative gradient washes, no tinted or themed canvases, no interchangeable-with-any-other-tool look. Elevation is a hairline border plus a barely-there shadow (none in dark), controls are rectangular rather than pill-shaped, and violet is the single accent. New work extends that discipline rather than drifting toward SaaS-template defaults.
 
 ## Design Principles
 
-- **Apple's restraint, apothecary's subject matter.** Borrow structural discipline (grouped surfaces, one accent, pill controls) from Apple; borrow palette and material cues from the pharmacy itself, not from generic tech branding.
-- **Every color pairing is measured, not eyeballed.** Contrast ratios are documented in the CSS as a first-class design constraint, not an accessibility afterthought.
-- **Single-purpose, light-only.** This is a tool read under pharmacy shelf lighting in short, task-focused visits — no dark mode, no decorative complexity that competes with the task.
-- **The mark is the message.** Where personality shows up, it comes from the domain (the ribbon/cross/pill mark, gentian violet) rather than from generic UI flourish.
+- **Calm and precise over expressive.** Neutral surfaces, one accent, tight alignment; personality comes from correctness and from the domain (the ribbon/cross/pill mark, gentian violet), not UI flourish.
+- **Violet means "act here".** The single accent is reserved for actions, focus, and selection, never for status or decoration.
+- **Light and dark are both measured.** Light, dark, and system themes each meet WCAG AA, with every pairing's ratio documented in the CSS as a first-class constraint, not an afterthought.
+- **Status is never colour-only.** Expiry tiers always carry an icon and a word alongside colour.
+- **Data reads in mono tabular figures.** Quantities, dates, and KPIs are set so they compare cleanly down a column.
+- **Built for the shelf.** Large touch targets on a phone, compact on desktop, short task-focused visits.
 
 ## Accessibility & Inclusion
 
-WCAG AA contrast is a hard floor, verified per color pairing (documented inline in `app/globals.css` with actual ratios, e.g. "6.18:1 on paper"). Status/tier information never relies on color alone — always paired with an icon and a word. Theme is locked to light by design (no half-built dark mode). Respect `prefers-reduced-motion` and `prefers-reduced-transparency` (already handled for the `.material` translucent surface).
+WCAG AA contrast is a hard floor in both light and dark themes, verified per color pairing (documented inline in `app/globals.css` with actual ratios). Status/tier information never relies on color alone: always paired with an icon and a word. Theme follows the user's choice (light, dark, or system). Respect `prefers-reduced-motion` (handled globally via Framer Motion's `reducedMotion="user"` and `motion-reduce` utilities).

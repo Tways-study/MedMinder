@@ -31,15 +31,36 @@ const TIER_ORDER: Exclude<ExpiryTier, "ok">[] = [
 ];
 
 /*
-  Colours are inlined and muted. Email clients strip <style> blocks, and this
-  lands in a mail app, not the app itself — it borrows the palette without
-  pretending to be the dashboard.
+  Colours are inlined, using the app's light-theme values. Email clients strip
+  <style> blocks and ignore prefers-color-scheme inconsistently, so the email
+  is light-only by design.
 */
+const COLOR = {
+  background: "#FAFAFA",
+  card: "#FFFFFF",
+  text: "#18181B",
+  muted: "#696971",
+  border: "#E4E4E7",
+  primary: "#6D4AA8",
+} as const;
+
+const FONT_SANS =
+  "Geist, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const FONT_MONO =
+  "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+
 const TIER_COLOR: Record<Exclude<ExpiryTier, "ok">, string> = {
-  expired: "#7C3350",
-  critical: "#A65038",
-  warning: "#83642B",
-  watch: "#5A6788",
+  expired: "#B91C1C",
+  critical: "#C2410C",
+  warning: "#B45309",
+  watch: "#0369A1",
+};
+
+const TIER_BG: Record<Exclude<ExpiryTier, "ok">, string> = {
+  expired: "#FEF2F2",
+  critical: "#FFF7ED",
+  warning: "#FFFBEB",
+  watch: "#F0F9FF",
 };
 
 const escape = (s: string) =>
@@ -113,7 +134,7 @@ export function digestHtml(
 
   if (alerts.length === 0) {
     sections.push(
-      `<p style="margin:0 0 24px;color:#6F6579;">Nothing on the shelf expires within six months.</p>`,
+      `<p style="margin:0 0 24px;color:${COLOR.muted};">Nothing on the shelf expires within six months.</p>`,
     );
   }
 
@@ -128,23 +149,25 @@ export function digestHtml(
         );
         return `
           <tr>
-            <td style="padding:10px 0;border-bottom:1px solid #E0D5EA;">
-              <div style="font-weight:600;color:#2A2434;">${name}</div>
-              <div style="font-family:monospace;font-size:13px;color:#6F6579;margin-top:2px;">
+            <td style="padding:10px 0;border-bottom:1px solid ${COLOR.border};">
+              <div style="font-weight:600;color:${COLOR.text};">${name}</div>
+              <div style="font-family:${FONT_MONO};font-size:13px;color:${COLOR.muted};margin-top:2px;">
                 ${escape(alert.expiryLabel)}
               </div>
             </td>
-            <td style="padding:10px 0;border-bottom:1px solid #E0D5EA;text-align:right;vertical-align:top;">
+            <td style="padding:10px 0;border-bottom:1px solid ${COLOR.border};text-align:right;vertical-align:top;">
               <div style="color:${TIER_COLOR[tier]};font-size:14px;">${escape(alert.expiryDistance)}</div>
-              <div style="font-family:monospace;font-size:13px;color:#6F6579;margin-top:2px;">${alert.onHandQuantity} on hand</div>
+              <div style="font-family:${FONT_MONO};font-size:13px;color:${COLOR.muted};margin-top:2px;">${alert.onHandQuantity} on hand</div>
             </td>
           </tr>`;
       })
       .join("");
 
     sections.push(`
-      <h2 style="margin:28px 0 4px;font-size:16px;color:${TIER_COLOR[tier]};">
-        ${TIER_HEADING[tier]} (${group.length})
+      <h2 style="margin:28px 0 4px;font-size:16px;">
+        <span style="display:inline-block;background:${TIER_BG[tier]};color:${TIER_COLOR[tier]};padding:3px 10px;border-radius:6px;">
+          ${TIER_HEADING[tier]} (${group.length})
+        </span>
       </h2>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
         ${rows}
@@ -157,8 +180,8 @@ export function digestHtml(
         const name = escape([m.name, m.strength].filter(Boolean).join(" "));
         return `
           <tr>
-            <td style="padding:10px 0;border-bottom:1px solid #E0D5EA;color:#2A2434;">${name}</td>
-            <td style="padding:10px 0;border-bottom:1px solid #E0D5EA;text-align:right;font-family:monospace;font-size:13px;color:#6F6579;">
+            <td style="padding:10px 0;border-bottom:1px solid ${COLOR.border};color:${COLOR.text};">${name}</td>
+            <td style="padding:10px 0;border-bottom:1px solid ${COLOR.border};text-align:right;font-family:${FONT_MONO};font-size:13px;color:${COLOR.muted};">
               ${m.onHandQuantity} / ${m.reorderPoint}
             </td>
           </tr>`;
@@ -166,7 +189,7 @@ export function digestHtml(
       .join("");
 
     sections.push(`
-      <h2 style="margin:28px 0 4px;font-size:16px;color:#6B4A9E;">
+      <h2 style="margin:28px 0 4px;font-size:16px;color:${COLOR.primary};">
         Running low (${lowStock.length})
       </h2>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
@@ -176,15 +199,15 @@ export function digestHtml(
 
   return `<!doctype html>
 <html>
-  <body style="margin:0;padding:0;background:#F7F3F9;">
-    <div style="max-width:560px;margin:0 auto;padding:32px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#2A2434;">
+  <body style="margin:0;padding:24px 12px;background:${COLOR.background};">
+    <div style="max-width:560px;margin:0 auto;padding:32px 24px;background:${COLOR.card};border:1px solid ${COLOR.border};border-radius:8px;font-family:${FONT_SANS};color:${COLOR.text};">
       <h1 style="margin:0 0 4px;font-size:22px;font-weight:600;">MedMinder</h1>
-      <p style="margin:0;color:#6F6579;font-size:14px;">Your weekly shelf summary.</p>
+      <p style="margin:0;color:${COLOR.muted};font-size:14px;">Your weekly shelf summary.</p>
 
       ${sections.join("")}
 
       <p style="margin:32px 0 0;">
-        <a href="${escape(appUrl)}" style="display:inline-block;background:#6B4A9E;color:#F7F3F9;text-decoration:none;padding:12px 20px;border-radius:8px;font-size:14px;">
+        <a href="${escape(appUrl)}" style="display:inline-block;background:${COLOR.primary};color:#FFFFFF;text-decoration:none;padding:12px 20px;border-radius:8px;font-size:14px;">
           Open MedMinder
         </a>
       </p>

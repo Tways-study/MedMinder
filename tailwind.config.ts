@@ -1,6 +1,13 @@
 import type { Config } from "tailwindcss";
 
+const tier = (name: string) => ({
+  DEFAULT: `hsl(var(--tier-${name}))`,
+  bg: `hsl(var(--tier-${name}-bg))`,
+  border: `hsl(var(--tier-${name}-border))`,
+});
+
 export default {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -49,61 +56,30 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        // The accent as text or outline (orchid); --primary is the same hue as a fill.
-        link: "hsl(var(--link))",
-        frost: "hsl(var(--frost))",
-        pebble: "hsl(var(--pebble))",
-        // Expiry severity ramp. Paired fg/bg so a badge can never be assembled
-        // from a mismatched combination.
+        // Expiry severity ramp: fg (DEFAULT), bg, border per tier.
         tier: {
-          expired: {
-            DEFAULT: "hsl(var(--tier-expired-fg))",
-            bg: "hsl(var(--tier-expired-bg))",
-          },
-          critical: {
-            DEFAULT: "hsl(var(--tier-critical-fg))",
-            bg: "hsl(var(--tier-critical-bg))",
-          },
-          warning: {
-            DEFAULT: "hsl(var(--tier-warning-fg))",
-            bg: "hsl(var(--tier-warning-bg))",
-          },
-          watch: {
-            DEFAULT: "hsl(var(--tier-watch-fg))",
-            bg: "hsl(var(--tier-watch-bg))",
-          },
-          ok: {
-            DEFAULT: "hsl(var(--tier-ok-fg))",
-            bg: "hsl(var(--tier-ok-bg))",
-          },
+          expired: tier("expired"),
+          critical: tier("critical"),
+          warning: tier("warning"),
+          watch: tier("watch"),
+          ok: tier("ok"),
         },
       },
-      // No elevation on surfaces. The one exception is chrome that floats over
-      // content — menus, popovers, dialogs — which needs separation to read.
       boxShadow: {
-        float: "0 8px 30px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.04)",
+        xs: "0 1px 2px 0 rgb(0 0 0 / 0.04)",
       },
-      // Two shapes only: 8px surfaces, full pills for anything pressed.
       borderRadius: {
-        sm: "var(--radius)",
-        md: "var(--radius)",
         lg: "var(--radius)",
-        xl: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-sans)"],
-        display: ["var(--font-display)"],
+        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+        serif: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
       },
-      // Tracking is size-specific: tighter as type grows, never one value for
-      // every size. Leading runs the other way — loose for body, tight for titles.
       fontSize: {
-        caption: ["0.75rem", { lineHeight: "1.33", letterSpacing: "-0.01em" }],
-        footnote: ["0.8125rem", { lineHeight: "1.38", letterSpacing: "-0.006em" }],
-        "body-sm": ["0.875rem", { lineHeight: "1.43", letterSpacing: "-0.016em" }],
-        body: ["1.0625rem", { lineHeight: "1.47", letterSpacing: "-0.022em" }],
-        subheading: ["1.3125rem", { lineHeight: "1.24", letterSpacing: "-0.012em" }],
-        title: ["1.75rem", { lineHeight: "1.14", letterSpacing: "-0.014em" }],
-        "large-title": ["2.125rem", { lineHeight: "1.12", letterSpacing: "-0.024em" }],
+        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
       },
     },
   },

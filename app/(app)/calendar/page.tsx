@@ -6,10 +6,11 @@ import {
   Page,
   PageHeader,
 } from "@/components/page-shell";
-import { GroupedList, GroupedListRow } from "@/components/grouped-list";
-import { HoverScale } from "@/components/motion";
-import { TierBadge } from "@/components/tier-badge";
+import { Stagger } from "@/components/motion";
+import { StampBadge } from "@/components/stamp-badge";
+import { tierClasses, tierLabel } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import type { ExpiryTier } from "@/convex/lib/inventory";
 import {
@@ -18,29 +19,23 @@ import {
   formatExpiryDistance,
 } from "@/convex/lib/inventory";
 import { formatDate, fromDateInput, toDateInput } from "@/lib/format";
+import { gsap, useGSAP } from "@/lib/gsap";
+import { DUR, EASE, MOTION_OK } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { FunctionReturnType } from "convex/server";
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type MedicineList = FunctionReturnType<typeof api.medicines.list>;
 type DayMedicine = MedicineList[number] & { tier: ExpiryTier };
 
 /*
   A day cell is tinted by the most urgent expiry landing on it. Colour here is
-  a scent, not the message — the authoritative per-medicine tier is carried by
-  the TierBadge (icon + word + colour) in the selected-day list below the grid.
+  a scent, not the message: the cell also carries a count and an aria-label
+  naming the tier, and the TierBadge in the selected-day list is authoritative.
 */
-const TIER_CELL_BG: Record<ExpiryTier, string> = {
-  expired: "bg-tier-expired-bg text-tier-expired",
-  critical: "bg-tier-critical-bg text-tier-critical",
-  warning: "bg-tier-warning-bg text-tier-warning",
-  watch: "bg-tier-watch-bg text-tier-watch",
-  ok: "bg-tier-ok-bg text-tier-ok",
-};
-
 /** Most urgent wins the cell tint. Mirrors the dashboard's expired-first order. */
 const TIER_RANK: Record<ExpiryTier, number> = {
   expired: 4,
@@ -76,10 +71,39 @@ export default function CalendarPage() {
     ),
   );
 
+  // Direction of the last month change (-1 back, 1 forward, 0 none yet).
+  const dirRef = useRef(0);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const monthIndex = viewMonth.year * 12 + viewMonth.month;
+
+  // Direction-aware slide + fade of the grid on month change. Reduced motion: instant.
+  useGSAP(
+    () => {
+      const dir = dirRef.current;
+      if (dir === 0 || !gridRef.current) return;
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap.from(gridRef.current, {
+          x: dir * 24,
+          autoAlpha: 0,
+          duration: DUR.base,
+          ease: EASE.out,
+          clearProps: "transform,opacity,visibility",
+        });
+      });
+      return () => mm.revert();
+    },
+    { dependencies: [monthIndex], scope: gridRef },
+  );
+
   if (medicines === undefined || settings === undefined) {
     return (
       <Page>
-        <PageHeader title="Calendar" />
+        <PageHeader
+          eyebrow="EXPIRY LEDGER"
+          title="Calendar"
+          description="When your stock expires, month by month."
+        />
         <CardSkeleton count={2} />
       </Page>
     );
@@ -110,12 +134,16 @@ export default function CalendarPage() {
   if (datedCount === 0) {
     return (
       <Page>
-        <PageHeader title="Calendar" />
+        <PageHeader
+          eyebrow="EXPIRY LEDGER"
+          title="Calendar"
+          description="When your stock expires, month by month."
+        />
         <EmptyState
           title="No expiry dates yet"
           body="Add expiry dates to your medicines and they'll appear here, laid out across the months ahead."
           action={
-            <Button asChild variant="outline" className="mt-1">
+            <Button asChild variant="outline">
               <Link href="/medicines">Go to medicines</Link>
             </Button>
           }
@@ -127,16 +155,13 @@ export default function CalendarPage() {
   const { year, month } = viewMonth;
   const firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-  const monthLabel = new Date(Date.UTC(year, month, 1)).toLocaleDateString(
+  const monthName = new Date(Date.UTC(year, month, 1)).toLocaleDateString(
     "en-GB",
-    {
-      timeZone: "UTC",
-      month: "long",
-      year: "numeric",
-    },
+    { timeZone: "UTC", month: "long" },
   );
 
   function step(delta: number) {
+    dirRef.current = delta;
     setViewMonth(({ year, month }) => {
       const next = new Date(Date.UTC(year, month + delta, 1));
       return { year: next.getUTCFullYear(), month: next.getUTCMonth() };
@@ -145,6 +170,8 @@ export default function CalendarPage() {
 
   function jumpToToday() {
     const t = todayUtc();
+    const target = t.year * 12 + t.month;
+    dirRef.current = target === monthIndex ? 0 : target > monthIndex ? 1 : -1;
     setViewMonth(t);
     setSelectedKey(todayKey);
   }
@@ -155,130 +182,214 @@ export default function CalendarPage() {
       TIER_RANK[b.tier] - TIER_RANK[a.tier] || a.name.localeCompare(b.name),
   );
 
+  const daysInPrevMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const trailing = (7 - ((firstWeekday + daysInMonth) % 7)) % 7;
+  const selectedLabel = selectedKey
+    ? formatDate(fromDateInput(selectedKey))
+    : "";
+
   return (
     <Page>
       <PageHeader
+        eyebrow="EXPIRY LEDGER"
         title="Calendar"
-        subtitle="When your stock expires, month by month."
-        action={
-          <Button variant="outline" onClick={jumpToToday}>
-            Today
-          </Button>
-        }
+        description="When your stock expires, month by month."
       />
 
-      <div className="rounded-lg bg-card p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => step(-1)}
-            aria-label="Previous month"
-            className="focus-card flex h-11 w-11 items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-95 active:bg-pebble motion-reduce:active:scale-100"
-          >
-            <ChevronLeftIcon className="h-5 w-5" />
-          </button>
-          <h2 className="font-display text-subheading font-semibold">
-            {monthLabel}
-          </h2>
-          <button
-            type="button"
-            onClick={() => step(1)}
-            aria-label="Next month"
-            className="focus-card flex h-11 w-11 items-center justify-center rounded-full text-link transition-[transform,background-color] duration-100 hover:bg-pebble/60 active:scale-95 active:bg-pebble motion-reduce:active:scale-100"
-          >
-            <ChevronRightIcon className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-7 gap-1">
-          {WEEKDAYS.map((d) => (
-            <div key={d} className="label-field pb-1 text-center">
-              {d}
-            </div>
-          ))}
-
-          {Array.from({ length: firstWeekday }).map((_, i) => (
-            <div key={`blank-${i}`} aria-hidden />
-          ))}
-
-          {Array.from({ length: daysInMonth }).map((_, i) => {
-            const day = i + 1;
-            const key = toDateInput(Date.UTC(year, month, day));
-            const items = byDay.get(key);
-            const tint = items ? TIER_CELL_BG[mostUrgent(items)] : null;
-            const isSelected = key === selectedKey;
-            const isToday = key === todayKey;
-
-            return (
-              <HoverScale
-                key={key}
-                scale={1.012}
-                tapScale={0.97}
-                className="relative hover:z-10"
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <Card className="p-4">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h2
+              className="flex items-baseline gap-2"
+              aria-live="polite"
+            >
+              <span className="font-serif text-2xl leading-none">
+                {monthName}
+              </span>
+              <span className="font-data text-sm text-muted-foreground">
+                {year}
+              </span>
+            </h2>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" onClick={jumpToToday}>
+                Today
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => step(-1)}
+                aria-label="Previous month"
               >
+                <ChevronLeft strokeWidth={1.75} aria-hidden />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => step(1)}
+                aria-label="Next month"
+              >
+                <ChevronRight strokeWidth={1.75} aria-hidden />
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {WEEKDAYS.map((d) => (
+              <div key={d} className="label-caps pb-1 text-center">
+                {d}
+              </div>
+            ))}
+          </div>
+
+          <div ref={gridRef} className="grid grid-cols-7 gap-1">
+
+            {Array.from({ length: firstWeekday }).map((_, i) => (
+              <OutOfMonthDay
+                key={`prev-${i}`}
+                day={daysInPrevMonth - firstWeekday + i + 1}
+              />
+            ))}
+
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const key = toDateInput(Date.UTC(year, month, day));
+              const items = byDay.get(key);
+              const urgent = items ? mostUrgent(items) : null;
+              const style = urgent ? tierClasses(urgent) : null;
+              const isSelected = key === selectedKey;
+              const isToday = key === todayKey;
+
+              const label = [
+                formatDate(Date.UTC(year, month, day)),
+                isToday ? "today" : null,
+                items && urgent
+                  ? `${items.length} ${items.length === 1 ? "medicine" : "medicines"} expiring, most urgent: ${tierLabel(urgent)}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(", ");
+
+              return (
                 <button
+                  key={key}
                   type="button"
                   onClick={() => setSelectedKey(key)}
-                  aria-label={`${formatDate(Date.UTC(year, month, day))}${
-                    items ? `, ${items.length} expiring` : ""
-                  }`}
+                  aria-label={label}
                   aria-pressed={isSelected}
+                  aria-current={isToday ? "date" : undefined}
                   className={cn(
-                    "focus-card flex h-full min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-body-sm transition-colors active:bg-pebble",
-                    tint ?? "hover:bg-frost",
-                    isSelected && "ring-2 ring-ring",
+                    "relative flex aspect-square min-h-12 w-full flex-col justify-between rounded-md border p-1.5 text-left text-sm transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                    style
+                      ? cn(style.bg, style.border, style.fg)
+                      : "border-transparent hover:bg-muted",
+                    isSelected && "ring-2 ring-primary",
                   )}
                 >
                   <span
                     className={cn(
                       "font-data leading-none",
-                      isToday && "font-semibold text-link",
+                      isToday
+                        ? "font-semibold underline decoration-primary decoration-2 underline-offset-4"
+                        : "font-medium",
+                      !style && "text-foreground",
                     )}
                   >
                     {day}
                   </span>
                   {items && (
-                    <span className="font-data text-[0.625rem] font-medium leading-none">
-                      {items.length}
+                    <span className="flex items-center gap-1 self-end">
+                      <span
+                        aria-hidden
+                        className="size-1.5 rounded-full bg-current"
+                      />
+                      <span className="font-data rounded-sm bg-card/70 px-1 text-2xs font-semibold leading-4">
+                        {items.length}
+                      </span>
                     </span>
                   )}
                 </button>
-              </HoverScale>
-            );
-          })}
-        </div>
-      </div>
+              );
+            })}
 
-      {selectedKey &&
-        (selectedSorted.length === 0 ? (
-          <section className="flex flex-col gap-2">
-            <h3 className="px-1 font-display text-subheading font-semibold">
-              {formatDate(fromDateInput(selectedKey))}
-            </h3>
-            <p className="px-1 text-body-sm text-muted-foreground">
-              Nothing expires on this day.
-            </p>
-          </section>
-        ) : (
-          <GroupedList title={formatDate(fromDateInput(selectedKey))}>
-            {selectedSorted.map((m) => (
-              <GroupedListRow key={m._id} href={`/medicines/${m._id}`}>
-                <div className="min-w-0">
-                  <p className="text-body font-semibold">{m.name}</p>
-                  {(m.strength || m.form) && (
-                    <p className="mt-0.5 text-body-sm text-muted-foreground">
-                      {[m.strength, m.form].filter(Boolean).join(" · ")}
-                    </p>
-                  )}
-                  <p className="mt-1 text-body-sm text-muted-foreground">
-                    {formatExpiryDistance(m.expiryDate as number, now)}
-                  </p>
-                </div>
-                <TierBadge tier={m.tier} className="shrink-0 self-center" />
-              </GroupedListRow>
+            {Array.from({ length: trailing }).map((_, i) => (
+              <OutOfMonthDay key={`next-${i}`} day={i + 1} />
             ))}
-          </GroupedList>
-        ))}
+          </div>
+        </Card>
+
+        {selectedKey && (
+          <section
+            data-stamp-card
+            className="overflow-hidden rounded-lg border bg-card text-card-foreground shadow-xs dark:shadow-none"
+          >
+            <header className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <span
+                  aria-hidden
+                  className="shrink-0 font-serif text-2xl leading-none text-primary"
+                >
+                  ℞
+                </span>
+                <div className="min-w-0">
+                  <p className="label-caps truncate">{selectedLabel}</p>
+                  <h3 className="truncate font-serif text-2xl leading-tight">
+                    {selectedSorted.length === 0
+                      ? "Nothing due"
+                      : `${selectedSorted.length} expiring`}
+                  </h3>
+                </div>
+              </div>
+            </header>
+            <div className="perforation" aria-hidden />
+            {selectedSorted.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-muted-foreground">
+                Nothing expires on this day.
+              </p>
+            ) : (
+              <Stagger key={selectedKey} className="divide-y">
+                {selectedSorted.map((m) => (
+                  <Link
+                    key={m._id}
+                    data-stagger
+                    href={`/medicines/${m._id}`}
+                    className="focus-card flex min-h-11 items-start justify-between gap-4 px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted/50 focus-visible:bg-muted active:bg-muted"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">{m.name}</p>
+                      {(m.strength || m.form) && (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {[m.strength, m.form].filter(Boolean).join(" · ")}
+                        </p>
+                      )}
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatExpiryDistance(m.expiryDate as number, now)}
+                      </p>
+                    </div>
+                    <StampBadge
+                      tier={m.tier}
+                      size="sm"
+                      seed={m._id}
+                      animate
+                      className="shrink-0 self-center"
+                    />
+                  </Link>
+                ))}
+              </Stagger>
+            )}
+          </section>
+        )}
+      </div>
     </Page>
+  );
+}
+
+function OutOfMonthDay({ day }: { day: number }) {
+  return (
+    <div
+      aria-hidden
+      className="font-data flex aspect-square min-h-12 w-full p-1.5 text-sm text-muted-foreground/50"
+    >
+      {day}
+    </div>
   );
 }

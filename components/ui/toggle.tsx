@@ -6,19 +6,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+/*
+  Segmented look: items sit in a bg-muted track (see ToggleGroup) and the
+  selected one lifts to a card-coloured chip.
+*/
 const toggleVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-full text-body-sm font-medium transition-[transform,background-color,color] duration-100 active:scale-[0.97] motion-reduce:active:scale-100 hover:bg-pebble/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium text-muted-foreground transition-[background-color,color,box-shadow] duration-150 ease-out hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-card data-[state=on]:text-foreground data-[state=on]:shadow-xs dark:data-[state=on]:bg-background dark:data-[state=on]:shadow-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default: "bg-transparent",
-        outline:
-          "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
+        outline: "border border-input bg-transparent hover:bg-muted",
       },
       size: {
-        default: "h-9 px-2 min-w-9",
-        sm: "h-8 px-1.5 min-w-8",
-        lg: "h-10 px-2.5 min-w-10",
+        default: "h-9 px-3 min-w-9",
+        sm: "h-8 px-2.5 min-w-8",
+        lg: "h-11 px-4 min-w-11",
       },
     },
     defaultVariants: {

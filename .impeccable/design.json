@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-13T00:00:00Z",
+  "title": "Design System: MedMinder",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Gentian Violet", "canonical": "#6D4AA8", "tonalRamp": ["#2A1B47", "#3B2663", "#4C2F80", "#6D4AA8", "#A78BDA", "#D6C8F0", "#F3EFFA", "#FAF8FD"] },
+      "background": { "role": "neutral", "displayName": "Canvas", "canonical": "#FAFAFA", "tonalRamp": ["#09090B", "#18181B", "#27272A", "#71717A", "#D4D4D8", "#E4E4E7", "#F4F4F5", "#FAFAFA"] },
+      "tier-ok": { "role": "status", "displayName": "In date", "canonical": "#047857", "tonalRamp": ["#112520", "#114334", "#047857", "#6EE7B7", "#A7F3D0", "#ECFDF5"] }
+    },
+    "typographyMeta": {
+      "page-title": { "displayName": "Page title", "purpose": "One h1 per page in PageHeader." },
+      "data": { "displayName": "Data", "purpose": "Geist Mono, tabular figures, for quantities, dates, KPIs." }
+    },
+    "shadows": [
+      { "name": "xs", "value": "0 1px 2px 0 rgb(0 0 0 / 0.04)", "purpose": "Resting cards and tables; removed in dark." },
+      { "name": "lg", "value": "Tailwind shadow-lg", "purpose": "Floating layers: dialog, menus, popover, select, tooltip, toast." }
+    ],
+    "motion": [
+      { "name": "fade-rise", "value": "180ms ease-out, y 4px", "purpose": "Entry animation." },
+      { "name": "color-transition", "value": "150ms ease-out", "purpose": "Buttons and nav hover/press." },
+      { "name": "spring", "value": "spring bounce 0, duration 0.35s", "purpose": "Nav highlight, expand/collapse, rolling counts." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "2xl", "value": "1400px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one violet action on a screen.",
+      "html": "<button class=\"ds-btn-primary\">Save medicine</button>",
+      "css": ".ds-btn-primary{height:36px;padding:0 16px;border:0;border-radius:8px;background:#6D4AA8;color:#fff;font:500 14px Geist,system-ui,sans-serif;transition:background-color 150ms ease-out,transform 150ms ease-out;cursor:pointer}.ds-btn-primary:hover{background:rgb(109 74 168 / .9)}.ds-btn-primary:active{transform:scale(.98)}.ds-btn-primary:focus-visible{outline:0;box-shadow:0 0 0 2px #FAFAFA,0 0 0 4px #6D4AA8}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline{height:36px;padding:0 16px;border:1px solid #D4D4D8;border-radius:8px;background:#fff;color:#18181B;font:500 14px Geist,system-ui,sans-serif;transition:background-color 150ms ease-out;cursor:pointer}.ds-btn-outline:hover{background:#F4F4F5}.ds-btn-outline:focus-visible{outline:0;box-shadow:0 0 0 2px #FAFAFA,0 0 0 4px #6D4AA8}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text field, 36px desktop.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search medicines\">",
+      "css": ".ds-input{height:36px;width:240px;padding:8px 12px;border:1px solid #D4D4D8;border-radius:8px;background:#fff;color:#18181B;font:14px Geist,system-ui,sans-serif}.ds-input::placeholder{color:#696971}.ds-input:focus-visible{outline:0;box-shadow:0 0 0 2px #FAFAFA,0 0 0 4px #6D4AA8}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Bordered surface with a whisper shadow.",
+      "html": "<div class=\"ds-card\"><strong>Amoxicillin 500mg</strong><span class=\"ds-data\">24 on hand</span></div>",
+      "css": ".ds-card{display:flex;justify-content:space-between;gap:16px;padding:16px;border:1px solid #E4E4E7;border-radius:10px;background:#fff;color:#18181B;box-shadow:0 1px 2px 0 rgb(0 0 0 / .04);font:14px Geist,system-ui,sans-serif}.ds-data{font-family:'Geist Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:#696971}"
+    },
+    {
+      "name": "Tier Badge",
+      "kind": "chip",
+      "refersTo": "tier-badge-ok",
+      "description": "Icon + word + colour; pill is reserved for this.",
+      "html": "<span class=\"ds-tier\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m9 12 2 2 4-4\"/></svg>In date</span>",
+      "css": ".ds-tier{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border:1px solid #A7F3D0;border-radius:9999px;background:#ECFDF5;color:#047857;font:500 12px Geist,system-ui,sans-serif}"
+    },
+    {
+      "name": "Sidebar Nav Item (active)",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Selected item in the md+ sidebar.",
+      "html": "<a class=\"ds-nav\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z\"/><path d=\"m8.5 8.5 7 7\"/></svg>Medicines</a>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:12px;height:36px;width:208px;padding:0 12px;border-radius:8px;background:#F3EFFA;color:#4C2F80;font:500 14px Geist,system-ui,sans-serif;text-decoration:none}.ds-nav:focus-visible{outline:0;box-shadow:inset 0 0 0 2px #6D4AA8}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Dispensary Ledger",
+    "overview": "A well-kept ledger on a clean counter: neutral zinc surfaces, hairline borders, numbers that line up, and one violet that means act here. Light, dark, and system themes are all first-class and measured to WCAG AA.",
+    "keyCharacteristics": [
+      "Neutral zinc canvas, a single violet accent, a five-step traffic-light ramp for expiry only.",
+      "Border plus a barely-there shadow for elevation; no shadow at rest in dark.",
+      "Geist for text, Geist Mono with tabular figures for data.",
+      "Status is always icon + word + colour.",
+      "Touch-first sizing (44px) that compacts to 36px from sm up.",
+      "Restrained motion, 150 to 200ms, honouring reduced-motion."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Violet means act here. It is never used for status, decoration, or section colour.", "section": "colors" },
+      { "name": "The Ramp Is Not A Palette Rule", "body": "Red, orange, amber, sky, and emerald exist only to express expiry.", "section": "colors" },
+      { "name": "The Measured Pair Rule", "body": "A new foreground/background pairing is added to the contrast comment in globals.css with its ratio, in both themes, before it ships.", "section": "colors" },
+      { "name": "The Mono Is For Data Rule", "body": "Numbers that get compared use .font-data. Prose and labels never do.", "section": "typography" },
+      { "name": "The Border Carries It Rule", "body": "Depth at rest comes from the 1px border; the shadow is a whisper and disappears in dark.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use semantic tokens so light and dark come free.",
+      "Do pair every tier with its icon and word, via TierBadge.",
+      "Do set quantities, dates, and KPIs in .font-data.",
+      "Do keep touch targets at 44px on mobile and compact to 36px from sm.",
+      "Do keep transitions between 150 and 200ms and respect reduced motion.",
+      "Do add a measured contrast ratio to the globals.css comment for any new pairing, in both themes."
+    ],
+    "donts": [
+      "Don't tint the canvas.",
+      "Don't make pill buttons; pills are for status badges only.",
+      "Don't put raw hex or palette classes in components; use tokens.",
+      "Don't use decorative gradients.",
+      "Don't convey status by colour alone.",
+      "Don't scale elements on hover.",
+      "Don't use emoji or glyph icons; lucide only.",
+      "Don't add shadows to resting surfaces beyond shadow-xs, and none in dark.",
+      "Don't spend violet on anything but action, focus, selection, and links."
+    ]
+  }
+}

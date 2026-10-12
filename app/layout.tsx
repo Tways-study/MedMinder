@@ -1,17 +1,26 @@
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
-/*
-  The system face comes first: on an iPhone or Mac that is SF Pro, with its
-  optical sizes and tracking tables. Inter only fills in on devices without
-  it, so it is loaded as a fallback, not as the identity.
-*/
-const inter = Inter({
-  variable: "--font-inter",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-serif",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
   display: "swap",
 });
 
@@ -24,7 +33,10 @@ export const viewport: Viewport = {
   // Used one-handed at a shelf; let the phone size it properly.
   width: "device-width",
   initialScale: 1,
-  themeColor: "#F7F3F9",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAFAFA" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090B" },
+  ],
 };
 
 export default function RootLayout({
@@ -34,9 +46,13 @@ export default function RootLayout({
 }>) {
   return (
     <ConvexAuthNextjsServerProvider>
-      {/* On <html>, not <body>: --font-sans on :root references --font-inter. */}
-      <html lang="en" className={inter.variable}>
-        <body className="antialiased">
+      {/* suppressHydrationWarning: next-themes sets the class before hydration. */}
+      <html
+        lang="en"
+        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
+      >
+        <body>
           <ConvexClientProvider>{children}</ConvexClientProvider>
         </body>
       </html>
