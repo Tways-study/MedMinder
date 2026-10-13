@@ -146,7 +146,7 @@ export function EmptyState({
 export function CardSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div
-      className="overflow-hidden rounded-lg border bg-card shadow-xs dark:shadow-none"
+      className="overflow-hidden rounded-lg border bg-card shadow-xs"
       aria-hidden
     >
       {Array.from({ length: count }).map((_, i) => (

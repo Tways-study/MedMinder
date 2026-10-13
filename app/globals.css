@@ -7,25 +7,17 @@
   traffic-light expiry ramp (red / orange / amber / sky / emerald).
 
   Tokens are HSL channels (hex in the trailing comment) so Tailwind can apply
-  alpha with `bg-primary/90`. Light and dark share names; `.dark` is toggled
-  by next-themes.
+  alpha with `bg-primary/90`. Light theme only.
 
   WCAG contrast, measured (text pairs need >= 4.5:1):
-    light  foreground/background 16.97, foreground/card 17.72,
+    foreground/background 16.97, foreground/card 17.72,
            muted-foreground/background 5.21, /card 5.44, /muted 4.95,
            primary-foreground/primary 6.57, accent-foreground/accent 9.15,
            destructive/background 4.63, destructive-foreground/destructive 4.83
            tier fg on tier bg: expired 5.91, critical 4.88, warning 4.84,
            watch 5.57, ok 5.21
-    dark   foreground/background 19.06, foreground/card 18.07,
-           muted-foreground/background 7.76, /card 7.36, /muted 6.91,
-           primary-foreground/primary 6.20, accent-foreground/accent 10.81,
-           destructive/background 7.19, destructive-foreground/destructive 6.40
-           tier fg on tier bg: expired 8.90, critical 9.60, warning 10.83,
-           watch 9.67, ok 10.52
   Light muted-foreground is #696971 rather than zinc-500 (#71717A), which
-  measured 4.34:1 on the muted fill. Dark tier backgrounds are the hue at 12%
-  over the card colour, pre-mixed because HSL channel tokens cannot carry alpha.
+  measured 4.34:1 on the muted fill.
   Tier is never colour alone: always icon + word + colour.
 */
 
@@ -69,46 +61,6 @@
 
     --radius: 0.625rem; /* 10px: cards, dialogs. md = 8px, sm = 6px */
     color-scheme: light;
-  }
-
-  .dark {
-    --background: 240 10% 3.9%; /* #09090B */
-    --foreground: 0 0% 98%; /* #FAFAFA */
-    --card: 240 5.6% 7.1%; /* #111113 */
-    --card-foreground: 0 0% 98%; /* #FAFAFA */
-    --popover: 240 5.6% 7.1%; /* #111113 */
-    --popover-foreground: 0 0% 98%; /* #FAFAFA */
-    --primary: 261.3 51.6% 70%; /* #A78BDA */
-    --primary-foreground: 240 5.9% 10%; /* #18181B */
-    --secondary: 240 5.9% 10%; /* #18181B */
-    --secondary-foreground: 0 0% 98%; /* #FAFAFA */
-    --muted: 240 5.9% 10%; /* #18181B */
-    --muted-foreground: 240 5% 64.9%; /* #A1A1AA */
-    --accent: 254.1 24.6% 13.5%; /* #1E1A2B */
-    --accent-foreground: 261 57.1% 86.3%; /* #D6C8F0 */
-    --destructive: 0 90.6% 70.8%; /* #F87171 */
-    --destructive-foreground: 240 5.9% 10%; /* #18181B */
-    --border: 240 3.7% 15.9%; /* #27272A */
-    --input: 240 5.3% 26.1%; /* #3F3F46 */
-    --ring: 261.3 51.6% 70%; /* #A78BDA */
-
-    --tier-expired: 0 93.5% 81.8%; /* #FCA5A5 */
-    --tier-expired-bg: 354.3 31.3% 13.1%; /* #2C1719 */
-    --tier-expired-border: 357.7 44.8% 22.7%; /* #542022 */
-    --tier-critical: 30.7 97.2% 72.4%; /* #FDBA74 */
-    --tier-critical-bg: 23.1 40.6% 12.5%; /* #2D1D13 */
-    --tier-critical-border: 23.3 62.6% 21%; /* #572E14 */
-    --tier-warning: 45.9 96.7% 64.5%; /* #FCD34D */
-    --tier-warning-bg: 36.9 41.9% 12.2%; /* #2C2212 */
-    --tier-warning-border: 37.1 66.7% 20%; /* #553B11 */
-    --tier-watch: 199.4 95.5% 73.9%; /* #7DD3FC */
-    --tier-watch-bg: 201.4 45.2% 12.2%; /* #11232D */
-    --tier-watch-border: 199.7 67.7% 19.4%; /* #103D53 */
-    --tier-ok: 156.2 71.6% 66.9%; /* #6EE7B7 */
-    --tier-ok-bg: 165 37% 10.6%; /* #112520 */
-    --tier-ok-border: 162 59.5% 16.5%; /* #114334 */
-
-    color-scheme: dark;
   }
 }
 

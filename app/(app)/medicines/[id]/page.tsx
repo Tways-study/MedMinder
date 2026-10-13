@@ -127,7 +127,7 @@ export default function MedicineDetailPage() {
           />
         </div>
         <FadeSlideIn>
-          <section className="max-w-3xl rounded-lg border bg-card text-card-foreground shadow-xs dark:shadow-none">
+          <section className="max-w-3xl rounded-lg border bg-card text-card-foreground shadow-xs">
             <header className="flex items-center gap-2.5 px-5 py-3 sm:px-6">
               <span aria-hidden className="font-serif text-2xl leading-none text-primary">
                 ℞
@@ -328,7 +328,7 @@ export default function MedicineDetailPage() {
 
       {medicine.notes && (
         <FadeSlideIn delay={0.1}>
-          <section className="rounded-lg border bg-card text-card-foreground shadow-xs dark:shadow-none">
+          <section className="rounded-lg border bg-card text-card-foreground shadow-xs">
             <h2 className="label-caps px-4 py-3">Notes</h2>
             <div className="perforation" aria-hidden />
             <p className="whitespace-pre-wrap px-4 py-3 text-sm">

@@ -26,17 +26,15 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: "MedMinder",
-  description: "Medicine inventory and expiry tracking for community pharmacies.",
+  description:
+    "Medicine inventory and expiry tracking for community pharmacies.",
 };
 
 export const viewport: Viewport = {
   // Used one-handed at a shelf; let the phone size it properly.
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FAFAFA" },
-    { media: "(prefers-color-scheme: dark)", color: "#09090B" },
-  ],
+  themeColor: "#FAFAFA",
 };
 
 export default function RootLayout({
@@ -46,10 +44,8 @@ export default function RootLayout({
 }>) {
   return (
     <ConvexAuthNextjsServerProvider>
-      {/* suppressHydrationWarning: next-themes sets the class before hydration. */}
       <html
         lang="en"
-        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
       >
         <body>

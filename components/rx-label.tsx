@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 /*
   A pharmacy-label card: ℞ + caps title, a perforated tear line, then a grid of
-  LabelFields. Built on the card tokens, so it follows light / dark. The root
+  LabelFields. Built on the card tokens, so it follows the theme tokens. The root
   carries `data-stamp-card` so a StampBadge inside can shake it on impact.
 */
 export function RxLabel({
@@ -37,7 +37,7 @@ export function RxLabel({
       data-stamp-card
       data-density={density}
       className={cn(
-        "group/rx rounded-lg border bg-card text-card-foreground shadow-xs dark:shadow-none",
+        "group/rx rounded-lg border bg-card text-card-foreground shadow-xs",
         className,
       )}
     >

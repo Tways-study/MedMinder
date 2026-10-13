@@ -83,7 +83,7 @@ const NO_FILTER: MedicineFilter = { statuses: [], lowStockOnly: false };
 // The button is a transparent hit area; the inner span carries the chip look,
 // so the tier colours come straight from tierClasses() with no class surgery.
 const CHIP_BUTTON =
-  "h-8 min-w-0 rounded-md border-0 bg-transparent p-0 hover:bg-transparent data-[state=on]:bg-transparent data-[state=on]:shadow-none dark:data-[state=on]:bg-transparent";
+  "h-8 min-w-0 rounded-md border-0 bg-transparent p-0 hover:bg-transparent data-[state=on]:bg-transparent data-[state=on]:shadow-none";
 const CHIP_FACE =
   "inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 font-mono text-2xs font-medium uppercase tracking-[0.1em] transition-colors";
 const CHIP_OFF = "border-border bg-card text-foreground hover:bg-muted";
@@ -426,7 +426,7 @@ export default function MedicinesPage() {
           {isDesktop ? (
             <div
               data-lenis-prevent
-              className="overflow-hidden rounded-lg border bg-card shadow-xs dark:shadow-none [&>div]:max-h-[70vh]"
+              className="overflow-hidden rounded-lg border bg-card shadow-xs [&>div]:max-h-[70vh]"
             >
               <Table>
                 <TableHeader className="sticky top-0 z-10 bg-muted [&_th]:bg-muted">
@@ -530,7 +530,7 @@ export default function MedicinesPage() {
             </div>
           ) : (
             /* Mobile: label-style rows. */
-            <Stagger className="divide-y overflow-hidden rounded-lg border bg-card shadow-xs dark:shadow-none">
+            <Stagger className="divide-y overflow-hidden rounded-lg border bg-card shadow-xs">
               {displayedMedicines.map((m) => {
                 const low = isLowStock(m);
                 const tier =

@@ -6,32 +6,13 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/convex/_generated/api";
-import { cn } from "@/lib/utils";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
-import {
-  Check,
-  ChevronsUpDown,
-  LogOut,
-  Monitor,
-  Moon,
-  Palette,
-  Sun,
-} from "lucide-react";
-import { useTheme } from "next-themes";
+import { ChevronsUpDown, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-const THEMES = [
-  { value: "system", label: "System", icon: Monitor },
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-] as const;
 
 export function UserMenu({
   variant = "icon",
@@ -41,7 +22,6 @@ export function UserMenu({
   const { signOut } = useAuthActions();
   const router = useRouter();
   const viewer = useQuery(api.users.viewer);
-  const { theme, setTheme } = useTheme();
 
   const email = viewer?.email ?? undefined;
   const initial = (email?.[0] ?? "?").toUpperCase();
@@ -92,28 +72,6 @@ export function UserMenu({
         <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
           {email ?? "Signed in"}
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Palette className="mr-2 size-4" aria-hidden />
-            Theme
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            {THEMES.map(({ value, label, icon: Icon }) => (
-              <DropdownMenuItem key={value} onClick={() => setTheme(value)}>
-                <Icon className="mr-2 size-4" aria-hidden />
-                {label}
-                <Check
-                  className={cn(
-                    "ml-auto size-4",
-                    (theme ?? "system") === value ? "opacity-100" : "opacity-0",
-                  )}
-                  aria-hidden
-                />
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {

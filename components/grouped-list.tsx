@@ -26,7 +26,7 @@ export function GroupedList({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-lg border bg-card shadow-xs dark:shadow-none",
+        "overflow-hidden rounded-lg border bg-card shadow-xs",
         className,
       )}
     >

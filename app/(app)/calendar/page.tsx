@@ -320,7 +320,7 @@ export default function CalendarPage() {
         {selectedKey && (
           <section
             data-stamp-card
-            className="overflow-hidden rounded-lg border bg-card text-card-foreground shadow-xs dark:shadow-none"
+            className="overflow-hidden rounded-lg border bg-card text-card-foreground shadow-xs"
           >
             <header className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex min-w-0 items-center gap-2.5">

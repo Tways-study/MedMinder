@@ -69,7 +69,7 @@ export default function NewMedicinePage() {
       <FadeSlideIn>
         <section
           data-stamp-card
-          className="max-w-3xl rounded-lg border bg-card text-card-foreground shadow-xs dark:shadow-none"
+          className="max-w-3xl rounded-lg border bg-card text-card-foreground shadow-xs"
         >
           <header className="flex items-center gap-2.5 px-5 py-3 sm:px-6">
             <span
