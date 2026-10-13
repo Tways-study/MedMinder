@@ -37,11 +37,11 @@ export function GroupedList({
               <span className="shrink-0">{title}</span>
               <span aria-hidden className="h-px min-w-4 flex-1 bg-border" />
               {count !== undefined && (
-                <span
-                  className="font-data shrink-0"
-                  aria-label={`${count} ${count === 1 ? "medicine" : "medicines"}`}
-                >
-                  {String(count).padStart(2, "0")}
+                <span className="font-data shrink-0">
+                  <span aria-hidden>{String(count).padStart(2, "0")}</span>
+                  <span className="sr-only">
+                    {count} {count === 1 ? "medicine" : "medicines"}
+                  </span>
                 </span>
               )}
             </h2>

@@ -118,7 +118,7 @@ convex/
     digest.ts             # isDigestDue schedule logic
     guards.ts             # Auth guard helpers
 components/
-  motion.tsx              # Shared Framer Motion primitives (springs, HoverScale, RollingNumber)
+  motion.tsx              # Shared GSAP motion primitives (Stagger, ExpandCollapse, RollingNumber, stamp-in)
   grouped-list.tsx        # iOS-style grouped list surface
   logo-mark.tsx           # Brand icon
   ui/                     # shadcn/ui primitives

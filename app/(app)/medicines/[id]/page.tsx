@@ -78,7 +78,9 @@ export default function MedicineDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  if (medicine === undefined) {
+  // `deleting` stays true after our own delete commits, so the query going
+  // null mid-navigation shows the skeleton rather than "That medicine is gone".
+  if (medicine === undefined || (medicine === null && deleting)) {
     return (
       <Page>
         <CardSkeleton count={4} />

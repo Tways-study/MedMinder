@@ -77,19 +77,22 @@ function RowReveal({ children }: { children: ReactNode }) {
         );
         if (!rows.length) return;
         gsap.set(rows, { y: 10, autoAlpha: 0 });
+        const reveal = (batch: Element[]) =>
+          gsap.to(batch, {
+            y: 0,
+            autoAlpha: 1,
+            duration: DUR.enter,
+            ease: EASE.out,
+            stagger: STAGGER,
+            overwrite: "auto",
+            clearProps: "transform,opacity,visibility",
+          });
+        // onLeave: rows already scrolled past must not stay hidden.
         ScrollTrigger.batch(rows, {
           start: "top 96%",
           once: true,
-          onEnter: (batch) =>
-            gsap.to(batch, {
-              y: 0,
-              autoAlpha: 1,
-              duration: DUR.enter,
-              ease: EASE.out,
-              stagger: STAGGER,
-              overwrite: "auto",
-              clearProps: "transform,opacity,visibility",
-            }),
+          onEnter: reveal,
+          onLeave: reveal,
         });
       });
       return () => mm.revert();

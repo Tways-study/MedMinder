@@ -11,9 +11,12 @@ function isValidEmail(email: string): boolean {
 export function EmailChipInput({
   value,
   onChange,
+  id,
 }: {
   value: string[];
   onChange: (emails: string[]) => void;
+  /** Id of the text input, so an external <label htmlFor> can target it. */
+  id?: string;
 }) {
   const [draft, setDraft] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
@@ -79,6 +82,7 @@ export function EmailChipInput({
         ))}
         <input
           ref={inputRef}
+          id={id}
           type="email"
           value={draft}
           onChange={(e) => {

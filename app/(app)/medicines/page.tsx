@@ -43,6 +43,7 @@ import { parseSearch } from "@/convex/lib/search";
 import { formatDate, formatQuantity } from "@/lib/format";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { DUR, EASE, MOTION_OK, STAGGER } from "@/lib/motion";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import {
@@ -138,6 +139,7 @@ function useRowStagger(
 export default function MedicinesPage() {
   const router = useRouter();
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<MedicineFilter>(NO_FILTER);
   const [sort, setSort] = useState<MedicineSort>("expiry");
@@ -214,7 +216,7 @@ export default function MedicinesPage() {
     !isLoading &&
     (source?.length ?? 0) === 0;
   const trimmed = search.trim();
-  useRowStagger(tbodyRef, displayedMedicines.length > 0);
+  useRowStagger(tbodyRef, isDesktop && displayedMedicines.length > 0);
 
   return (
     <Page>
@@ -420,165 +422,171 @@ export default function MedicinesPage() {
 
       {displayedMedicines.length > 0 && (
         <>
-          {/* Desktop: sortable data table. */}
-          <div
-            data-lenis-prevent
-            className="hidden overflow-hidden rounded-lg border bg-card shadow-xs dark:shadow-none md:block [&>div]:max-h-[70vh]"
-          >
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-muted [&_th]:bg-muted">
-                <TableRow className="hover:bg-transparent">
-                  <SortHead
-                    label="Name"
-                    sortKey="name"
-                    sort={sort}
-                    onSort={setSort}
-                    disabled={isSearching}
-                  />
-                  <SortHead
-                    label="On hand"
-                    sortKey="stock"
-                    sort={sort}
-                    onSort={setSort}
-                    disabled={isSearching}
-                    align="right"
-                  />
-                  <TableHead className="label-caps text-right">Actual</TableHead>
-                  <SortHead
-                    label="Expiry"
-                    sortKey="expiry"
-                    sort={sort}
-                    onSort={setSort}
-                    disabled={isSearching}
-                  />
-                  <TableHead className="label-caps">Status</TableHead>
-                  <TableHead className="w-10">
-                    <span className="sr-only">Open</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody ref={tbodyRef}>
-                {displayedMedicines.map((m) => {
-                  const low = isLowStock(m);
-                  const tier =
-                    m.expiryDate === undefined
-                      ? null
-                      : expiryTier(m.expiryDate, now, tiers);
-                  const meta = [m.strength, m.form].filter(Boolean).join(" · ");
-                  return (
-                    <TableRow
-                      key={m._id}
-                      data-stagger
-                      className="cursor-pointer focus-within:bg-muted/50"
-                      onClick={() => router.push(`/medicines/${m._id}`)}
-                    >
-                      <TableCell>
-                        <Link
-                          href={`/medicines/${m._id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="rounded-sm font-medium outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          {m.name}
-                        </Link>
-                        {meta && (
-                          <p className="text-xs text-muted-foreground">
-                            {meta}
-                          </p>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-data text-right">
-                        {formatQuantity(m.onHandQuantity)}
-                      </TableCell>
-                      <TableCell className="font-data text-right text-muted-foreground">
-                        {formatQuantity(m.actualQuantity)}
-                      </TableCell>
-                      <TableCell className="font-data whitespace-nowrap">
-                        {m.expiryDate !== undefined ? (
-                          formatDate(m.expiryDate)
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {tier ? (
-                            <TierBadge tier={tier} />
-                          ) : (
-                            <PlainBadge>No expiry</PlainBadge>
-                          )}
-                          {low && <PlainBadge>Low stock</PlainBadge>}
-                        </div>
-                      </TableCell>
-                      <TableCell className="w-10 pl-0">
-                        <ChevronRight
-                          aria-hidden
-                          className="size-4 text-muted-foreground"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Mobile: label-style rows. */}
-          <Stagger
-            className="divide-y overflow-hidden rounded-lg border bg-card shadow-xs dark:shadow-none md:hidden"
-          >
-            {displayedMedicines.map((m) => {
-              const low = isLowStock(m);
-              const tier =
-                m.expiryDate === undefined
-                  ? null
-                  : expiryTier(m.expiryDate, now, tiers);
-              const flagged = (tier && tier !== "ok") || low;
-
-              return (
-                <Link
-                  key={m._id}
-                  data-stagger
-                  href={`/medicines/${m._id}`}
-                  className="focus-card flex min-h-11 items-start justify-between gap-4 px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted/50 focus-visible:bg-muted active:bg-muted"
-                >
-                  <div className="min-w-0">
-                    <p className="font-serif text-lg leading-tight">{m.name}</p>
-                    <p className="label-caps mt-1 normal-case tracking-normal">
-                      {[m.strength, m.form].filter(Boolean).join(" · ")}
-                      {m.genericName ? ` · ${m.genericName}` : ""}
-                    </p>
-                    {flagged && (
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {tier && tier !== "ok" && (
-                          <StampBadge tier={tier} size="sm" seed={m._id} />
-                        )}
-                        {low && (
-                          <StampBadge
-                            tier="low"
-                            size="sm"
-                            seed={`${m._id}-low`}
-                          />
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-2 self-center">
-                    <div className="text-right">
-                      <p className="font-data text-base font-semibold">
-                        {formatQuantity(m.onHandQuantity)}
-                      </p>
-                      <p className="label-caps">On hand</p>
-                    </div>
-                    <ChevronRight
-                      aria-hidden
-                      className="size-4 text-muted-foreground"
+          {/* Desktop: sortable data table. Only one layout is mounted. */}
+          {isDesktop ? (
+            <div
+              data-lenis-prevent
+              className="overflow-hidden rounded-lg border bg-card shadow-xs dark:shadow-none [&>div]:max-h-[70vh]"
+            >
+              <Table>
+                <TableHeader className="sticky top-0 z-10 bg-muted [&_th]:bg-muted">
+                  <TableRow className="hover:bg-transparent">
+                    <SortHead
+                      label="Name"
+                      sortKey="name"
+                      sort={sort}
+                      onSort={setSort}
+                      disabled={isSearching}
                     />
-                  </div>
-                </Link>
-              );
-            })}
-          </Stagger>
+                    <SortHead
+                      label="On hand"
+                      sortKey="stock"
+                      sort={sort}
+                      onSort={setSort}
+                      disabled={isSearching}
+                      align="right"
+                    />
+                    <TableHead className="label-caps text-right">
+                      Actual
+                    </TableHead>
+                    <SortHead
+                      label="Expiry"
+                      sortKey="expiry"
+                      sort={sort}
+                      onSort={setSort}
+                      disabled={isSearching}
+                    />
+                    <TableHead className="label-caps">Status</TableHead>
+                    <TableHead className="w-10">
+                      <span className="sr-only">Open</span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody ref={tbodyRef}>
+                  {displayedMedicines.map((m) => {
+                    const low = isLowStock(m);
+                    const tier =
+                      m.expiryDate === undefined
+                        ? null
+                        : expiryTier(m.expiryDate, now, tiers);
+                    const meta = [m.strength, m.form]
+                      .filter(Boolean)
+                      .join(" · ");
+                    return (
+                      <TableRow
+                        key={m._id}
+                        data-stagger
+                        className="cursor-pointer focus-within:bg-muted/50"
+                        onClick={() => router.push(`/medicines/${m._id}`)}
+                      >
+                        <TableCell>
+                          <Link
+                            href={`/medicines/${m._id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="rounded-sm font-medium outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            {m.name}
+                          </Link>
+                          {meta && (
+                            <p className="text-xs text-muted-foreground">
+                              {meta}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-data text-right">
+                          {formatQuantity(m.onHandQuantity)}
+                        </TableCell>
+                        <TableCell className="font-data text-right text-muted-foreground">
+                          {formatQuantity(m.actualQuantity)}
+                        </TableCell>
+                        <TableCell className="font-data whitespace-nowrap">
+                          {m.expiryDate !== undefined ? (
+                            formatDate(m.expiryDate)
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {tier ? (
+                              <TierBadge tier={tier} />
+                            ) : (
+                              <PlainBadge>No expiry</PlainBadge>
+                            )}
+                            {low && <PlainBadge>Low stock</PlainBadge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="w-10 pl-0">
+                          <ChevronRight
+                            aria-hidden
+                            className="size-4 text-muted-foreground"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            /* Mobile: label-style rows. */
+            <Stagger className="divide-y overflow-hidden rounded-lg border bg-card shadow-xs dark:shadow-none">
+              {displayedMedicines.map((m) => {
+                const low = isLowStock(m);
+                const tier =
+                  m.expiryDate === undefined
+                    ? null
+                    : expiryTier(m.expiryDate, now, tiers);
+                const flagged = (tier && tier !== "ok") || low;
+
+                return (
+                  <Link
+                    key={m._id}
+                    data-stagger
+                    href={`/medicines/${m._id}`}
+                    className="focus-card flex min-h-11 items-start justify-between gap-4 px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted/50 focus-visible:bg-muted active:bg-muted"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-serif text-lg leading-tight">
+                        {m.name}
+                      </p>
+                      <p className="label-caps mt-1 normal-case tracking-normal">
+                        {[m.strength, m.form].filter(Boolean).join(" · ")}
+                        {m.genericName ? ` · ${m.genericName}` : ""}
+                      </p>
+                      {flagged && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          {tier && tier !== "ok" && (
+                            <StampBadge tier={tier} size="sm" seed={m._id} />
+                          )}
+                          {low && (
+                            <StampBadge
+                              tier="low"
+                              size="sm"
+                              seed={`${m._id}-low`}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-2 self-center">
+                      <div className="text-right">
+                        <p className="font-data text-base font-semibold">
+                          {formatQuantity(m.onHandQuantity)}
+                        </p>
+                        <p className="label-caps">On hand</p>
+                      </div>
+                      <ChevronRight
+                        aria-hidden
+                        className="size-4 text-muted-foreground"
+                      />
+                    </div>
+                  </Link>
+                );
+              })}
+            </Stagger>
+          )}
         </>
       )}
 

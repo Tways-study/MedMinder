@@ -161,8 +161,12 @@ export default function SettingsPage() {
               </label>
             </div>
 
-            <Field label="Send to">
-              <EmailChipInput value={digestEmails} onChange={setDigestEmails} />
+            <Field label="Send to" htmlFor="digest-emails">
+              <EmailChipInput
+                id="digest-emails"
+                value={digestEmails}
+                onChange={setDigestEmails}
+              />
             </Field>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -210,8 +214,13 @@ export default function SettingsPage() {
             <Field
               label="Timezone"
               hint="The hour above is read in this timezone."
+              htmlFor="digest-timezone"
             >
-              <TimezoneCombobox value={timezone} onChange={setTimezone} />
+              <TimezoneCombobox
+                id="digest-timezone"
+                value={timezone}
+                onChange={setTimezone}
+              />
             </Field>
           </CardContent>
         </Card>

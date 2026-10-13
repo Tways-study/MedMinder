@@ -50,6 +50,22 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // ScrollTrigger only re-measures on window resize. Content that changes
+  // height (a collapsing panel, data arriving) shifts trigger positions, which
+  // would leave scroll-revealed rows/stamps hidden; re-measure on body resize.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const ro = new ResizeObserver(() => {
+      clearTimeout(timer);
+      timer = setTimeout(() => ScrollTrigger.refresh(), 120);
+    });
+    ro.observe(document.body);
+    return () => {
+      clearTimeout(timer);
+      ro.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     if (lastPath.current === pathname) return;
     lastPath.current = pathname;

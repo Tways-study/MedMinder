@@ -18,6 +18,7 @@ import {
   type PointerEvent,
   type ReactNode,
   type RefObject,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -132,6 +133,7 @@ export function Stagger({
               start: "top 96%",
               once: true,
               onEnter: (batch) => reveal(batch, 0),
+              onLeave: (batch) => reveal(batch, 0),
             });
             ScrollTrigger.refresh();
           } else {
@@ -162,9 +164,9 @@ export function Stagger({
 
 /**
   Height-free expand/collapse: a grid-template-rows 0fr <-> 1fr CSS transition
-  (interruptible; motion-reduce:transition-none). Children mount on first open
-  and stay mounted; while closed the region is `inert` + aria-hidden so it
-  can't take focus. `show` is the legacy alias of `open`.
+  (interruptible; motion-reduce:transition-none). Children mount on open and
+  unmount once the collapse finishes; while closed the region is `inert` +
+  aria-hidden so it can't take focus. `show` is the legacy alias of `open`.
 */
 export function ExpandCollapse({
   open,
@@ -181,6 +183,14 @@ export function ExpandCollapse({
   const isOpen = open ?? show ?? false;
   const [mounted, setMounted] = useState(isOpen);
   if (isOpen && !mounted) setMounted(true);
+
+  // Unmount once the collapse has finished so uncontrolled children (forms)
+  // reset instead of resurfacing stale input on the next open.
+  useEffect(() => {
+    if (isOpen) return;
+    const t = setTimeout(() => setMounted(false), 320);
+    return () => clearTimeout(t);
+  }, [isOpen]);
 
   return (
     <div
@@ -220,7 +230,12 @@ export function RollingNumber({
   const ref = useRef<HTMLSpanElement>(null);
   const shown = useRef({ v: value });
   const first = useRef(true);
-  const [display, setDisplay] = useState(value);
+  // Frames write straight to the text node (React renders it from `value`),
+  // so the tween never re-renders the component.
+  const write = (n: number) => {
+    const node = ref.current?.firstElementChild?.firstChild;
+    if (node) node.nodeValue = format(n);
+  };
 
   useGSAP(
     () => {
@@ -233,12 +248,12 @@ export function RollingNumber({
         const proxy = shown.current;
         if (from === value) {
           proxy.v = value;
-          setDisplay(value);
+          write(value);
           return;
         }
         const dir = value >= from ? 1 : -1;
         proxy.v = from;
-        setDisplay(from);
+        write(from);
         const inner = ref.current?.firstElementChild;
         if (inner && !isFirst) {
           gsap.fromTo(
@@ -252,13 +267,13 @@ export function RollingNumber({
           duration: isFirst ? DUR.enter * 2 : DUR.base,
           ease: EASE.out,
           snap: { v: 1 },
-          onUpdate: () => setDisplay(proxy.v),
+          onUpdate: () => write(proxy.v),
         });
       });
 
       mm.add("(prefers-reduced-motion: reduce)", () => {
         shown.current.v = value;
-        setDisplay(value);
+        write(value);
       });
 
       return () => mm.revert();
@@ -269,10 +284,13 @@ export function RollingNumber({
   return (
     <span
       ref={ref}
-      className={cn("relative inline-flex overflow-hidden tabular-nums", className)}
+      className={cn(
+        "relative inline-flex overflow-hidden tabular-nums",
+        className,
+      )}
     >
       <span aria-hidden className="inline-block">
-        {format(display)}
+        {format(value)}
       </span>
       <span className="sr-only">{format(value)}</span>
     </span>
@@ -301,34 +319,42 @@ export function useStampIn(
         const rot = Number(gsap.getProperty(el, "rotation")) || 0;
         const card = el.closest("[data-stamp-card]");
         gsap.set(el, { autoAlpha: 0, scale: 1.6, rotation: rot + 8 });
+        let played = false;
+        const play = () => {
+          if (played) return;
+          played = true;
+          const tl = gsap.timeline({ delay });
+          tl.to(el, {
+            autoAlpha: 1,
+            scale: 1,
+            rotation: rot,
+            duration: DUR.base,
+            ease: EASE.stamp,
+          });
+          if (card) {
+            tl.fromTo(
+              card,
+              { x: 0 },
+              {
+                keyframes: { x: [2, -2, 1, 0] },
+                duration: DUR.micro + 0.04,
+                ease: "none",
+                clearProps: "transform",
+              },
+              DUR.base * 0.55,
+            );
+          }
+        };
+        // onLeave covers a stamp that is already above the viewport (restored
+        // scroll position) so a status stamp can never stay hidden.
         const st = ScrollTrigger.create({
           trigger: el,
           start: "top 98%",
           once: true,
-          onEnter: () => {
-            const tl = gsap.timeline({ delay });
-            tl.to(el, {
-              autoAlpha: 1,
-              scale: 1,
-              rotation: rot,
-              duration: DUR.base,
-              ease: EASE.stamp,
-            });
-            if (card) {
-              tl.fromTo(
-                card,
-                { x: 0 },
-                {
-                  keyframes: { x: [2, -2, 1, 0] },
-                  duration: DUR.micro + 0.04,
-                  ease: "none",
-                  clearProps: "transform",
-                },
-                DUR.base * 0.55,
-              );
-            }
-          },
+          onEnter: play,
+          onLeave: play,
         });
+        if (st.progress > 0) play();
         return () => st.kill();
       });
       return () => mm.revert();

@@ -22,9 +22,12 @@ const TIMEZONES = Intl.supportedValuesOf("timeZone").sort();
 export function TimezoneCombobox({
   value,
   onChange,
+  id,
 }: {
   value: string;
   onChange: (tz: string) => void;
+  /** Id of the trigger button, so an external <label htmlFor> can target it. */
+  id?: string;
 }) {
   const [open, setOpen] = React.useState(false);
   const listId = React.useId();
@@ -33,6 +36,7 @@ export function TimezoneCombobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
+          id={id}
           type="button"
           role="combobox"
           aria-expanded={open}

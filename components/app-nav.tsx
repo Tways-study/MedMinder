@@ -75,16 +75,22 @@ function useNavIndicator(
       };
 
       const mm = gsap.matchMedia();
+      // Only mark as placed once the indicator has a real position; a
+      // container hidden at this breakpoint has none, so the first visible
+      // placement must snap rather than tween from 0,0.
       mm.add(MOTION_OK, () => {
         place(placed.current);
-        placed.current = true;
+        if (target()) placed.current = true;
       });
       mm.add("(prefers-reduced-motion: reduce)", () => {
         place(false);
-        placed.current = true;
+        if (target()) placed.current = true;
       });
 
-      const ro = new ResizeObserver(() => place(false));
+      const ro = new ResizeObserver(() => {
+        place(false);
+        if (target()) placed.current = true;
+      });
       ro.observe(container);
       return () => {
         ro.disconnect();
