@@ -118,6 +118,16 @@
 
 @layer components {
   /*
+    Plain tear line for label-style cards that sit on a coloured page, where
+    the notched .perforation below would show light cut-outs. Full-bleed, like
+    .perforation: place it directly inside a bordered bg-card box.
+  */
+  .card-divider {
+    height: 0;
+    border-top: 1.5px dashed hsl(var(--input));
+  }
+
+  /*
     Tear line between a label's header and body. Place it as a full-bleed
     element (no horizontal margin) directly inside a bordered bg-card box.
     The two notches take the page background so they read as cut-outs; each

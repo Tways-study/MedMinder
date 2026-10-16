@@ -8,7 +8,7 @@ import {
 } from "@/components/page-shell";
 import { LowStockBadge, TierBadge, tierClasses, tierStyle } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
-import { Stagger } from "@/components/motion";
+import { Stagger, useFlipList } from "@/components/motion";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -217,6 +217,18 @@ export default function MedicinesPage() {
   const trimmed = search.trim();
   useRowStagger(tbodyRef, isDesktop && displayedMedicines.length > 0);
 
+  // Sorting and filtering move rows; Flip slides them there instead of
+  // snapping. `capture` runs just before each state change that reorders.
+  const capture = useFlipList(displayedMedicines.map((m) => m._id).join());
+  const changeSort = (v: MedicineSort) => {
+    capture();
+    setSort(v);
+  };
+  const changeFilter: typeof setFilter = (v) => {
+    capture();
+    setFilter(v);
+  };
+
   return (
     <Page>
       <PageHeader
@@ -288,7 +300,7 @@ export default function MedicinesPage() {
               aria-label="Filter by expiry"
               value={filter.statuses}
               onValueChange={(statuses) =>
-                setFilter((f) => ({
+                changeFilter((f) => ({
                   ...f,
                   statuses: statuses as ExpiryStatus[],
                 }))
@@ -310,7 +322,7 @@ export default function MedicinesPage() {
               aria-label="Only low stock"
               pressed={filter.lowStockOnly}
               onPressedChange={(lowStockOnly) =>
-                setFilter((f) => ({ ...f, lowStockOnly }))
+                changeFilter((f) => ({ ...f, lowStockOnly }))
               }
               className={CHIP_BUTTON}
             >
@@ -335,7 +347,7 @@ export default function MedicinesPage() {
                 </span>
                 <Select
                   value={sort}
-                  onValueChange={(v) => setSort(v as MedicineSort)}
+                  onValueChange={(v) => changeSort(v as MedicineSort)}
                 >
                   <SelectTrigger aria-labelledby="sort-label" className="w-44">
                     <SelectValue />
@@ -358,7 +370,7 @@ export default function MedicinesPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setFilter(NO_FILTER)}
+                  onClick={() => changeFilter(NO_FILTER)}
                 >
                   Clear filters
                 </Button>
@@ -408,6 +420,7 @@ export default function MedicinesPage() {
               <Button
                 variant="outline"
                 onClick={() => {
+                  capture();
                   setFilter(NO_FILTER);
                   setSearch("");
                 }}
@@ -433,14 +446,14 @@ export default function MedicinesPage() {
                       label="Name"
                       sortKey="name"
                       sort={sort}
-                      onSort={setSort}
+                      onSort={changeSort}
                       disabled={isSearching}
                     />
                     <SortHead
                       label="On hand"
                       sortKey="stock"
                       sort={sort}
-                      onSort={setSort}
+                      onSort={changeSort}
                       disabled={isSearching}
                       align="right"
                     />
@@ -451,7 +464,7 @@ export default function MedicinesPage() {
                       label="Expiry"
                       sortKey="expiry"
                       sort={sort}
-                      onSort={setSort}
+                      onSort={changeSort}
                       disabled={isSearching}
                     />
                     <TableHead className="label-caps">Status</TableHead>
@@ -474,6 +487,7 @@ export default function MedicinesPage() {
                       <TableRow
                         key={m._id}
                         data-stagger
+                        data-flip-id={m._id}
                         className="cursor-pointer focus-within:bg-muted/50"
                         onClick={() => router.push(`/medicines/${m._id}`)}
                       >
@@ -541,6 +555,7 @@ export default function MedicinesPage() {
                   <Link
                     key={m._id}
                     data-stagger
+                    data-flip-id={m._id}
                     href={`/medicines/${m._id}`}
                     className="focus-card flex min-h-11 items-start justify-between gap-4 px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted/50 focus-visible:bg-muted active:bg-muted"
                   >

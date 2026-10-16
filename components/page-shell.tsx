@@ -2,7 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { gsap, useGSAP } from "@/lib/gsap";
-import { DUR, EASE, MOTION_OK } from "@/lib/motion";
+import { DUR, EASE, MOTION_OK, STAGGER } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { Pill, type LucideIcon } from "lucide-react";
 import { type ReactNode, useRef } from "react";
@@ -112,8 +112,32 @@ export function EmptyState({
   className?: string;
 }) {
   const desc = description ?? body;
+  const ref = useRef<HTMLElement>(null);
+
+  // The one authored moment on a first-run screen: the blank label's ruled
+  // lines are drawn in, left to right, as if about to be filled. Clip-path
+  // rather than scale, so the dashes keep their size.
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap.from("[data-rule]", {
+          clipPath: "inset(0 100% 0 0)",
+          duration: DUR.enter,
+          ease: EASE.out,
+          stagger: STAGGER * 2,
+          delay: 0.2,
+          clearProps: "clipPath",
+        });
+      });
+      return () => mm.revert();
+    },
+    { scope: ref },
+  );
+
   return (
     <section
+      ref={ref}
       className={cn(
         "overflow-hidden rounded-lg border bg-card shadow-xs",
         className,
@@ -151,7 +175,7 @@ export function EmptyState({
           {["Name", "Strength", "On hand", "Expires"].map((label) => (
             <div key={label}>
               <dt className="label-caps">{label}</dt>
-              <dd className="mt-2 h-px border-b border-dashed border-input" />
+              <dd data-rule className="mt-2 h-px border-b border-dashed border-input" />
             </div>
           ))}
         </dl>

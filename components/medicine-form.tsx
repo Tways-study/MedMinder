@@ -1,5 +1,6 @@
 "use client";
 
+import { useAlertIn } from "@/components/motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,7 +15,7 @@ import { fromDateInput, toDateInput } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ConvexError } from "convex/values";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const FORMS = [
   "tablet",
@@ -61,6 +62,8 @@ export function Field({
   id?: string;
   className?: string;
 }) {
+  const errorRef = useRef<HTMLSpanElement>(null);
+  useAlertIn(errorRef, Boolean(error));
   return (
     <label className={cn("flex flex-col gap-1.5", className)}>
       <span className="label-caps">{label}</span>
@@ -76,6 +79,7 @@ export function Field({
       )}
       {error && (
         <span
+          ref={errorRef}
           id={id ? `${id}-error` : undefined}
           role="alert"
           className="text-xs font-medium text-destructive"
@@ -125,6 +129,8 @@ export function MedicineForm({
   onCancel: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const formErrorRef = useRef<HTMLParagraphElement>(null);
+  useAlertIn(formErrorRef, error !== null);
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<FieldName, string>>
   >({});
@@ -389,7 +395,11 @@ export function MedicineForm({
       </Section>
 
       {error && (
-        <p role="alert" className="text-sm font-medium text-destructive">
+        <p
+          ref={formErrorRef}
+          role="alert"
+          className="text-sm font-medium text-destructive"
+        >
           {error}
         </p>
       )}
