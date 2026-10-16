@@ -172,22 +172,31 @@ Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `
 
 ## Typography
 
+**Display:** EB Garamond (`--font-serif`, `font-serif`), for the page title, record names, and list/group titles. Normal tracking, weight 500; italic only for one emphasised phrase in the same face.
 **Sans:** Geist (`--font-geist-sans`, then system-ui, sans-serif), via `next/font/google`.
 **Mono:** Geist Mono (`--font-geist-mono`, then ui-monospace), for data.
 
-**Character:** a clean, slightly technical grotesque with a matching mono. Headings are semibold with tight tracking; everything else is regular or medium. No display face.
+**Character:** a dispensary label. A Garamond display voice for names and titles over a clean Geist UI, with mono kept for figures. Everything that is not a name or a number is Geist, regular or medium.
 
 ### Hierarchy
-- **Page title** (600, 1.5rem, tracking-tight): one `h1` per page, in `PageHeader`.
-- **Card title** (600, 1rem, tracking-tight, leading-none): `CardTitle`, empty-state titles, sidebar wordmark.
+- **Page title** (Garamond 500, 2.25rem, 3rem from `sm`): one `h1` per page, in `PageHeader`. No kicker above it.
+- **Record / group name** (Garamond 500, 1.125-1.5rem): `RxLabel` title, medicine names, `GroupedList` titles, empty-state titles, wordmark.
+- **Card title** (600, 1rem): `CardTitle` on settings cards.
 - **Body** (400, 0.875rem): default UI text, table cells, descriptions in muted ink.
 - **Input text** (1rem on mobile, 0.875rem from `sm`): 16px on mobile prevents iOS focus zoom.
 - **Label** (500, 0.75rem): badges and small captions.
+- **Field label** (`.label-caps`, Geist 600, 0.75rem, uppercase, 0.06em): the label inside a record card ("On hand", "Expires"). Never above a title and never for units.
 - **Tab label** (500, 0.6875rem, `text-2xs`): bottom tab bar only.
 - **Data** (`.font-data` = Geist Mono + tabular-nums): quantities, dates, KPIs, anything compared down a column.
 
 ### Named Rules
-**The Mono Is For Data Rule.** Numbers that get compared (counts, dates, KPIs) use `.font-data`. Prose and labels never do.
+**The Mono Is For Data Rule.** Numbers that get compared (counts, dates, KPIs) use `.font-data`. Prose, labels, expiry phrases and units never do.
+
+**The Units Keep Their Case Rule.** `mg`, `mL`, `mcg` are never uppercased or capitalised; a pharmacy reads the case. Capitalise only the dosage form word, with `formatForm()`.
+
+**The One Glyph Rule.** The only non-icon glyph is the brand `℞` in the `RxLabel` header. Everywhere else, Lucide.
+
+**The Stamp Is Rare Rule.** `StampBadge` (rotated, double-bordered) is the signature for the medicine detail page and the sign-in sample. List and table rows use the flat rectangular `TierBadge` / `LowStockBadge`, so a screen of rows stays calm.
 
 ## Layout
 
@@ -250,7 +259,8 @@ One radius token, `--radius` 10px, derived into three steps: `lg` 10px (cards, d
 
 ### Don't:
 - **Don't** tint the canvas; `background` stays neutral zinc.
-- **Don't** make pill buttons; pills are for status badges only.
+- **Don't** make pill buttons or pill chips; tier and stock chips are rectangular (`rounded-sm`).
+- **Don't** put an eyebrow or kicker above a heading, or invent record meta ("No. 0001", version footers, taglines).
 - **Don't** put raw hex, `rgb()`, or palette classes (`bg-violet-600`, `text-red-500`) in components; use tokens.
 - **Don't** use decorative gradients or gradient washes.
 - **Don't** convey status by colour alone.

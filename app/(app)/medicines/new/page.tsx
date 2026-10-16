@@ -17,7 +17,7 @@ import { ConvexError } from "convex/values";
 import { useMutation } from "convex/react";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, PackagePlus } from "lucide-react";
 import { toast } from "sonner";
 
 function isDuplicateError(err: unknown): err is ConvexError<{ code: string; name: string }> {
@@ -62,7 +62,6 @@ export default function NewMedicinePage() {
   return (
     <Page>
       <PageHeader
-        eyebrow="Inventory"
         title="Add medicine"
         description="Lots and expiry dates come in later, with each delivery."
       />
@@ -72,12 +71,7 @@ export default function NewMedicinePage() {
           className="max-w-3xl rounded-lg border bg-card text-card-foreground shadow-xs"
         >
           <header className="flex items-center gap-2.5 px-5 py-3 sm:px-6">
-            <span
-              aria-hidden
-              className="font-serif text-2xl leading-none text-primary"
-            >
-              ℞
-            </span>
+            <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground"><PackagePlus className="size-4" strokeWidth={1.75} /></span>
             <p className="label-caps">New entry</p>
           </header>
           <div className="perforation" aria-hidden />

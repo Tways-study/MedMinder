@@ -16,9 +16,9 @@ export function RxLabel({
   bodyClassName,
   children,
 }: {
-  /** With no `eyebrow`, shown as a caps caption. With one, shown as the serif name. */
+  /** The record's name, set in the display serif. */
   title: ReactNode;
-  /** Caps line above the title (e.g. dosage form). */
+  /** Small plain line above the title (e.g. dosage form). */
   eyebrow?: ReactNode;
   /** Right slot of the header strip (stamp, count, actions). */
   right?: ReactNode;
@@ -58,19 +58,19 @@ export function RxLabel({
             ℞
           </span>
           <div className="min-w-0">
-            {eyebrow && <p className="label-caps truncate">{eyebrow}</p>}
-            {eyebrow ? (
-              <h3
-                className={cn(
-                  "truncate font-serif leading-tight",
-                  row ? "text-lg" : "text-2xl",
-                )}
-              >
-                {title}
-              </h3>
-            ) : (
-              <h3 className="label-caps truncate">{title}</h3>
+            {eyebrow && (
+              <p className="truncate text-xs text-muted-foreground">
+                {eyebrow}
+              </p>
             )}
+            <h3
+              className={cn(
+                "truncate font-serif font-medium leading-tight",
+                row ? "text-lg" : "text-2xl",
+              )}
+            >
+              {title}
+            </h3>
           </div>
         </div>
         {right && <div className="flex shrink-0 items-center gap-2">{right}</div>}
@@ -90,7 +90,7 @@ export function RxLabel({
       {footer && (
         <p
           className={cn(
-            "font-mono text-2xs text-muted-foreground",
+            "text-xs text-muted-foreground",
             row ? "px-3 pb-2" : "px-4 pb-3",
           )}
         >

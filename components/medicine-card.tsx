@@ -4,20 +4,18 @@ import {
   MedicineForm,
   type MedicineFormValues,
 } from "@/components/medicine-form";
-import { StampBadge } from "@/components/stamp-badge";
-import { tierClasses } from "@/components/tier-badge";
+import { LowStockBadge, TierBadge, tierClasses } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { ExpiryTier } from "@/convex/lib/inventory";
-import { formatQuantity } from "@/lib/format";
+import { formatForm, formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Minus, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   RollingNumber,
   usePressFeedback,
-  useStampIn,
 } from "@/components/motion";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { DUR, EASE, MOTION_OK } from "@/lib/motion";
@@ -86,13 +84,7 @@ export function MedicineCard({
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const skipFirst = useRef(true);
-  const stampRef = useRef<HTMLSpanElement>(null);
   const isLow = medicine.onHandQuantity <= medicine.reorderPoint;
-  // Stamps thunk in just after the row has landed (rows stagger in first).
-  useStampIn(stampRef, {
-    delay: 0.15,
-    enabled: !isEditing && (!!tier || isLow),
-  });
 
   // View <-> edit swap: the incoming side fades up 6px. Not on first mount.
   useGSAP(
@@ -116,7 +108,9 @@ export function MedicineCard({
     { scope: wrapRef, dependencies: [isEditing] },
   );
 
-  const meta = [medicine.form, medicine.strength].filter(Boolean).join(" · ");
+  const meta = [formatForm(medicine.form), medicine.strength]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <div ref={wrapRef} data-stamp-card>
@@ -162,33 +156,21 @@ export function MedicineCard({
                 href={`/medicines/${medicine._id}`}
                 className="focus-card -mx-1 block rounded-md px-1 hover:underline"
               >
-                <h3 className="truncate text-sm font-medium">
+                <h3 className="truncate font-serif text-lg font-medium leading-tight">
                   {medicine.name}
                 </h3>
               </Link>
               {meta && (
-                <p className="mt-0.5 truncate font-mono text-2xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
                   {meta}
                 </p>
               )}
               {(tier || isLow || expiryDistance) && (
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                  {(tier || isLow) && (
-                    <span ref={stampRef} className="inline-flex gap-2">
-                      {tier && (
-                        <StampBadge tier={tier} size="sm" seed={medicine._id} />
-                      )}
-                      {isLow && (
-                        <StampBadge
-                          tier="low"
-                          size="sm"
-                          seed={`${medicine._id}-low`}
-                        />
-                      )}
-                    </span>
-                  )}
+                  {tier && <TierBadge tier={tier} />}
+                  {isLow && <LowStockBadge />}
                   {expiryDistance && (
-                    <span className="font-mono text-2xs uppercase tracking-[0.08em] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {expiryDistance}
                     </span>
                   )}
@@ -202,7 +184,7 @@ export function MedicineCard({
               size="icon-sm"
               onClick={onToggleEdit}
               aria-label={`Edit ${medicine.name}`}
-              className="shrink-0 text-muted-foreground hover:text-foreground sm:hidden"
+              className="-mr-2 size-11 shrink-0 text-muted-foreground hover:text-foreground sm:hidden"
             >
               <Pencil className="size-4" strokeWidth={1.75} aria-hidden />
             </Button>

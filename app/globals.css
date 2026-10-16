@@ -86,9 +86,33 @@
     @apply outline-none ring-inset focus-visible:ring-2 focus-visible:ring-ring;
   }
 
-  /* Apothecary label: mono uppercase caption for field labels and eyebrows. */
+  /*
+    Field label: small tracked caps in the UI sans, for the labels inside a
+    record card ("On hand", "Expires"). Never above a page or section title,
+    and never for units or sentences. Mono stays reserved for figures.
+  */
   .label-caps {
-    @apply font-mono text-2xs font-medium uppercase tracking-[0.12em] text-muted-foreground;
+    @apply text-xs font-semibold uppercase tracking-[0.06em] text-muted-foreground;
+  }
+
+  /* Browser surfaces carry the palette too. */
+  ::selection {
+    background: hsl(var(--primary) / 0.22);
+    color: hsl(var(--foreground));
+  }
+  html {
+    accent-color: hsl(var(--primary));
+    scrollbar-color: hsl(var(--input)) transparent;
+    scrollbar-width: thin;
+  }
+  input,
+  textarea {
+    caret-color: hsl(var(--primary));
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
 }
 

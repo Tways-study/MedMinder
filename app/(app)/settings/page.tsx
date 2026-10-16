@@ -24,7 +24,7 @@ import { api } from "@/convex/_generated/api";
 import { DEFAULT_ALERT_TIERS } from "@/convex/lib/inventory";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
-import { Loader2 } from "lucide-react";
+import { Loader2, MailCheck } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -90,7 +90,7 @@ export default function SettingsPage() {
   if (settings === undefined) {
     return (
       <Page className="max-w-3xl">
-        <PageHeader eyebrow="PREFERENCES" title="Settings" />
+        <PageHeader title="Settings" />
         <CardSkeleton count={2} />
       </Page>
     );
@@ -125,7 +125,6 @@ export default function SettingsPage() {
   return (
     <Page className="max-w-3xl">
       <PageHeader
-        eyebrow="PREFERENCES"
         title="Settings"
         description="What counts as urgent, and when to be told."
       />
@@ -134,9 +133,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <p className="label-caps flex items-center gap-2">
-              <span aria-hidden className="font-serif text-lg leading-none text-primary normal-case">
-                ℞
-              </span>
+              <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground"><MailCheck className="size-4" strokeWidth={1.75} /></span>
               Weekly digest
             </p>
             <CardTitle>What is on the shelf, once a week</CardTitle>

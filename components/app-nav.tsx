@@ -125,19 +125,12 @@ export function AppNav() {
           className="focus-card mx-3 mt-4 flex h-10 items-center gap-2.5 rounded-md px-2"
         >
           <LogoMark className="size-7" />
-          <span className="font-serif text-xl leading-none tracking-tight">
+          <span className="font-serif text-2xl font-medium leading-none">
             MedMinder
-          </span>
-          <span
-            aria-hidden
-            className="ml-auto font-serif text-lg leading-none text-muted-foreground"
-          >
-            ℞
           </span>
         </Link>
 
-        <nav aria-label="Main" className="mt-6 flex-1 px-3">
-          <p className="label-caps mb-2 px-3">Dispensary</p>
+        <nav aria-label="Main" className="mt-8 flex-1 px-3">
           <ul ref={sideRef} className="relative flex flex-col gap-1">
             <span
               ref={sideIndicator}
@@ -173,7 +166,6 @@ export function AppNav() {
 
         <div className="border-t p-3">
           <UserMenu variant="sidebar" />
-          <p className="label-caps mt-2 px-2">v1 · ℞</p>
         </div>
       </aside>
 

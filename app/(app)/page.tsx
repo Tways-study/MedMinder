@@ -124,15 +124,15 @@ export default function DashboardPage() {
       }),
     );
   }, []);
-  const eyebrow = today ?? " ";
 
   if (summary === undefined || medicines === undefined) {
     return (
       <Page>
         <PageHeader
-          eyebrow={eyebrow}
           title="Today"
-          description="Checking the shelf…"
+          description={
+            today ? `${today}. Checking the shelf…` : "Checking the shelf…"
+          }
         />
         <div aria-hidden>
           <RxLabel title="Shelf report">
@@ -228,22 +228,24 @@ export default function DashboardPage() {
   return (
     <Page>
       <PageHeader
-        eyebrow={eyebrow}
         title="Today"
         description={
-          nothingStocked ? (
-            "Nothing on the shelf yet."
-          ) : summary.alerts.length > 0 ? (
-            <>
-              <span className="font-serif text-lg italic text-foreground">
-                {summary.alerts.length}{" "}
-                {summary.alerts.length === 1 ? "needs" : "need"} attention
-              </span>
-              , most urgent first.
-            </>
-          ) : (
-            "Everything on the shelf is in order."
-          )
+          <>
+            {today ? `${today}. ` : ""}
+            {nothingStocked ? (
+              "Nothing on the shelf yet."
+            ) : summary.alerts.length > 0 ? (
+              <>
+                <span className="font-serif text-lg italic text-foreground">
+                  {summary.alerts.length}{" "}
+                  {summary.alerts.length === 1 ? "needs" : "need"} attention
+                </span>
+                , most urgent first.
+              </>
+            ) : (
+              "Everything on the shelf is in order."
+            )}
+          </>
         }
         actions={addButton}
       />
