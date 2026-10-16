@@ -11,14 +11,16 @@
     never leaves content at opacity 0.
 */
 
-import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { Flip, gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { DUR, EASE, MOTION_OK, STAGGER } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import {
   type PointerEvent,
   type ReactNode,
   type RefObject,
+  useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -264,7 +266,7 @@ export function RollingNumber({
         }
         gsap.to(proxy, {
           v: value,
-          duration: isFirst ? DUR.enter * 2 : DUR.base,
+          duration: isFirst ? DUR.enter : DUR.base,
           ease: EASE.out,
           snap: { v: 1 },
           onUpdate: () => write(proxy.v),
@@ -381,4 +383,79 @@ export function usePressFeedback() {
     onPointerUp: (e: PointerEvent<HTMLElement>) => to(e, 1),
     onPointerLeave: (e: PointerEvent<HTMLElement>) => to(e, 1),
   };
+}
+
+/* ----------------------------------------------------------------- useAlertIn */
+
+/**
+  An error or confirmation message arriving: a 6px drop and fade, so the eye
+  is pulled to the new text instead of missing it. Runs each time `active`
+  turns true. Under reduced motion the message simply appears.
+*/
+export function useAlertIn(ref: RefObject<HTMLElement | null>, active: boolean) {
+  useGSAP(
+    () => {
+      const el = ref.current;
+      if (!el || !active) return;
+      const mm = gsap.matchMedia();
+      mm.add(MOTION_OK, () => {
+        gsap.fromTo(
+          el,
+          { y: -6, autoAlpha: 0 },
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration: DUR.base,
+            ease: EASE.out,
+            clearProps: "transform,opacity,visibility",
+          },
+        );
+      });
+      return () => mm.revert();
+    },
+    { dependencies: [active], revertOnUpdate: true },
+  );
+}
+
+/* ----------------------------------------------------------------- useFlipList */
+
+/**
+  Continuity for a list that reorders or filters: rows slide to their new place
+  instead of snapping. Mark each row `data-flip-id={stableId}`.
+
+  GSAP Flip needs the layout from *before* the change, so call the returned
+  `capture()` right before the state setter that causes it, and pass a
+  `signature` (the ordered ids) that changes when the list does:
+
+    const capture = useFlipList(ids.join());
+    onChange={(v) => { capture(); setSort(v); }}
+
+  For changes that happen instantly on the client (sort, filter). A change that
+  has to be fetched, like search, re-mounts its rows and gets their entrance
+  instead. Rows that are new are left to their own entrance; removed rows are
+  already gone from the DOM. Nothing is captured under reduced motion, so the
+  list just updates.
+*/
+export function useFlipList(signature: string) {
+  const pending = useRef<ReturnType<typeof Flip.getState> | null>(null);
+
+  const capture = useCallback(() => {
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia(MOTION_OK).matches) return;
+    pending.current = Flip.getState("[data-flip-id]");
+  }, []);
+
+  useLayoutEffect(() => {
+    const state = pending.current;
+    if (!state) return;
+    pending.current = null;
+    Flip.from(state, {
+      targets: "[data-flip-id]",
+      duration: DUR.base,
+      ease: EASE.out,
+      overwrite: "auto",
+    });
+  }, [signature]);
+
+  return capture;
 }
