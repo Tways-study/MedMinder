@@ -15,3 +15,8 @@ export {
 export function formatQuantity(n: number): string {
   return new Intl.NumberFormat("en-US").format(n);
 }
+
+/** "capsule" -> "Capsule". Only the dosage form: strengths keep their unit case (mg, mL). */
+export function formatForm(form: string): string {
+  return form.charAt(0).toUpperCase() + form.slice(1);
+}

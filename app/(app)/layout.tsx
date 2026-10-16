@@ -32,14 +32,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           className="focus-card -ml-1 flex items-center gap-2 rounded-md px-1 py-1"
         >
           <LogoMark className="size-7" />
-          <span className="font-serif text-xl leading-none tracking-tight">
+          <span className="font-serif text-2xl font-medium leading-none">
             MedMinder
-          </span>
-          <span
-            aria-hidden
-            className="font-serif text-base leading-none text-muted-foreground"
-          >
-            ℞
           </span>
         </Link>
         <UserMenu />

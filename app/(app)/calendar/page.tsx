@@ -7,8 +7,7 @@ import {
   PageHeader,
 } from "@/components/page-shell";
 import { Stagger } from "@/components/motion";
-import { StampBadge } from "@/components/stamp-badge";
-import { tierClasses, tierLabel } from "@/components/tier-badge";
+import { TierBadge, tierClasses, tierLabel } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
@@ -18,11 +17,11 @@ import {
   expiryTier,
   formatExpiryDistance,
 } from "@/convex/lib/inventory";
-import { formatDate, fromDateInput, toDateInput } from "@/lib/format";
+import { formatDate, formatForm, fromDateInput, toDateInput } from "@/lib/format";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { DUR, EASE, MOTION_OK } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import type { FunctionReturnType } from "convex/server";
 import { useQuery } from "convex/react";
 import Link from "next/link";
@@ -100,7 +99,6 @@ export default function CalendarPage() {
     return (
       <Page>
         <PageHeader
-          eyebrow="EXPIRY LEDGER"
           title="Calendar"
           description="When your stock expires, month by month."
         />
@@ -135,7 +133,6 @@ export default function CalendarPage() {
     return (
       <Page>
         <PageHeader
-          eyebrow="EXPIRY LEDGER"
           title="Calendar"
           description="When your stock expires, month by month."
         />
@@ -191,7 +188,6 @@ export default function CalendarPage() {
   return (
     <Page>
       <PageHeader
-        eyebrow="EXPIRY LEDGER"
         title="Calendar"
         description="When your stock expires, month by month."
       />
@@ -324,12 +320,7 @@ export default function CalendarPage() {
           >
             <header className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex min-w-0 items-center gap-2.5">
-                <span
-                  aria-hidden
-                  className="shrink-0 font-serif text-2xl leading-none text-primary"
-                >
-                  ℞
-                </span>
+                <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground"><CalendarDays className="size-4" strokeWidth={1.75} /></span>
                 <div className="min-w-0">
                   <p className="label-caps truncate">{selectedLabel}</p>
                   <h3 className="truncate font-serif text-2xl leading-tight">
@@ -358,20 +349,14 @@ export default function CalendarPage() {
                       <p className="text-sm font-semibold">{m.name}</p>
                       {(m.strength || m.form) && (
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          {[m.strength, m.form].filter(Boolean).join(" · ")}
+                          {[m.strength, m.form && formatForm(m.form)].filter(Boolean).join(", ")}
                         </p>
                       )}
                       <p className="mt-1 text-xs text-muted-foreground">
                         {formatExpiryDistance(m.expiryDate as number, now)}
                       </p>
                     </div>
-                    <StampBadge
-                      tier={m.tier}
-                      size="sm"
-                      seed={m._id}
-                      animate
-                      className="shrink-0 self-center"
-                    />
+                    <TierBadge tier={m.tier} className="shrink-0 self-center" />
                   </Link>
                 ))}
               </Stagger>

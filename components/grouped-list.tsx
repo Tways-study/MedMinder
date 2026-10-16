@@ -15,7 +15,7 @@ export function GroupedList({
   className,
 }: {
   title?: ReactNode;
-  /** Shown at the end of the header rule in zero-padded mono (03). */
+  /** Shown at the end of the header, as "3 medicines". */
   count?: number;
   description?: ReactNode;
   footer?: ReactNode;
@@ -33,15 +33,13 @@ export function GroupedList({
       {hasHeader && (
         <div className="flex flex-col gap-1 border-b px-4 py-3">
           {title && (
-            <h2 className="label-caps flex items-center gap-3">
-              <span className="shrink-0">{title}</span>
-              <span aria-hidden className="h-px min-w-4 flex-1 bg-border" />
+            <h2 className="flex items-baseline justify-between gap-3">
+              <span className="font-serif text-xl font-medium leading-tight">
+                {title}
+              </span>
               {count !== undefined && (
-                <span className="font-data shrink-0">
-                  <span aria-hidden>{String(count).padStart(2, "0")}</span>
-                  <span className="sr-only">
-                    {count} {count === 1 ? "medicine" : "medicines"}
-                  </span>
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                  {count} {count === 1 ? "medicine" : "medicines"}
                 </span>
               )}
             </h2>

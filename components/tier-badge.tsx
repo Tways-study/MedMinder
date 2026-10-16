@@ -86,7 +86,7 @@ export function TierBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-xs font-medium",
         tierClass,
         className,
       )}
@@ -125,3 +125,20 @@ export const LOW_STOCK_STYLE = {
   border: "border-tier-critical-border",
   className: "bg-tier-critical-bg text-tier-critical border-tier-critical-border",
 };
+
+/** Low-stock chip: same shape as TierBadge, for stock rather than expiry. */
+export function LowStockBadge({ className }: { className?: string }) {
+  const { label, icon: Icon, className: tone } = LOW_STOCK_STYLE;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-xs font-medium",
+        tone,
+        className,
+      )}
+    >
+      <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+      {label}
+    </span>
+  );
+}

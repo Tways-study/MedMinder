@@ -86,7 +86,7 @@ export function DashboardMetrics({
     <RxLabel
       title="Shelf report"
       right={right}
-      footer={`${formatQuantity(totalMedicines)} ${totalMedicines === 1 ? "medicine" : "medicines"} on the shelf · counting ${activeTab === "onHand" ? "on hand" : "actual"}`}
+      footer={`${formatQuantity(totalMedicines)} ${totalMedicines === 1 ? "medicine" : "medicines"} on the shelf, counting ${activeTab === "onHand" ? "on hand" : "actual"}.`}
     >
       <MetricValue
         label="Total stock"

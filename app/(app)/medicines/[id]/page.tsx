@@ -33,7 +33,7 @@ import {
   expiryTier,
   formatExpiryDistance,
 } from "@/convex/lib/inventory";
-import { formatDate, formatQuantity } from "@/lib/format";
+import { formatDate, formatForm, formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
@@ -121,7 +121,6 @@ export default function MedicineDetailPage() {
         <div className="flex flex-col gap-3">
           {backLink}
           <PageHeader
-            eyebrow="Amend entry"
             title="Edit medicine"
             description={medicine.name}
           />
@@ -129,9 +128,7 @@ export default function MedicineDetailPage() {
         <FadeSlideIn>
           <section className="max-w-3xl rounded-lg border bg-card text-card-foreground shadow-xs">
             <header className="flex items-center gap-2.5 px-5 py-3 sm:px-6">
-              <span aria-hidden className="font-serif text-2xl leading-none text-primary">
-                ℞
-              </span>
+              <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground"><Pencil className="size-4" strokeWidth={1.75} /></span>
               <p className="label-caps">Amend entry</p>
             </header>
             <div className="perforation" aria-hidden />
@@ -168,10 +165,9 @@ export default function MedicineDetailPage() {
           Date.now(),
           settings?.alertTiers ?? DEFAULT_ALERT_TIERS,
         );
-  const eyebrow = [medicine.strength, medicine.form]
+  const eyebrow = [medicine.strength, formatForm(medicine.form)]
     .filter(Boolean)
-    .join(" · ");
-  const shortId = medicine._id.slice(-6).toUpperCase();
+    .join(", ");
   const footer = [
     medicine.genericName,
     medicine.category,
@@ -241,7 +237,7 @@ export default function MedicineDetailPage() {
       <FadeSlideIn>
         <RxLabel
           density="card"
-          eyebrow={eyebrow ? `${eyebrow} · ℞ No. ${shortId}` : `℞ No. ${shortId}`}
+          eyebrow={eyebrow || undefined}
           title={medicine.name}
           right={
             <div className="flex flex-col items-end gap-2">
@@ -306,7 +302,7 @@ export default function MedicineDetailPage() {
                   </span>
                 </>
               ) : (
-                "—"
+                "Not set"
               )
             }
           />

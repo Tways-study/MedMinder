@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { DUR, EASE, MOTION_OK } from "@/lib/motion";
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
+import { Pill, type LucideIcon } from "lucide-react";
 import { type ReactNode, useRef } from "react";
 
 export function Page({
@@ -28,15 +28,12 @@ export function Page({
 
 export function PageHeader({
   title,
-  eyebrow,
   description,
   actions,
   subtitle,
   action,
 }: {
   title: ReactNode;
-  /** Caps line above the title, e.g. today's date. */
-  eyebrow?: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
   /** @deprecated use `description` */
@@ -54,8 +51,7 @@ export function PageHeader({
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         const tl = gsap.timeline({ defaults: { ease: EASE.out } });
-        tl.from("[data-ph=eyebrow]", { autoAlpha: 0, duration: DUR.base }, 0)
-          .from(
+        tl.from(
             "[data-ph=title]",
             { y: 12, autoAlpha: 0, duration: DUR.enter },
             0.04,
@@ -73,19 +69,14 @@ export function PageHeader({
       className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3"
     >
       <div className="min-w-0">
-        {eyebrow && (
-          <p data-ph="eyebrow" className="label-caps mb-2">
-            {eyebrow}
-          </p>
-        )}
         <h1
           data-ph="title"
-          className="font-serif text-3xl leading-none sm:text-4xl"
+          className="font-serif text-4xl font-medium leading-[1.05] sm:text-5xl"
         >
           {title}
         </h1>
         {desc && (
-          <p data-ph="rest" className="mt-2 text-sm text-muted-foreground">
+          <p data-ph="rest" className="mt-2.5 max-w-[60ch] text-sm text-muted-foreground">
             {desc}
           </p>
         )}
@@ -99,7 +90,11 @@ export function PageHeader({
   );
 }
 
-/** An empty screen is an invitation to act, so it always carries the next step. */
+/**
+  An empty screen is an invitation to act, so it always carries the next step.
+  It is drawn as a blank record card: the same header, tear line and ruled
+  fields a filled one has, so the user sees what is about to exist.
+*/
 export function EmptyState({
   icon: Icon,
   title,
@@ -118,27 +113,50 @@ export function EmptyState({
 }) {
   const desc = description ?? body;
   return (
-    <div
+    <section
       className={cn(
-        "flex flex-col items-center gap-2 rounded-lg border border-dashed bg-card px-6 py-12 text-center",
+        "overflow-hidden rounded-lg border bg-card shadow-xs",
         className,
       )}
     >
-      <div className="mb-1 flex size-11 items-center justify-center rounded-full border border-dashed text-muted-foreground">
-        {Icon ? (
-          <Icon className="size-5" strokeWidth={1.75} aria-hidden />
-        ) : (
-          <span aria-hidden className="font-serif text-2xl leading-none">
-            ℞
-          </span>
-        )}
+      <header className="flex items-center gap-3 px-4 py-3">
+        <span
+          aria-hidden
+          className="grid size-9 place-items-center rounded-md bg-accent text-accent-foreground"
+        >
+          {Icon ? (
+            <Icon className="size-[18px]" strokeWidth={1.75} />
+          ) : (
+            <Pill className="size-[18px]" strokeWidth={1.75} />
+          )}
+        </span>
+        <div className="min-w-0">
+          <h3 className="font-serif text-2xl font-medium leading-tight">
+            {title}
+          </h3>
+        </div>
+      </header>
+      <div className="card-divider" aria-hidden />
+      <div className="grid gap-6 px-4 py-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,18rem)] sm:items-center sm:px-6">
+        <div className="flex flex-col items-start gap-4">
+          {desc && (
+            <p className="max-w-[46ch] text-sm leading-relaxed text-muted-foreground">
+              {desc}
+            </p>
+          )}
+          {action}
+        </div>
+        {/* The blank fields a first entry will fill. */}
+        <dl aria-hidden className="hidden grid-cols-2 gap-x-4 gap-y-5 sm:grid">
+          {["Name", "Strength", "On hand", "Expires"].map((label) => (
+            <div key={label}>
+              <dt className="label-caps">{label}</dt>
+              <dd className="mt-2 h-px border-b border-dashed border-input" />
+            </div>
+          ))}
+        </dl>
       </div>
-      <p className="font-serif text-2xl leading-tight">{title}</p>
-      {desc && (
-        <p className="max-w-[42ch] text-sm text-muted-foreground">{desc}</p>
-      )}
-      {action && <div className="mt-2">{action}</div>}
-    </div>
+    </section>
   );
 }
 

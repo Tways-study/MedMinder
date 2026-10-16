@@ -6,8 +6,7 @@ import {
   Page,
   PageHeader,
 } from "@/components/page-shell";
-import { StampBadge } from "@/components/stamp-badge";
-import { TierBadge, tierClasses, tierStyle } from "@/components/tier-badge";
+import { LowStockBadge, TierBadge, tierClasses, tierStyle } from "@/components/tier-badge";
 import { Button } from "@/components/ui/button";
 import { Stagger } from "@/components/motion";
 import { Input } from "@/components/ui/input";
@@ -40,7 +39,7 @@ import {
   sortMedicines,
 } from "@/convex/lib/medicineFilters";
 import { parseSearch } from "@/convex/lib/search";
-import { formatDate, formatQuantity } from "@/lib/format";
+import { formatDate, formatForm, formatQuantity } from "@/lib/format";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { DUR, EASE, MOTION_OK, STAGGER } from "@/lib/motion";
 import { useMediaQuery } from "@/lib/use-media-query";
@@ -221,13 +220,12 @@ export default function MedicinesPage() {
   return (
     <Page>
       <PageHeader
-        eyebrow={
-          allMedicines !== undefined && !isSearching
-            ? `Inventory · ${allMedicines.length} ${allMedicines.length === 1 ? "item" : "items"}`
-            : "Inventory"
-        }
         title="Medicines"
-        description="Everything on the shelf, and what is running low."
+        description={
+          allMedicines !== undefined && !isSearching
+            ? `${allMedicines.length} ${allMedicines.length === 1 ? "item" : "items"} on the shelf, and what is running low.`
+            : "Everything on the shelf, and what is running low."
+        }
         actions={
           <Button asChild>
             <Link href="/medicines/new">
@@ -469,9 +467,9 @@ export default function MedicinesPage() {
                       m.expiryDate === undefined
                         ? null
                         : expiryTier(m.expiryDate, now, tiers);
-                    const meta = [m.strength, m.form]
+                    const meta = [m.strength, formatForm(m.form)]
                       .filter(Boolean)
-                      .join(" · ");
+                      .join(", ");
                     return (
                       <TableRow
                         key={m._id}
@@ -503,7 +501,7 @@ export default function MedicinesPage() {
                           {m.expiryDate !== undefined ? (
                             formatDate(m.expiryDate)
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <span className="text-muted-foreground">None</span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -550,21 +548,17 @@ export default function MedicinesPage() {
                       <p className="font-serif text-lg leading-tight">
                         {m.name}
                       </p>
-                      <p className="label-caps mt-1 normal-case tracking-normal">
-                        {[m.strength, m.form].filter(Boolean).join(" · ")}
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {[m.strength, formatForm(m.form)].filter(Boolean).join(", ")}
                         {m.genericName ? ` · ${m.genericName}` : ""}
                       </p>
                       {flagged && (
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           {tier && tier !== "ok" && (
-                            <StampBadge tier={tier} size="sm" seed={m._id} />
+                            <TierBadge tier={tier} />
                           )}
                           {low && (
-                            <StampBadge
-                              tier="low"
-                              size="sm"
-                              seed={`${m._id}-low`}
-                            />
+                            <LowStockBadge />
                           )}
                         </div>
                       )}

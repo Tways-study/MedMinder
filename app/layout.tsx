@@ -1,7 +1,7 @@
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { EB_Garamond, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,10 +16,11 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-const instrumentSerif = Instrument_Serif({
+// Display face for names and titles. Garamond is the apothecary-label voice;
+// it sets at normal tracking (unlike the condensed face it replaced).
+const garamond = EB_Garamond({
   variable: "--font-serif",
   subsets: ["latin"],
-  weight: "400",
   style: ["normal", "italic"],
   display: "swap",
 });
@@ -46,7 +47,7 @@ export default function RootLayout({
     <ConvexAuthNextjsServerProvider>
       <html
         lang="en"
-        className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable}`}
+        className={`${geistSans.variable} ${geistMono.variable} ${garamond.variable}`}
       >
         <body>
           <ConvexClientProvider>{children}</ConvexClientProvider>
