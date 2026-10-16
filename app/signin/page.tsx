@@ -102,11 +102,14 @@ export default function SignInPage() {
 
     const form = new FormData(event.currentTarget);
     try {
-      await signIn("password", {
+      const { signingIn } = await signIn("password", {
         email: String(form.get("email")),
         password: String(form.get("password")),
         flow,
       });
+      // A resolved signIn that did not sign in is a failure too; without this
+      // the push to "/" is bounced back by middleware and nothing is shown.
+      if (!signingIn) throw new Error("Not signed in");
       router.push("/");
     } catch {
       setError(
