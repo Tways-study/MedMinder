@@ -45,7 +45,7 @@ function Frame({ children }: { children: ReactNode }) {
   return (
     <div
       className={cn(
-        "min-h-[100dvh] transition-[padding] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
+        "min-h-[100dvh] transition-[padding] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none",
         collapsed ? "md:pl-14" : "md:pl-60",
       )}
     >
@@ -85,7 +85,7 @@ function Frame({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 hidden h-14 items-center gap-3 border-b bg-background/95 px-6 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur md:flex lg:px-8">
         <SearchTrigger />
         <Button asChild className="ml-auto">
-          <Link href="/medicines/new">
+          <Link href="/?add=1" scroll={false}>
             <Plus strokeWidth={1.75} aria-hidden />
             Add medicine
           </Link>

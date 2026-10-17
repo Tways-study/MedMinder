@@ -26,7 +26,7 @@ npx vitest run convex/medicines.test.ts
 ### Frontend (`app/`)
 
 Route groups:
-- `app/(app)/` — authenticated routes behind middleware; layout wraps all inventory pages
+- `app/(app)/` — authenticated routes behind middleware; layout wraps all inventory pages. `/` is the Inventory workspace (status tabs, table, side panel); its state lives in the URL (`?view=`, `?m=`, `?edit=1`, `?add=1`). `/medicines*` only redirect there
 - `app/signin/` — unauthenticated entry point
 
 `middleware.ts` uses `convexAuthNextjsMiddleware` to protect every non-sign-in route by default — adding a new route is protected automatically without explicit listing.
@@ -65,10 +65,10 @@ settings  → by_owner (ownerId)
 ### Shared components (`components/`)
 
 - `ui/` — shadcn/ui primitives (Button, Card, Dialog, etc.)
-- Feature components: `medicine-card.tsx`, `medicine-form.tsx`, `dashboard-metrics.tsx`, `status-chip.tsx`, `timezone-combobox.tsx`, `email-chip-input.tsx`
+- Feature components: `inventory-table.tsx`, `medicine-drawer.tsx` (view/edit/add/delete panel), `quantity-stepper.tsx`, `medicine-form.tsx`, `status-chip.tsx`, `timezone-combobox.tsx`, `email-chip-input.tsx`
 - `ConvexClientProvider.tsx` — wraps the app with `ConvexAuthNextjsServerProvider`
 - Shell: `app-shell.tsx` (top bar, frame), `app-nav.tsx` (collapsible sidebar + mobile tabs), `command-palette.tsx` (Cmd/Ctrl+K), `shell-state.tsx` (collapsed + palette state); destinations live in `lib/nav.ts`
-- `motion.tsx` — GSAP motion primitives (`FadeSlideIn`, `Stagger`, `ExpandCollapse`, `RollingNumber`, `useStampIn`, `usePressFeedback`); GSAP setup lives in `lib/gsap.ts`
+- `motion.tsx` — GSAP motion primitives (`Stagger`, `ExpandCollapse`, `useStampIn`, `usePressFeedback`, `useAlertIn`); GSAP setup lives in `lib/gsap.ts`
 
 ### Testing
 

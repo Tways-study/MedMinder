@@ -168,7 +168,7 @@ Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `
 
 ### Hierarchy
 - **Page title** (Garamond 500, 2.25rem, 3rem from `sm`): one `h1` per page, in `PageHeader`. No kicker above it.
-- **Record / group name** (Garamond 500, 1.125-1.5rem): `RxLabel` title, medicine names, `GroupedList` titles, empty-state titles, wordmark.
+- **Record / group name** (Garamond 500, 1.125-1.5rem): drawer title, medicine names in mobile rows, empty-state titles, wordmark.
 - **Card title** (600, 1rem): `CardTitle` on settings cards.
 - **Body** (400, 0.875rem): default UI text, table cells, descriptions in muted ink.
 - **Input text** (1rem on mobile, 0.875rem from `sm`): 16px on mobile prevents iOS focus zoom.
@@ -182,19 +182,21 @@ Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `
 
 **The Units Keep Their Case Rule.** `mg`, `mL`, `mcg` are never uppercased or capitalised; a pharmacy reads the case. Capitalise only the dosage form word, with `formatForm()`.
 
-**The One Glyph Rule.** The only non-icon glyph is the brand `℞` in the `RxLabel` header. Everywhere else, Lucide.
+**The One Glyph Rule.** Icons are Lucide only; the brand mark is the pill tile.
 
-**The Stamp Is Rare Rule.** `StampBadge` (rotated, double-bordered) is the signature for the medicine detail page and the sign-in sample. List and table rows use the flat rectangular `StatusChip`, so a screen of rows stays calm.
+**The Stamp Is Rare Rule.** `StampBadge` (rotated, double-bordered) appears only in the sign-in sample shelf. Everything else, including the table, the drawer and the palette, uses the flat rectangular `StatusChip`, so a screen of rows stays calm.
 
 ## Layout
 
-Shell: from `md` up, a fixed sidebar (card fill, right border) holds logo, four nav items (Today, Calendar, Medicines, Settings), a collapse control and the account menu at the bottom. It is `w-60` expanded and a 56px icon rail collapsed; the choice persists in `localStorage` and the content column follows it. Above the content sits a sticky 56px top bar with a search field that opens the command palette (Cmd/Ctrl+K) and the primary "Add medicine" action. Below `md`, the top bar carries brand, a search button and the account, and a bottom tab bar (`min-h-14` items, safe-area padding, blurred `background/95`) with a 2px violet indicator on the active tab, bottom-anchored for one-handed use at the shelf.
+Shell: from `md` up, a fixed sidebar (card fill, right border) holds logo, three nav items (Inventory, Calendar, Settings), a collapse control and the account menu at the bottom. It is `w-60` expanded and a 56px icon rail collapsed; the choice persists in `localStorage` and the content column follows it. Above the content sits a sticky 56px top bar with a search field that opens the command palette (Cmd/Ctrl+K) and the primary "Add medicine" action. Below `md`, the top bar carries brand, a search button and the account, and a bottom tab bar (`min-h-14` items, safe-area padding, blurred `background/95`) with a 2px violet indicator on the active tab, bottom-anchored for one-handed use at the shelf.
 
-Command palette: Cmd/Ctrl+K from anywhere. Searches medicines by name (server-ranked, `medicines.searchByName`), and lists "Add medicine" and the destinations from `lib/nav.ts`. Keyboard-initiated, so it opens with no entrance animation.
+Command palette: Cmd/Ctrl+K from anywhere. Searches medicines by name (server-ranked, `medicines.searchByName`), and lists "Add medicine", the status views ("Show Expired", "Show Low stock"…) and the destinations from `lib/nav.ts`. Choosing a medicine opens its panel on Inventory. Keyboard-initiated, so it opens with no entrance animation.
 
 Content: `Page` is a centred column, `max-w-6xl`, `gap-6`, padding `px-4 sm:px-6 lg:px-8`, `py-6 lg:py-8`. `PageHeader` puts title and description left and actions right, wrapping on narrow screens.
 
-Medicines: at `md` and up a data table (sticky muted header, scrolls inside 70vh); below `md` the same records render as stacked rows. Same data, two densities, no horizontal scroll on a phone.
+Inventory (`/`): one workspace replaces the old Today and Medicines pages. A row of status tabs (All, Expired, Critical, Soon, Watch, Low stock), each with a live count, sits above a filter box and the list. At `md` and up the list is a dense table (sticky muted header, inline +/- stepper on the On hand column, sortable Name / On hand / Expiry headers); below `md` the same records are stacked rows with a sort select. Same data, two densities, no horizontal scroll on a phone.
+
+Detail panel: selecting a row opens a 448px panel on the right (`MedicineDrawer`) holding view, edit, add and delete. On desktop it is a non-modal companion below the top bar: the table stays clickable, clicking another row swaps the content, Esc or the close button dismisses it, and from `xl` the content column makes room for it. Below `md` it is a full-width modal sheet. The URL carries the state, so every view is linkable and survives a reload: `?view=expired` (tab), `?m=<id>` (open medicine), `?m=<id>&edit=1` (editing), `?add=1` (new medicine). `/medicines`, `/medicines/[id]` and `/medicines/new` redirect to these.
 
 Spacing runs on Tailwind's 4px scale; card padding is 24px, list rows 16px, nav gaps 4px.
 
@@ -231,7 +233,7 @@ One radius token, `--radius` 10px, derived into three steps: `lg` 10px (cards, d
 
 ### Feedback and Motion
 - Toasts via sonner (`top-center`, rich colours, close button), styled as popover surfaces.
-- GSAP (`lib/gsap.ts`, primitives in `components/motion.tsx`), with every effect gated by `prefers-reduced-motion`. Native scrolling: there is no smooth-scroll layer. Entries fade and rise a few px; hover feedback is background or colour only; the quantity stepper updates instantly. Rolling counts are for dashboard metrics only, and the stamp thunk is reserved for the detail page and sign-in sample.
+- GSAP (`lib/gsap.ts`, primitives in `components/motion.tsx`), with every effect gated by `prefers-reduced-motion`. Native scrolling: there is no smooth-scroll layer. Entries fade and rise a few px; hover feedback is background or colour only; the quantity stepper updates instantly. The detail panel slides in over 150ms (none under reduced motion) and the table never animates on filter or sort. The stamp thunk is reserved for the sign-in sample.
 - Loading uses skeletons shaped like the content; empty states always carry the next action.
 
 ### Icons
