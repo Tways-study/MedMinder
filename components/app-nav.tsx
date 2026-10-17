@@ -1,25 +1,16 @@
 "use client";
 
 import { LogoMark } from "@/components/logo-mark";
+import { useShell } from "@/components/shell-state";
 import { UserMenu } from "@/components/UserMenu";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { DUR, EASE, MOTION_OK } from "@/lib/motion";
+import { isActive, NAV_ITEMS as ITEMS } from "@/lib/nav";
 import { cn } from "@/lib/utils";
-import { CalendarDays, LayoutDashboard, Pill, Settings } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
-
-const ITEMS = [
-  { href: "/", label: "Today", icon: LayoutDashboard },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays },
-  { href: "/medicines", label: "Medicines", icon: Pill },
-  { href: "/settings", label: "Settings", icon: Settings },
-];
-
-function isActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
-}
 
 /**
  * Moves one indicator element to the active link inside `containerRef`.
@@ -102,12 +93,13 @@ function useNavIndicator(
 }
 
 /**
- * Fixed sidebar from md up (logo, nav, account at the bottom), and a bottom
- * tab bar on a phone — bottom-anchored because this is used one-handed while
- * standing at a shelf.
+ * Fixed sidebar from md up (logo, nav, account at the bottom) that collapses to
+ * a 56px icon rail, and a bottom tab bar on a phone — bottom-anchored because
+ * this is used one-handed while standing at a shelf.
  */
 export function AppNav() {
   const pathname = usePathname();
+  const { collapsed, toggleCollapsed } = useShell();
 
   const sideRef = useRef<HTMLUListElement>(null);
   const sideIndicator = useRef<HTMLSpanElement>(null);
@@ -119,18 +111,29 @@ export function AppNav() {
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r bg-card md:flex">
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden whitespace-nowrap border-r bg-card transition-[width] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none md:flex",
+          collapsed ? "w-14" : "w-60",
+        )}
+      >
         <Link
           href="/"
-          className="focus-card mx-3 mt-4 flex h-10 items-center gap-2.5 rounded-md px-2"
+          aria-label="MedMinder home"
+          className="focus-card mx-2 mt-4 flex h-10 items-center gap-2.5 rounded-md px-1.5"
         >
           <LogoMark className="size-7" />
-          <span className="font-serif text-2xl font-medium leading-none">
+          <span
+            className={cn(
+              "font-serif text-2xl font-medium leading-none",
+              collapsed && "sr-only",
+            )}
+          >
             MedMinder
           </span>
         </Link>
 
-        <nav aria-label="Main" className="mt-8 flex-1 px-3">
+        <nav aria-label="Main" className="mt-8 flex-1 px-2">
           <ul ref={sideRef} className="relative flex flex-col gap-1">
             <span
               ref={sideIndicator}
@@ -144,6 +147,7 @@ export function AppNav() {
                   <Link
                     href={href}
                     aria-current={active ? "page" : undefined}
+                    title={collapsed ? label : undefined}
                     className={cn(
                       "focus-card relative flex h-9 items-center gap-3 rounded-md px-3 text-sm transition-colors",
                       active
@@ -156,7 +160,9 @@ export function AppNav() {
                       strokeWidth={1.75}
                       aria-hidden
                     />
-                    <span className="relative">{label}</span>
+                    <span className={cn("relative", collapsed && "sr-only")}>
+                      {label}
+                    </span>
                   </Link>
                 </li>
               );
@@ -164,8 +170,24 @@ export function AppNav() {
           </ul>
         </nav>
 
-        <div className="border-t p-3">
-          <UserMenu variant="sidebar" />
+        <div className="flex flex-col gap-1 border-t p-2">
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-expanded={!collapsed}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="focus-card flex h-9 items-center gap-3 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+            ) : (
+              <PanelLeftClose className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+            )}
+            <span className={cn(collapsed && "sr-only")}>
+              {collapsed ? "Expand sidebar" : "Collapse"}
+            </span>
+          </button>
+          <UserMenu variant="sidebar" collapsed={collapsed} />
         </div>
       </aside>
 
