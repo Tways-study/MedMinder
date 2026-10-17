@@ -6,7 +6,7 @@ import {
   Page,
   PageHeader,
 } from "@/components/page-shell";
-import { LowStockBadge, TierBadge, tierClasses, tierStyle } from "@/components/tier-badge";
+import { StatusChip, statusStyle } from "@/components/status-chip";
 import { Button } from "@/components/ui/button";
 import { Stagger, useFlipList } from "@/components/motion";
 import { Input } from "@/components/ui/input";
@@ -80,11 +80,11 @@ const SORT_LABELS: Record<MedicineSort, string> = {
 const NO_FILTER: MedicineFilter = { statuses: [], lowStockOnly: false };
 
 // The button is a transparent hit area; the inner span carries the chip look,
-// so the tier colours come straight from tierClasses() with no class surgery.
+// so the tier colours come straight from statusStyle() with no class surgery.
 const CHIP_BUTTON =
   "h-8 min-w-0 rounded-md border-0 bg-transparent p-0 hover:bg-transparent data-[state=on]:bg-transparent data-[state=on]:shadow-none";
 const CHIP_FACE =
-  "inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 font-mono text-2xs font-medium uppercase tracking-[0.1em] transition-colors";
+  "inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors";
 const CHIP_OFF = "border-border bg-card text-foreground hover:bg-muted";
 const CHIP_ON_NEUTRAL = "border-transparent bg-accent text-accent-foreground";
 
@@ -287,7 +287,7 @@ export default function MedicinesPage() {
                 s === "none" ? (
                   <PlainBadge key={s}>No expiry</PlainBadge>
                 ) : (
-                  <TierBadge key={s} tier={s} />
+                  <StatusChip key={s} kind={s} />
                 ),
               )}
               {parsed.lowStock && <PlainBadge>Low stock</PlainBadge>}
@@ -308,7 +308,7 @@ export default function MedicinesPage() {
               className="flex-wrap justify-start gap-1.5 bg-transparent p-0"
             >
               {STATUS_CHIPS.map((s) => (
-                <StatusChip
+                <StatusFilterChip
                   key={s}
                   status={s}
                   on={filter.statuses.includes(s)}
@@ -436,7 +436,6 @@ export default function MedicinesPage() {
           {/* Desktop: sortable data table. Only one layout is mounted. */}
           {isDesktop ? (
             <div
-              data-lenis-prevent
               className="overflow-hidden rounded-lg border bg-card shadow-xs [&>div]:max-h-[70vh]"
             >
               <Table>
@@ -521,7 +520,7 @@ export default function MedicinesPage() {
                         <TableCell>
                           <div className="flex flex-wrap items-center gap-1.5">
                             {tier ? (
-                              <TierBadge tier={tier} />
+                              <StatusChip kind={tier} />
                             ) : (
                               <PlainBadge>No expiry</PlainBadge>
                             )}
@@ -570,10 +569,10 @@ export default function MedicinesPage() {
                       {flagged && (
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           {tier && tier !== "ok" && (
-                            <TierBadge tier={tier} />
+                            <StatusChip kind={tier} />
                           )}
                           {low && (
-                            <LowStockBadge />
+                            <StatusChip kind="low" />
                           )}
                         </div>
                       )}
@@ -668,9 +667,9 @@ function SortHead({
 
 /**
  * Off, a chip is quiet with only its icon in the tier colour; on, it takes the
- * same fill as the TierBadge it filters for, so the list below visibly matches.
+ * same fill as the StatusChip it filters for, so the list below visibly matches.
  */
-function StatusChip({ status, on }: { status: ExpiryStatus; on: boolean }) {
+function StatusFilterChip({ status, on }: { status: ExpiryStatus; on: boolean }) {
   if (status === "none") {
     return (
       <ToggleGroupItem value="none" className={CHIP_BUTTON}>
@@ -681,8 +680,8 @@ function StatusChip({ status, on }: { status: ExpiryStatus; on: boolean }) {
     );
   }
 
-  const { label, icon: Icon } = tierStyle(status);
-  const { fg, bg, border } = tierClasses(status);
+  const { label, icon: Icon } = statusStyle(status);
+  const { fg, bg, border } = statusStyle(status);
   return (
     <ToggleGroupItem value={status} className={CHIP_BUTTON}>
       <span className={cn(CHIP_FACE, on ? cn(fg, bg, border) : CHIP_OFF)}>

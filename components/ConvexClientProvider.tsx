@@ -1,6 +1,6 @@
 "use client";
 
-import { SmoothScroll } from "@/components/smooth-scroll";
+import { ScrollSync } from "@/components/scroll-sync";
 import { Toaster } from "@/components/ui/sonner";
 import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
 import { ConvexReactClient } from "convex/react";
@@ -17,7 +17,7 @@ export default function ConvexClientProvider({
 }) {
   return (
     <ConvexAuthNextjsProvider client={convex}>
-      <SmoothScroll>{children}</SmoothScroll>
+      <ScrollSync>{children}</ScrollSync>
       <Toaster richColors closeButton position="top-center" />
     </ConvexAuthNextjsProvider>
   );

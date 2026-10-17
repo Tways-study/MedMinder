@@ -10,7 +10,7 @@ import {
   Page,
   PageHeader,
 } from "@/components/page-shell";
-import { tierLabel } from "@/components/tier-badge";
+import { tierLabel } from "@/components/status-chip";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LabelField, RxLabel } from "@/components/rx-label";

@@ -189,7 +189,7 @@ export function AppNav() {
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "focus-card relative flex min-h-14 flex-col items-center justify-center gap-1 text-2xs font-medium transition-colors",
+                    "focus-card relative flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors",
                     active
                       ? "text-primary"
                       : "text-muted-foreground hover:text-foreground",

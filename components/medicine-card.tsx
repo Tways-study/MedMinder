@@ -4,7 +4,7 @@ import {
   MedicineForm,
   type MedicineFormValues,
 } from "@/components/medicine-form";
-import { LowStockBadge, TierBadge, tierClasses } from "@/components/tier-badge";
+import { StatusChip, statusStyle } from "@/components/status-chip";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -13,10 +13,7 @@ import { formatForm, formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Minus, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
-import {
-  RollingNumber,
-  usePressFeedback,
-} from "@/components/motion";
+import { usePressFeedback } from "@/components/motion";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { DUR, EASE, MOTION_OK } from "@/lib/motion";
 import { useMutation } from "convex/react";
@@ -167,8 +164,8 @@ export function MedicineCard({
               )}
               {(tier || isLow || expiryDistance) && (
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                  {tier && <TierBadge tier={tier} />}
-                  {isLow && <LowStockBadge />}
+                  {tier && <StatusChip kind={tier} />}
+                  {isLow && <StatusChip kind="low" />}
                   {expiryDistance && (
                     <span className="text-xs text-muted-foreground">
                       {expiryDistance}
@@ -198,8 +195,8 @@ export function MedicineCard({
                   className={cn(
                     "mt-0.5 text-xs",
                     diff < 0
-                      ? tierClasses("critical").fg
-                      : tierClasses("watch").fg,
+                      ? statusStyle("critical").fg
+                      : statusStyle("watch").fg,
                   )}
                 >
                   {driftText}
@@ -348,7 +345,7 @@ function QuantityStepper({
         aria-label={`${formatQuantity(value)}, tap to type an exact count`}
         className="font-data flex h-11 w-14 touch-manipulation items-center justify-center rounded-md px-2 text-base font-semibold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-muted sm:h-8"
       >
-        <RollingNumber value={value} format={formatQuantity} />
+        {formatQuantity(value)}
       </button>
       <Button
         type="button"
