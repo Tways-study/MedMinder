@@ -141,7 +141,7 @@ export default function CalendarPage() {
           body="Add expiry dates to your medicines and they'll appear here, laid out across the months ahead."
           action={
             <Button asChild variant="outline">
-              <Link href="/medicines">Go to medicines</Link>
+              <Link href="/">Go to inventory</Link>
             </Button>
           }
         />
@@ -342,7 +342,7 @@ export default function CalendarPage() {
                   <Link
                     key={m._id}
                     data-stagger
-                    href={`/medicines/${m._id}`}
+                    href={`/?m=${m._id}`}
                     className="focus-card flex min-h-11 items-start justify-between gap-4 px-4 py-3 transition-colors duration-100 ease-out hover:bg-muted/50 focus-visible:bg-muted active:bg-muted"
                   >
                     <div className="min-w-0">

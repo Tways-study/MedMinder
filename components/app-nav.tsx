@@ -113,7 +113,7 @@ export function AppNav() {
     <>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden whitespace-nowrap border-r bg-card transition-[width] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none md:flex",
+          "fixed inset-y-0 left-0 z-40 hidden flex-col overflow-hidden whitespace-nowrap border-r bg-card transition-[width] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] motion-reduce:transition-none md:flex",
           collapsed ? "w-14" : "w-60",
         )}
       >

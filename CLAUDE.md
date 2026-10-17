@@ -26,7 +26,7 @@ npx vitest run convex/medicines.test.ts
 ### Frontend (`app/`)
 
 Route groups:
-- `app/(app)/` — authenticated routes behind middleware; layout wraps all inventory pages
+- `app/(app)/` — authenticated routes behind middleware; layout wraps all inventory pages. `/` is the Inventory workspace (status tabs, table, side panel); its state lives in the URL (`?view=`, `?m=`, `?edit=1`, `?add=1`). `/medicines*` only redirect there
 - `app/signin/` — unauthenticated entry point
 
 `middleware.ts` uses `convexAuthNextjsMiddleware` to protect every non-sign-in route by default — adding a new route is protected automatically without explicit listing.
@@ -42,7 +42,7 @@ Convex functions are organized by domain. File-based routing: `convex/medicines.
 | `dashboard.ts` | Expiry alerts, low-stock warnings, running totals (streaming, no doc cap) |
 | `settings.ts` | Per-account digest and alert tier settings |
 | `digest.ts` | Digest content query (calls inventory logic) |
-| `sendDigest.ts` | Node.js action (`"use node"`) — renders and sends email via Nodemailer/Resend |
+| `sendDigest.ts` | Node.js action (`"use node"`) — renders and sends email via Nodemailer over Gmail SMTP |
 | `crons.ts` | Hourly cron that calls `isDigestDue` and triggers `sendDigest` |
 | `http.ts` | HTTP endpoints |
 | `auth.ts` / `auth.config.ts` | Convex Auth setup |
@@ -65,10 +65,10 @@ settings  → by_owner (ownerId)
 ### Shared components (`components/`)
 
 - `ui/` — shadcn/ui primitives (Button, Card, Dialog, etc.)
-- Feature components: `medicine-card.tsx`, `medicine-form.tsx`, `dashboard-metrics.tsx`, `status-chip.tsx`, `timezone-combobox.tsx`, `email-chip-input.tsx`
+- Feature components: `inventory-table.tsx`, `medicine-drawer.tsx` (view/edit/add/delete panel), `quantity-stepper.tsx`, `medicine-form.tsx`, `status-chip.tsx`, `timezone-combobox.tsx`, `email-chip-input.tsx`
 - `ConvexClientProvider.tsx` — wraps the app with `ConvexAuthNextjsServerProvider`
 - Shell: `app-shell.tsx` (top bar, frame), `app-nav.tsx` (collapsible sidebar + mobile tabs), `command-palette.tsx` (Cmd/Ctrl+K), `shell-state.tsx` (collapsed + palette state); destinations live in `lib/nav.ts`
-- `motion.tsx` — GSAP motion primitives (`FadeSlideIn`, `Stagger`, `ExpandCollapse`, `RollingNumber`, `useStampIn`, `usePressFeedback`); GSAP setup lives in `lib/gsap.ts`
+- `motion.tsx` — GSAP motion primitives (`Stagger`, `ExpandCollapse`, `useStampIn`, `usePressFeedback`, `useAlertIn`); GSAP setup lives in `lib/gsap.ts`
 
 ### Testing
 
@@ -90,4 +90,4 @@ Vercel build command (defined in `vercel.json`, deploys Convex first then Next.j
 npx convex deploy --cmd 'npm run build'
 ```
 
-Environment variables for Convex functions (set in Convex dashboard, not Vercel): `RESEND_API_KEY`, `SITE_URL`, `AUTH_*`.
+Environment variables for Convex functions (set in Convex dashboard, not Vercel): `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `SITE_URL`, `AUTH_*`.

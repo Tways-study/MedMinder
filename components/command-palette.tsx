@@ -12,11 +12,21 @@ import {
 } from "@/components/ui/command";
 import { api } from "@/convex/_generated/api";
 import { formatForm } from "@/lib/format";
-import { NAV_ITEMS } from "@/lib/nav";
+import { statusStyle } from "@/components/status-chip";
+import { INVENTORY_VIEWS, NAV_ITEMS } from "@/lib/nav";
 import { useQuery } from "convex/react";
 import { Pill, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+
+const VIEW_LABEL = {
+  all: "All",
+  expired: "Expired",
+  critical: "Critical",
+  warning: "Soon",
+  watch: "Watch",
+  low: "Low stock",
+} as const;
 
 /*
   Keyboard-first: opens on Cmd/Ctrl+K, so it appears with no entrance motion
@@ -67,6 +77,9 @@ export function CommandPalette() {
   const destinations = NAV_ITEMS.filter((i) =>
     i.label.toLowerCase().includes(needle),
   );
+  const views = INVENTORY_VIEWS.filter((v) => v !== "all").filter((v) =>
+    `show ${VIEW_LABEL[v]}`.toLowerCase().includes(needle),
+  );
   const showAdd = "add medicine".includes(needle) || "new".includes(needle);
 
   const go = (href: string) => {
@@ -102,7 +115,7 @@ export function CommandPalette() {
                 <CommandItem
                   key={m._id}
                   value={`medicine-${m._id}`}
-                  onSelect={() => go(`/medicines/${m._id}`)}
+                  onSelect={() => go(`/?m=${m._id}`)}
                 >
                   <Pill aria-hidden />
                   <span className="min-w-0 flex-1 truncate">{m.name}</span>
@@ -115,16 +128,34 @@ export function CommandPalette() {
           </CommandGroup>
         )}
 
-        {medicines.length > 0 && (destinations.length > 0 || showAdd) && (
+        {medicines.length > 0 && (destinations.length > 0 || views.length > 0 || showAdd) && (
           <CommandSeparator />
         )}
 
         {(showAdd || !needle) && (
           <CommandGroup heading="Actions">
-            <CommandItem value="action-add" onSelect={() => go("/medicines/new")}>
+            <CommandItem value="action-add" onSelect={() => go("/?add=1")}>
               <Plus aria-hidden />
               Add medicine
             </CommandItem>
+          </CommandGroup>
+        )}
+
+        {views.length > 0 && (
+          <CommandGroup heading="Show">
+            {views.map((v) => {
+              const { icon: Icon, fg } = statusStyle(v === "low" ? "low" : v);
+              return (
+                <CommandItem
+                  key={v}
+                  value={`view-${v}`}
+                  onSelect={() => go(`/?view=${v}`)}
+                >
+                  <Icon aria-hidden className={fg} />
+                  {VIEW_LABEL[v]}
+                </CommandItem>
+              );
+            })}
           </CommandGroup>
         )}
 
