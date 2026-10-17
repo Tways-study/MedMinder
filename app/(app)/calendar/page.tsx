@@ -7,7 +7,7 @@ import {
   PageHeader,
 } from "@/components/page-shell";
 import { Stagger } from "@/components/motion";
-import { TierBadge, tierClasses, tierLabel } from "@/components/tier-badge";
+import { StatusChip, statusStyle, tierLabel } from "@/components/status-chip";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
@@ -33,7 +33,7 @@ type DayMedicine = MedicineList[number] & { tier: ExpiryTier };
 /*
   A day cell is tinted by the most urgent expiry landing on it. Colour here is
   a scent, not the message: the cell also carries a count and an aria-label
-  naming the tier, and the TierBadge in the selected-day list is authoritative.
+  naming the tier, and the StatusChip in the selected-day list is authoritative.
 */
 /** Most urgent wins the cell tint. Mirrors the dashboard's expired-first order. */
 const TIER_RANK: Record<ExpiryTier, number> = {
@@ -251,7 +251,7 @@ export default function CalendarPage() {
               const key = toDateInput(Date.UTC(year, month, day));
               const items = byDay.get(key);
               const urgent = items ? mostUrgent(items) : null;
-              const style = urgent ? tierClasses(urgent) : null;
+              const style = urgent ? statusStyle(urgent) : null;
               const isSelected = key === selectedKey;
               const isToday = key === todayKey;
 
@@ -298,7 +298,7 @@ export default function CalendarPage() {
                         aria-hidden
                         className="size-1.5 rounded-full bg-current"
                       />
-                      <span className="font-data rounded-sm bg-card/70 px-1 text-2xs font-semibold leading-4">
+                      <span className="font-data rounded-sm bg-card/70 px-1 text-xs font-semibold leading-4">
                         {items.length}
                       </span>
                     </span>
@@ -356,7 +356,7 @@ export default function CalendarPage() {
                         {formatExpiryDistance(m.expiryDate as number, now)}
                       </p>
                     </div>
-                    <TierBadge tier={m.tier} className="shrink-0 self-center" />
+                    <StatusChip kind={m.tier} className="shrink-0 self-center" />
                   </Link>
                 ))}
               </Stagger>

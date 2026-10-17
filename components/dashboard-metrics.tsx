@@ -2,7 +2,7 @@
 
 import { RollingNumber } from "@/components/motion";
 import { LabelField, RxLabel } from "@/components/rx-label";
-import { tierClasses } from "@/components/tier-badge";
+import { statusStyle } from "@/components/status-chip";
 import { formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
@@ -99,7 +99,7 @@ export function DashboardMetrics({
         icon={Clock}
         value={alertCount}
         note={alertCount === 0 ? "All items in date" : "Expiring soon"}
-        tintClass={alertCount > 0 ? tierClasses("warning").fg : undefined}
+        tintClass={alertCount > 0 ? statusStyle("warning").fg : undefined}
       />
       <MetricValue
         label="Running low"
@@ -108,7 +108,7 @@ export function DashboardMetrics({
         note={
           lowStockCount === 0 ? "Above reorder points" : "At or below reorder"
         }
-        tintClass={lowStockCount > 0 ? tierClasses("critical").fg : undefined}
+        tintClass={lowStockCount > 0 ? statusStyle("critical").fg : undefined}
       />
       <MetricValue
         label="Count drift"
@@ -119,7 +119,7 @@ export function DashboardMetrics({
             ? "On hand matches actual"
             : "Needs reconciliation"
         }
-        tintClass={discrepancyCount > 0 ? tierClasses("watch").fg : undefined}
+        tintClass={discrepancyCount > 0 ? statusStyle("watch").fg : undefined}
       />
     </RxLabel>
   );

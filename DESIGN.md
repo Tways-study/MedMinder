@@ -3,29 +3,17 @@ name: MedMinder
 description: A calm, precise, modern clinical tool for pharmacy shelf stock and expiry, in neutral zinc with one violet accent.
 colors:
   primary: "#6D4AA8"
-  primary-dark: "#A78BDA"
   on-primary: "#FFFFFF"
-  on-primary-dark: "#18181B"
   background: "#FAFAFA"
-  background-dark: "#09090B"
   card: "#FFFFFF"
-  card-dark: "#111113"
   foreground: "#18181B"
-  foreground-dark: "#FAFAFA"
   muted: "#F4F4F5"
-  muted-dark: "#18181B"
   muted-foreground: "#696971"
-  muted-foreground-dark: "#A1A1AA"
   accent-tint: "#F3EFFA"
-  accent-tint-dark: "#1E1A2B"
   accent-foreground: "#4C2F80"
-  accent-foreground-dark: "#D6C8F0"
   border: "#E4E4E7"
-  border-dark: "#27272A"
   input-border: "#D4D4D8"
-  input-border-dark: "#3F3F46"
   destructive: "#DC2626"
-  destructive-dark: "#F87171"
   tier-expired: "#B91C1C"
   tier-expired-bg: "#FEF2F2"
   tier-critical: "#C2410C"
@@ -61,7 +49,7 @@ typography:
     lineHeight: 1.33
   tab-label:
     fontFamily: "Geist, system-ui, sans-serif"
-    fontSize: "0.6875rem"
+    fontSize: "0.75rem"
     fontWeight: 500
     lineHeight: 1rem
   data:
@@ -104,7 +92,7 @@ components:
     textColor: "{colors.foreground}"
     rounded: "{rounded.lg}"
     padding: "24px"
-  tier-badge-ok:
+  status-chip-ok:
     backgroundColor: "{colors.tier-ok-bg}"
     textColor: "{colors.tier-ok}"
     rounded: "{rounded.pill}"
@@ -122,13 +110,13 @@ components:
 
 **Creative North Star: "The Dispensary Ledger"**
 
-A well-kept ledger on a clean counter: neutral zinc surfaces, hairline borders, numbers that line up, and one violet that means "act here". Personality comes from restraint and correctness, not decoration. Light, dark, and system themes are all first-class (next-themes, class strategy), and every text pairing in both is measured to WCAG AA; the ratios live in the comment block at the top of `app/globals.css`.
+A well-kept ledger on a clean counter: neutral zinc surfaces, hairline borders, numbers that line up, and one violet that means "act here". Personality comes from restraint and correctness, not decoration. The theme is light only (dark mode was removed deliberately in `a1d8039`), and every text pairing is measured to WCAG AA; the ratios live in the comment block at the top of `app/globals.css`.
 
 The accent is gentian violet, the pharmacy antiseptic dye. It appears only on primary actions, focus rings, the active mobile tab, and links, so it stays rare enough to carry meaning. Everything else is zinc.
 
 **Key Characteristics:**
 - Neutral zinc canvas, a single violet accent, a five-step traffic-light ramp for expiry only.
-- Border plus a barely-there shadow for elevation; no shadow at rest in dark.
+- Border plus a barely-there shadow for elevation.
 - Geist for text, Geist Mono with tabular figures for anything compared down a column.
 - Status is always icon + word + colour.
 - Touch-first sizing (44px) that compacts to 36px from `sm` up.
@@ -136,32 +124,32 @@ The accent is gentian violet, the pharmacy antiseptic dye. It appears only on pr
 
 ## Colors
 
-Tokens are HSL channels in `app/globals.css` (`:root` and `.dark`), exposed through Tailwind as `hsl(var(--token))` so alpha utilities such as `bg-primary/90` work. Components use semantic Tailwind names only. Frontmatter hex values are normative; `-dark` entries are the `.dark` values of the same token.
+Tokens are HSL channels in `app/globals.css` (`:root`), exposed through Tailwind as `hsl(var(--token))` so alpha utilities such as `bg-primary/90` work. Components use semantic Tailwind names only. Frontmatter hex values are normative.
 
 ### Primary
-- **Gentian Violet** (#6D4AA8 light, #A78BDA dark): `primary` and `ring`. Primary buttons, focus rings, links, the active bottom-tab indicator and label. White text on it is 6.57:1 in light; #18181B text on the dark value is 6.20:1.
-- **Violet Wash** (#F3EFFA light, #1E1A2B dark) with **Deep Violet** text (#4C2F80 / #D6C8F0): `accent`. The selected sidebar item only. 9.15:1 light, 10.81:1 dark.
+- **Gentian Violet** (#6D4AA8): `primary` and `ring`. Primary buttons, focus rings, links, the active bottom-tab indicator and label. White text on it is 6.57:1.
+- **Violet Wash** (#F3EFFA) with **Deep Violet** text (#4C2F80): `accent`. The selected sidebar item only. 9.15:1.
 
 ### Neutral
 - **Canvas** (#FAFAFA / #09090B): `background`, the page. Never tinted.
 - **Card** (#FFFFFF / #111113): `card` and `popover`, every raised surface and input fill.
 - **Muted** (#F4F4F5 / #18181B): `muted` and `secondary`, table header, hover fill, icon wells.
 - **Ink** (#18181B / #FAFAFA): `foreground`. 16.97:1 and 19.06:1 on canvas.
-- **Muted Ink** (#696971 / #A1A1AA): secondary text. Light is deliberately darker than zinc-500 (#71717A) because that measured 4.34:1 on the muted fill; this one is 4.95:1 there.
+- **Muted Ink** (#696971): secondary text. Deliberately darker than zinc-500 (#71717A) because that measured 4.34:1 on the muted fill; this one is 4.95:1 there.
 - **Hairline** (#E4E4E7 / #27272A): `border`, the default for every edge (applied globally via `* { border-color }`).
 - **Field Edge** (#D4D4D8 / #3F3F46): `input` border.
 - **Alarm Red** (#DC2626 / #F87171): `destructive` fills and error text.
 
 ### Expiry Tier Ramp
-Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `-border`), re-tuned for dark (foregrounds lighten, backgrounds become the hue at about 12% over the card). Used only by `TierBadge` and tier-coloured data.
+Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `-border`). Used only by `StatusChip` and tier-coloured data.
 
-| Tier | Word | Icon | Light fg / bg | Dark fg |
-|---|---|---|---|---|
-| expired | Expired | XCircle | #B91C1C / #FEF2F2 | #FCA5A5 |
-| critical | Critical | AlertTriangle | #C2410C / #FFF7ED | #FDBA74 |
-| warning | Soon | Clock | #B45309 / #FFFBEB | #FCD34D |
-| watch | Watch | Eye | #0369A1 / #F0F9FF | #7DD3FC |
-| ok | In date | CheckCircle2 | #047857 / #ECFDF5 | #6EE7B7 |
+| Tier | Word | Icon | Fg / bg |
+|---|---|---|---|
+| expired | Expired | XCircle | #B91C1C / #FEF2F2 |
+| critical | Critical | AlertTriangle | #C2410C / #FFF7ED |
+| warning | Soon | Clock | #B45309 / #FFFBEB |
+| watch | Watch | Eye | #0369A1 / #F0F9FF |
+| ok | In date | CheckCircle2 | #047857 / #ECFDF5 |
 
 ### Named Rules
 **The One Voice Rule.** Violet means "act here". It is never used for status, decoration, or section colour.
@@ -186,7 +174,7 @@ Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `
 - **Input text** (1rem on mobile, 0.875rem from `sm`): 16px on mobile prevents iOS focus zoom.
 - **Label** (500, 0.75rem): badges and small captions.
 - **Field label** (`.label-caps`, Geist 600, 0.75rem, uppercase, 0.06em): the label inside a record card ("On hand", "Expires"). Never above a title and never for units.
-- **Tab label** (500, 0.6875rem, `text-2xs`): bottom tab bar only.
+- **Tab label** (500, 0.75rem, `text-xs`): bottom tab bar only.
 - **Data** (`.font-data` = Geist Mono + tabular-nums): quantities, dates, KPIs, anything compared down a column.
 
 ### Named Rules
@@ -196,7 +184,7 @@ Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `
 
 **The One Glyph Rule.** The only non-icon glyph is the brand `℞` in the `RxLabel` header. Everywhere else, Lucide.
 
-**The Stamp Is Rare Rule.** `StampBadge` (rotated, double-bordered) is the signature for the medicine detail page and the sign-in sample. List and table rows use the flat rectangular `TierBadge` / `LowStockBadge`, so a screen of rows stays calm.
+**The Stamp Is Rare Rule.** `StampBadge` (rotated, double-bordered) is the signature for the medicine detail page and the sign-in sample. List and table rows use the flat rectangular `StatusChip`, so a screen of rows stays calm.
 
 ## Layout
 
@@ -210,10 +198,10 @@ Spacing runs on Tailwind's 4px scale; card padding is 24px, list rows 16px, nav 
 
 ## Elevation & Depth
 
-Hybrid, border-first. Resting surfaces (cards, tables, skeletons) are `border` plus `shadow-xs` (`0 1px 2px 0 rgb(0 0 0 / 0.04)`), and `dark:shadow-none` removes even that in dark, where the border alone separates. Floating layers (dialog, dropdown, popover, select, tooltip, toast) use `shadow-lg` plus a border so they separate from content in both themes.
+Hybrid, border-first. Resting surfaces (cards, tables, skeletons) are `border` plus `shadow-xs` (`0 1px 2px 0 rgb(0 0 0 / 0.04)`). Floating layers (dialog, dropdown, popover, select, tooltip, toast) use `shadow-lg` plus a border so they separate from content.
 
 ### Named Rules
-**The Border Carries It Rule.** Depth at rest comes from the 1px border; the shadow is a whisper and disappears in dark.
+**The Border Carries It Rule.** Depth at rest comes from the 1px border; the shadow is a whisper.
 
 ## Shapes
 
@@ -223,7 +211,7 @@ One radius token, `--radius` 10px, derived into three steps: `lg` 10px (cards, d
 
 ### Buttons
 - **Shape:** 8px radius. Heights `h-11` (44px) on mobile, `h-9` (36px) from `sm`; `sm` size 36/32px; `icon` 44/36px. Text-sm medium, 16px icons.
-- **Primary:** violet fill, white text (dark ink in dark), hover `primary/90`.
+- **Primary:** violet fill, white text, hover `primary/90`.
 - **Outline:** card fill, input border, hover muted. **Secondary:** muted fill. **Ghost:** hover muted. **Link:** violet text, underline on hover. **Destructive:** red fill.
 - **Interaction:** 150ms ease-out on colour; `active:scale-[0.98]` press only (removed under reduced motion); focus is a 2px violet ring with a 2px background offset; disabled is 50% opacity.
 
@@ -231,17 +219,17 @@ One radius token, `--radius` 10px, derived into three steps: `lg` 10px (cards, d
 - 44px mobile, 36px from `sm`, 8px radius, `input` border, card fill, muted placeholder. Focus is a 2px violet ring, not a border change. Checkbox, select, toggle, combobox, and chip input share these tokens.
 
 ### Cards / Containers
-- 10px radius, 1px border, card fill, `shadow-xs` (none in dark), 24px header and content padding. Card-sized links add `.focus-card` for an inset 2px ring.
+- 10px radius, 1px border, card fill, `shadow-xs`, 24px header and content padding. Card-sized links add `.focus-card` for an inset 2px ring.
 
 ### Tier Badge
 - Pill, 1px tier border, tier background and foreground, `text-xs` medium, 14px lucide icon (1.75 stroke), then the word or expiry phrase. Legible in greyscale by design.
 
 ### Navigation
-- Sidebar items 36px tall, 8px radius, muted text; active is Violet Wash with a shared-layout highlight that slides between items (critically damped spring, 0.35s). Mobile tabs: 20px icon over an 11px label, active in violet with a sliding 2px top indicator. Both set `aria-current="page"`.
+- Sidebar items 36px tall, 8px radius, muted text; active is Violet Wash with a highlight that slides between items. Mobile tabs: 20px icon over a 12px label, active in violet with a sliding 2px top indicator. Both set `aria-current="page"`.
 
 ### Feedback and Motion
 - Toasts via sonner (`top-center`, rich colours, close button), styled as popover surfaces.
-- Framer Motion under `MotionConfig reducedMotion="user"`. Entries fade and rise 4px in 180ms; hover and press feedback is background or colour only; expand/collapse and rolling counts use the 0.35s critically damped spring. `HoverScale` is a retired passthrough.
+- GSAP (`lib/gsap.ts`, primitives in `components/motion.tsx`), with every effect gated by `prefers-reduced-motion`. Native scrolling: there is no smooth-scroll layer. Entries fade and rise a few px; hover feedback is background or colour only; the quantity stepper updates instantly. Rolling counts are for dashboard metrics only, and the stamp thunk is reserved for the detail page and sign-in sample.
 - Loading uses skeletons shaped like the content; empty states always carry the next action.
 
 ### Icons
@@ -250,8 +238,8 @@ One radius token, `--radius` 10px, derived into three steps: `lg` 10px (cards, d
 ## Do's and Don'ts
 
 ### Do:
-- **Do** use semantic tokens (`bg-card`, `text-muted-foreground`, `border-input`, `text-tier-ok`) so light and dark come free.
-- **Do** pair every tier with its icon and word, via `TierBadge`.
+- **Do** use semantic tokens (`bg-card`, `text-muted-foreground`, `border-input`, `text-tier-ok`) so a future theme is a token change.
+- **Do** pair every tier with its icon and word, via `StatusChip`.
 - **Do** set quantities, dates, and KPIs in `.font-data`.
 - **Do** keep touch targets at 44px on mobile and compact to 36px from `sm`.
 - **Do** keep transitions between 150 and 200ms and respect reduced motion.
@@ -266,5 +254,5 @@ One radius token, `--radius` 10px, derived into three steps: `lg` 10px (cards, d
 - **Don't** convey status by colour alone.
 - **Don't** scale elements on hover; hover changes fill or colour only.
 - **Don't** use emoji or glyph icons; lucide only.
-- **Don't** add shadows to resting surfaces beyond `shadow-xs`, and none in dark.
+- **Don't** add shadows to resting surfaces beyond `shadow-xs`.
 - **Don't** spend violet on anything but action, focus, selection, and links.

@@ -268,7 +268,7 @@ export default function MedicineDetailPage() {
               <>
                 {formatQuantity(medicine.onHandQuantity)}
                 {low && (
-                  <span className="mt-0.5 block text-2xs text-tier-warning">
+                  <span className="mt-0.5 block text-xs text-tier-warning">
                     At or below reorder point
                   </span>
                 )}
@@ -284,7 +284,7 @@ export default function MedicineDetailPage() {
             value={
               <span className={cn("block", vs.cls)}>
                 {varianceStr}
-                <span className="mt-0.5 flex items-center gap-1 text-2xs font-medium">
+                <span className="mt-0.5 flex items-center gap-1 text-xs font-medium">
                   <VarianceIcon aria-hidden className="size-3.5" />
                   {vs.label}
                 </span>
@@ -297,7 +297,7 @@ export default function MedicineDetailPage() {
               medicine.expiryDate !== undefined ? (
                 <>
                   {formatDate(medicine.expiryDate)}
-                  <span className="mt-0.5 block text-2xs text-muted-foreground">
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
                     {formatExpiryDistance(medicine.expiryDate, nowMs)}
                   </span>
                 </>

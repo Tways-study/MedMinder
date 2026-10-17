@@ -10,15 +10,19 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-/*
-  This drives decisions about medicine, so tier is never carried by colour
-  alone. Each badge is icon + word + colour, and stays legible in greyscale,
-  under colour-blindness, and on a sun-washed phone at the counter.
+export type StatusKind = ExpiryTier | "low";
 
+/*
+  This drives decisions about medicine, so status is never carried by colour
+  alone. Every chip is icon + word + colour (the dot variant keeps the word),
+  and stays legible in greyscale, under colour-blindness, and on a sun-washed
+  phone at the counter.
+
+  "low" is a stock status, not an expiry tier; it borrows the critical colours.
   Class names are written out literally so Tailwind's JIT can see them.
 */
-const TIERS: Record<
-  ExpiryTier,
+const STATUS: Record<
+  StatusKind,
   {
     label: string;
     icon: LucideIcon;
@@ -69,66 +73,56 @@ const TIERS: Record<
     border: "border-tier-ok-border",
     className: "bg-tier-ok-bg text-tier-ok border-tier-ok-border",
   },
+  low: {
+    label: "Low stock",
+    icon: PackageMinus,
+    fg: "text-tier-critical",
+    bg: "bg-tier-critical-bg",
+    border: "border-tier-critical-border",
+    className:
+      "bg-tier-critical-bg text-tier-critical border-tier-critical-border",
+  },
 };
 
-export function TierBadge({
-  tier,
-  children,
-  className,
-}: {
-  tier: ExpiryTier;
-  /** The expiry phrasing, e.g. "expires in 5 months". Falls back to the tier word. */
-  children?: React.ReactNode;
-  className?: string;
-}) {
-  const { label, icon: Icon, className: tierClass } = TIERS[tier];
-
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-xs font-medium",
-        tierClass,
-        className,
-      )}
-    >
-      <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
-      {children ?? label}
-    </span>
-  );
+/** Label, icon and fg / bg / border / combined classes for a status. */
+export function statusStyle(kind: StatusKind) {
+  return STATUS[kind];
 }
 
 export function tierLabel(tier: ExpiryTier): string {
-  return TIERS[tier].label;
+  return STATUS[tier].label;
 }
 
-/** The badge's icon, label and combined classes, for controls that need to match it. */
-export function tierStyle(tier: ExpiryTier) {
-  return TIERS[tier];
-}
+export function StatusChip({
+  kind,
+  variant = "chip",
+  children,
+  className,
+}: {
+  kind: StatusKind;
+  /** `chip` is the bordered tag; `dot` is the quiet form for dense rows. */
+  variant?: "chip" | "dot";
+  /** The expiry phrasing, e.g. "expires in 5 months". Falls back to the status word. */
+  children?: React.ReactNode;
+  className?: string;
+}) {
+  const { label, icon: Icon, fg, className: tone } = STATUS[kind];
 
-/** Separate fg / bg / border utility classes for building custom tier-coloured UI. */
-export function tierClasses(tier: ExpiryTier): {
-  fg: string;
-  bg: string;
-  border: string;
-} {
-  const { fg, bg, border } = TIERS[tier];
-  return { fg, bg, border };
-}
+  if (variant === "dot") {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 text-xs font-medium",
+          fg,
+          className,
+        )}
+      >
+        <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-current" />
+        {children ?? label}
+      </span>
+    );
+  }
 
-/** Low-stock treatment: critical-tier colours with a package icon (stock, not expiry). */
-export const LOW_STOCK_STYLE = {
-  label: "Low stock",
-  icon: PackageMinus as LucideIcon,
-  fg: "text-tier-critical",
-  bg: "bg-tier-critical-bg",
-  border: "border-tier-critical-border",
-  className: "bg-tier-critical-bg text-tier-critical border-tier-critical-border",
-};
-
-/** Low-stock chip: same shape as TierBadge, for stock rather than expiry. */
-export function LowStockBadge({ className }: { className?: string }) {
-  const { label, icon: Icon, className: tone } = LOW_STOCK_STYLE;
   return (
     <span
       className={cn(
@@ -138,7 +132,7 @@ export function LowStockBadge({ className }: { className?: string }) {
       )}
     >
       <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
-      {label}
+      {children ?? label}
     </span>
   );
 }

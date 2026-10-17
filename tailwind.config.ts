@@ -77,9 +77,6 @@ export default {
         mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
         serif: ["var(--font-serif)", "ui-serif", "Georgia", "serif"],
       },
-      fontSize: {
-        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
-      },
     },
   },
   plugins: [require("tailwindcss-animate")],

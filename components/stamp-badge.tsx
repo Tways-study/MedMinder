@@ -1,7 +1,7 @@
 "use client";
 
 import { useStampIn } from "@/components/motion";
-import { LOW_STOCK_STYLE, tierStyle } from "@/components/tier-badge";
+import { statusStyle } from "@/components/status-chip";
 import type { ExpiryTier } from "@/convex/lib/inventory";
 import { cn } from "@/lib/utils";
 import { useRef } from "react";
@@ -23,7 +23,7 @@ export function stampRotation(seed: string): number {
 /*
   A rubber-stamp status mark: double border (outer + inner) in the tier colour,
   uppercase mono, slight stable tilt. Always icon + word + colour, never colour
-  alone. Dense tables should keep the flat TierBadge instead.
+  alone. Dense tables should keep the flat StatusChip instead.
 */
 export function StampBadge({
   tier,
@@ -47,7 +47,7 @@ export function StampBadge({
   const ref = useRef<HTMLSpanElement>(null);
   useStampIn(ref, { enabled: animate });
 
-  const style = tier === "low" ? LOW_STOCK_STYLE : tierStyle(tier);
+  const style = statusStyle(tier);
   const Icon = style.icon;
   const sm = size === "sm";
 
@@ -64,7 +64,7 @@ export function StampBadge({
       <span
         className={cn(
           "inline-flex items-center rounded-[2px] border border-current font-mono font-bold uppercase tracking-[0.14em]",
-          sm ? "gap-1 px-1.5 py-px text-2xs" : "gap-1.5 px-2 py-0.5 text-xs",
+          sm ? "gap-1 px-1.5 py-px text-xs" : "gap-1.5 px-2 py-0.5 text-xs",
         )}
       >
         <Icon
