@@ -42,7 +42,7 @@ Convex functions are organized by domain. File-based routing: `convex/medicines.
 | `dashboard.ts` | Expiry alerts, low-stock warnings, running totals (streaming, no doc cap) |
 | `settings.ts` | Per-account digest and alert tier settings |
 | `digest.ts` | Digest content query (calls inventory logic) |
-| `sendDigest.ts` | Node.js action (`"use node"`) — renders and sends email via Nodemailer/Resend |
+| `sendDigest.ts` | Node.js action (`"use node"`) — renders and sends email via Nodemailer over Gmail SMTP |
 | `crons.ts` | Hourly cron that calls `isDigestDue` and triggers `sendDigest` |
 | `http.ts` | HTTP endpoints |
 | `auth.ts` / `auth.config.ts` | Convex Auth setup |
@@ -90,4 +90,4 @@ Vercel build command (defined in `vercel.json`, deploys Convex first then Next.j
 npx convex deploy --cmd 'npm run build'
 ```
 
-Environment variables for Convex functions (set in Convex dashboard, not Vercel): `RESEND_API_KEY`, `SITE_URL`, `AUTH_*`.
+Environment variables for Convex functions (set in Convex dashboard, not Vercel): `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `SITE_URL`, `AUTH_*`.
