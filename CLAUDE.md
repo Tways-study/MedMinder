@@ -67,6 +67,7 @@ settings  → by_owner (ownerId)
 - `ui/` — shadcn/ui primitives (Button, Card, Dialog, etc.)
 - Feature components: `medicine-card.tsx`, `medicine-form.tsx`, `dashboard-metrics.tsx`, `status-chip.tsx`, `timezone-combobox.tsx`, `email-chip-input.tsx`
 - `ConvexClientProvider.tsx` — wraps the app with `ConvexAuthNextjsServerProvider`
+- Shell: `app-shell.tsx` (top bar, frame), `app-nav.tsx` (collapsible sidebar + mobile tabs), `command-palette.tsx` (Cmd/Ctrl+K), `shell-state.tsx` (collapsed + palette state); destinations live in `lib/nav.ts`
 - `motion.tsx` — GSAP motion primitives (`FadeSlideIn`, `Stagger`, `ExpandCollapse`, `RollingNumber`, `useStampIn`, `usePressFeedback`); GSAP setup lives in `lib/gsap.ts`
 
 ### Testing

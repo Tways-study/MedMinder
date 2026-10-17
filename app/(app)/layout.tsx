@@ -6,39 +6,15 @@
 // "react-server" export condition has no createContext — the build fails
 // with "TypeError: d.createContext is not a function" while collecting page
 // data, on whichever page the bundler happens to process first.
-import { AppNav } from "@/components/app-nav";
-import { LogoMark } from "@/components/logo-mark";
+import { AppShell } from "@/components/app-shell";
 import { CardSkeleton, Page } from "@/components/page-shell";
 import { RedirectToSignIn } from "@/components/redirect-to-sign-in";
-import { UserMenu } from "@/components/UserMenu";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-[100dvh] md:pl-60">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
-      >
-        Skip to content
-      </a>
-
-      {/* Mobile top bar; on desktop the sidebar carries the brand and account. */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-background/95 px-4 supports-[backdrop-filter]:bg-background/80 supports-[backdrop-filter]:backdrop-blur md:hidden">
-        <Link
-          href="/"
-          className="focus-card -ml-1 flex items-center gap-2 rounded-md px-1 py-1"
-        >
-          <LogoMark className="size-7" />
-          <span className="font-serif text-2xl font-medium leading-none">
-            MedMinder
-          </span>
-        </Link>
-        <UserMenu />
-      </header>
-
+    <AppShell>
       {/*
         Signing out flips Convex auth to unauthenticated before the redirect
         to /signin lands. Without this gate, the still-mounted page below
@@ -62,9 +38,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <RedirectToSignIn />
         </Unauthenticated>
       </div>
-
-      {/* The nav queries nothing, so it stays put outside the auth gate. */}
-      <AppNav />
-    </div>
+    </AppShell>
   );
 }

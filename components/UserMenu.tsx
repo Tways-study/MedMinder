@@ -16,8 +16,11 @@ import { useRouter } from "next/navigation";
 
 export function UserMenu({
   variant = "icon",
+  collapsed = false,
 }: {
   variant?: "icon" | "sidebar";
+  /** Sidebar rail: show the avatar only. */
+  collapsed?: boolean;
 }) {
   const { signOut } = useAuthActions();
   const router = useRouter();
@@ -32,7 +35,8 @@ export function UserMenu({
         {variant === "sidebar" ? (
           <button
             type="button"
-            className="focus-card flex h-11 w-full items-center gap-2.5 rounded-md px-2 text-left text-sm transition-colors hover:bg-muted"
+            title={collapsed ? (email ?? "Account") : undefined}
+            className={`focus-card flex h-11 w-full items-center gap-2.5 rounded-md px-1.5 text-left text-sm transition-colors hover:bg-muted ${collapsed ? "justify-center" : ""}`}
           >
             <span
               aria-hidden
@@ -40,13 +44,17 @@ export function UserMenu({
             >
               {initial}
             </span>
-            <span className="min-w-0 flex-1 truncate">
-              {email ?? "Account"}
-            </span>
-            <ChevronsUpDown
-              className="size-4 shrink-0 text-muted-foreground"
-              aria-hidden
-            />
+            {!collapsed && (
+              <>
+                <span className="min-w-0 flex-1 truncate">
+                  {email ?? "Account"}
+                </span>
+                <ChevronsUpDown
+                  className="size-4 shrink-0 text-muted-foreground"
+                  aria-hidden
+                />
+              </>
+            )}
             <span className="sr-only">Account menu</span>
           </button>
         ) : (
@@ -66,7 +74,7 @@ export function UserMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align={variant === "sidebar" ? "start" : "end"}
-        side={variant === "sidebar" ? "top" : "bottom"}
+        side={variant === "sidebar" ? (collapsed ? "right" : "top") : "bottom"}
         className="w-56"
       >
         <DropdownMenuLabel className="truncate font-normal text-muted-foreground">

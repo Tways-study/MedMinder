@@ -188,7 +188,9 @@ Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `
 
 ## Layout
 
-Shell: from `md` up, a fixed sidebar (`w-60`, card fill, right border) holds logo, four nav items (Today, Calendar, Medicines, Settings), and the account menu at the bottom. Below `md`, a bottom tab bar (`min-h-14` items, safe-area padding, blurred `background/95`) with a 2px violet indicator on the active tab, bottom-anchored for one-handed use at the shelf.
+Shell: from `md` up, a fixed sidebar (card fill, right border) holds logo, four nav items (Today, Calendar, Medicines, Settings), a collapse control and the account menu at the bottom. It is `w-60` expanded and a 56px icon rail collapsed; the choice persists in `localStorage` and the content column follows it. Above the content sits a sticky 56px top bar with a search field that opens the command palette (Cmd/Ctrl+K) and the primary "Add medicine" action. Below `md`, the top bar carries brand, a search button and the account, and a bottom tab bar (`min-h-14` items, safe-area padding, blurred `background/95`) with a 2px violet indicator on the active tab, bottom-anchored for one-handed use at the shelf.
+
+Command palette: Cmd/Ctrl+K from anywhere. Searches medicines by name (server-ranked, `medicines.searchByName`), and lists "Add medicine" and the destinations from `lib/nav.ts`. Keyboard-initiated, so it opens with no entrance animation.
 
 Content: `Page` is a centred column, `max-w-6xl`, `gap-6`, padding `px-4 sm:px-6 lg:px-8`, `py-6 lg:py-8`. `PageHeader` puts title and description left and actions right, wrapping on narrow screens.
 
