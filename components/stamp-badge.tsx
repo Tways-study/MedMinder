@@ -31,6 +31,7 @@ export function StampBadge({
   size = "md",
   seed,
   animate = false,
+  delay = 0,
   className,
 }: {
   /** An expiry tier, or "low" for the low-stock stamp. */
@@ -42,10 +43,12 @@ export function StampBadge({
   seed: string;
   /** Thunk in when scrolled into view (once). */
   animate?: boolean;
+  /** Seconds to hold the thunk, to sequence stamps down a list. */
+  delay?: number;
   className?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
-  useStampIn(ref, { enabled: animate });
+  useStampIn(ref, { enabled: animate, delay });
 
   const style = statusStyle(tier);
   const Icon = style.icon;

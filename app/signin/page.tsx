@@ -1,7 +1,7 @@
 "use client";
 
+import { LandingShelf, PillField } from "@/components/landing-shelf";
 import { LogoMark } from "@/components/logo-mark";
-import { StampBadge } from "@/components/stamp-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ExpandCollapse, useAlertIn } from "@/components/motion";
@@ -21,24 +21,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-
-const SAMPLE_SHELF = [
-  {
-    name: "Amoxicillin 500 mg",
-    meta: "Capsule, 42 on hand",
-    tier: "critical",
-  },
-  {
-    name: "Salbutamol inhaler",
-    meta: "100 mcg, 3 on hand",
-    tier: "low",
-  },
-  {
-    name: "Paracetamol 500 mg",
-    meta: "Tablet, 380 on hand",
-    tier: "ok",
-  },
-] as const;
 
 const FEATURES = [
   {
@@ -81,15 +63,28 @@ export default function SignInPage() {
           duration: DUR.enter,
           stagger: STAGGER * 2,
         });
-        tl.from("[data-pad]", { y: 16, autoAlpha: 0, duration: DUR.enter }, 0.18);
+        tl.from(
+          "[data-pad]",
+          { y: 16, autoAlpha: 0, duration: DUR.enter },
+          0.18,
+        );
         tl.from(
           "[data-field]",
           { y: 8, autoAlpha: 0, duration: DUR.base, stagger: STAGGER },
           DUR.enter - 0.1,
         );
 
-        // The sample shelf and feature list sit below the fold: hold them
-        // back until they are reached, rather than animating unseen.
+        // Ambient: the pill field drifts one tile, seamlessly, over a minute.
+        gsap.to("[data-drift]", {
+          x: -96,
+          y: -96,
+          duration: 70,
+          ease: "none",
+          repeat: -1,
+        });
+
+        // The sample shelf and feature list wait for the form to land (on a
+        // phone they sit below the fold and wait to be reached).
         const below = gsap.utils.toArray<HTMLElement>("[data-below]");
         if (below.length) {
           gsap.set(below, { y: 14, autoAlpha: 0 });
@@ -99,6 +94,7 @@ export default function SignInPage() {
               autoAlpha: 1,
               duration: DUR.enter,
               ease: EASE.out,
+              delay: 0.25,
               stagger: STAGGER * 2,
               overwrite: "auto",
               clearProps: "transform,opacity,visibility",
@@ -200,54 +196,60 @@ export default function SignInPage() {
   return (
     <main
       ref={padRef}
-      className="min-h-[100dvh] bg-[hsl(262_38%_15%)] px-4 py-10 text-white sm:px-8 sm:py-14"
+      className="relative min-h-[100dvh] overflow-hidden bg-landing px-4 py-10 text-primary-foreground sm:px-8 sm:py-14 lg:flex lg:items-center"
     >
-      {/* First screen: brand, promise, and the form, all on one centred axis. */}
-      <div className="mx-auto flex w-full max-w-md flex-col items-center gap-8 text-center">
-        <div data-brand className="flex items-center gap-3">
-          <LogoMark className="size-9 ring-1 ring-white/25" />
-          <span className="font-serif text-3xl font-medium leading-none">
-            MedMinder
-          </span>
-        </div>
+      <PillField />
 
-        <div className="flex flex-col items-center gap-4">
-          <p
-            data-brand
-            className="font-serif text-4xl font-medium leading-[1.1] sm:text-5xl"
-          >
-            Know what&rsquo;s on the shelf{" "}
-            <em className="pb-1 font-normal italic text-[hsl(262_60%_85%)]">
-              before it expires.
-            </em>
-          </p>
-          <p
-            data-brand
-            className="max-w-sm text-base leading-relaxed text-white/80"
-          >
-            Stock, expiry and reorder tracking for the dispensary. Every
-            account keeps its own private shelf.
-          </p>
-        </div>
+      <div className="relative mx-auto grid w-full max-w-6xl gap-14 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:items-center lg:gap-16 xl:gap-24">
+        {/* The promise and the form, on one axis. */}
+        <div className="mx-auto flex w-full max-w-md flex-col items-center gap-8 text-center lg:mx-0 lg:max-w-none lg:items-start lg:text-left">
+          <div data-brand className="flex items-center gap-3">
+            <LogoMark className="size-9 ring-1 ring-primary-foreground/25" />
+            <span className="font-serif text-3xl font-medium leading-none">
+              MedMinder
+            </span>
+          </div>
 
-        <div
-          data-pad
-          className="w-full rounded-lg bg-card text-left text-card-foreground shadow-[0_28px_56px_-20px_hsl(262_60%_4%/0.7)]"
-        >
-          <div className="px-6 py-5 text-center sm:px-8">
-            <h1 data-flow-swap className="font-serif text-4xl font-medium leading-none">
-              {isSignUp ? "Open an account" : "Sign in"}
-            </h1>
-            <p data-flow-swap className="mt-3 text-sm text-muted-foreground">
-              {isSignUp
-                ? "Each account keeps its own private shelf of medicines."
-                : "Welcome back. Your shelf is as you left it."}
+          <div className="flex flex-col items-center gap-4 lg:items-start">
+            <p
+              data-brand
+              className="font-serif text-4xl font-medium leading-[1.1] sm:text-5xl"
+            >
+              Know what&rsquo;s on the shelf{" "}
+              <em className="pb-1 font-normal italic text-landing-ink">
+                before it expires.
+              </em>
+            </p>
+            <p
+              data-brand
+              className="max-w-sm text-base leading-relaxed text-primary-foreground/80"
+            >
+              Stock, expiry and reorder tracking for the dispensary. Every
+              account keeps its own private shelf.
             </p>
           </div>
-          <div className="card-divider" aria-hidden />
 
-          <div className="p-6 sm:p-8">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div
+            data-pad
+            className="w-full max-w-md rounded-lg bg-card text-left text-card-foreground shadow-landing"
+          >
+            <div className="px-6 py-5 text-center sm:px-8">
+              <h1
+                data-flow-swap
+                className="font-serif text-4xl font-medium leading-none"
+              >
+                {isSignUp ? "Open an account" : "Sign in"}
+              </h1>
+              <p data-flow-swap className="mt-3 text-sm text-muted-foreground">
+                {isSignUp
+                  ? "Each account keeps its own private shelf of medicines."
+                  : "Welcome back. Your shelf is as you left it."}
+              </p>
+            </div>
+            <div className="card-divider" aria-hidden />
+
+            <div className="p-6 sm:p-8">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div data-field className="flex flex-col gap-1.5">
                   <label htmlFor="email" className="text-sm font-medium">
                     Email
@@ -350,74 +352,46 @@ export default function SignInPage() {
                     </p>
                   )}
                 </div>
-            </form>
+              </form>
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFlow(isSignUp ? "signIn" : "signUp");
+              setError(null);
+            }}
+            className="-mt-2 rounded-md lg:-ml-3 px-3 py-2.5 text-sm font-medium text-landing-ink-strong underline underline-offset-4 hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
+          >
+            {isSignUp
+              ? "Already have an account? Sign in"
+              : "New here? Open an account"}
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setFlow(isSignUp ? "signIn" : "signUp");
-            setError(null);
-          }}
-          className="-mt-2 rounded-md px-3 py-2.5 text-sm font-medium text-[hsl(262_60%_88%)] underline underline-offset-4 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-        >
-          {isSignUp
-            ? "Already have an account? Sign in"
-            : "New here? Open an account"}
-        </button>
-      </div>
+        {/* What a shelf looks like, and what the app does. */}
+        <div className="mx-auto flex w-full max-w-md flex-col gap-8 border-t border-primary-foreground/15 pt-12 lg:max-w-xl lg:border-t-0 lg:pt-0">
+          <LandingShelf />
 
-      {/* Below the fold: what a shelf looks like, and what the app does. */}
-      <div className="mx-auto mt-16 flex w-full max-w-md flex-col items-center gap-10 border-t border-white/15 pt-12 sm:mt-20">
-        <div
-          data-below
-          aria-hidden
-          className="w-full rounded-lg bg-card text-left text-card-foreground shadow-[0_28px_56px_-20px_hsl(262_60%_4%/0.7)]"
-        >
-          <div className="flex items-center gap-2.5 px-4 py-3">
-            <span className="font-serif text-xl leading-none text-primary">
-              ℞
-            </span>
-            <p className="font-serif text-xl font-medium leading-none">
-              On the shelf
-            </p>
-          </div>
-          <div className="card-divider" />
-          <ul className="divide-y divide-dashed">
-            {SAMPLE_SHELF.map((row) => (
-              <li
-                key={row.name}
-                className="flex items-center justify-between gap-3 px-4 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="font-serif text-lg font-medium leading-tight">
-                    {row.name}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {row.meta}
-                  </p>
-                </div>
-                <StampBadge tier={row.tier} size="sm" seed={row.name} animate />
+          <ul className="grid gap-4 text-left">
+            {FEATURES.map(({ icon: Icon, title, body }) => (
+              <li key={title} data-below className="flex items-baseline gap-3">
+                <Icon
+                  className="size-4 shrink-0 translate-y-0.5 text-landing-ink"
+                  strokeWidth={1.75}
+                  aria-hidden
+                />
+                <p className="text-sm text-primary-foreground/75">
+                  <span className="font-medium text-primary-foreground">
+                    {title}.
+                  </span>{" "}
+                  {body}
+                </p>
               </li>
             ))}
           </ul>
         </div>
-
-        <ul className="grid gap-4 text-left">
-          {FEATURES.map(({ icon: Icon, title, body }) => (
-            <li key={title} data-below className="flex items-baseline gap-3">
-              <Icon
-                className="size-4 shrink-0 translate-y-0.5 text-[hsl(262_60%_85%)]"
-                strokeWidth={1.75}
-                aria-hidden
-              />
-              <p className="text-sm text-white/75">
-                <span className="font-medium text-white">{title}.</span> {body}
-              </p>
-            </li>
-          ))}
-        </ul>
       </div>
     </main>
   );

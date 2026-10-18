@@ -156,6 +156,8 @@ Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `
 
 **The Ramp Is Not A Palette Rule.** Red, orange, amber, sky, and emerald exist only to express expiry. Do not borrow them for categories, charts, or accents.
 
+**The Landing Exception Rule.** `/signin` is the one place the canvas is tinted. It uses the `landing*` tokens (`--landing` #221835, `--landing-deep` #090410, `--landing-ink` #D3C2F0, `--landing-ink-strong` #DCCEF3), exposed as `bg-landing`, `text-landing-ink`, `text-landing-ink-strong` and `shadow-landing`. Nothing inside the app shell uses them. White text on it is `primary-foreground`; every pairing is measured in `globals.css`.
+
 **The Measured Pair Rule.** A new foreground/background pairing is added to the contrast comment in `globals.css` with its ratio, in both themes, before it ships. Text needs 4.5:1.
 
 ## Typography
@@ -184,7 +186,7 @@ Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `
 
 **The One Glyph Rule.** Icons are Lucide only; the brand mark is the pill tile.
 
-**The Stamp Is Rare Rule.** `StampBadge` (rotated, double-bordered) appears only in the sign-in sample shelf. Everything else, including the table, the drawer and the palette, uses the flat rectangular `StatusChip`, so a screen of rows stays calm.
+**The Stamp Is Rare Rule.** `StampBadge` (rotated, double-bordered) appears only in the sign-in sample shelf, where a lot is re-stamped when its day count crosses into the next tier. Everything else, including the table, the drawer and the palette, uses the flat rectangular `StatusChip`, so a screen of rows stays calm.
 
 ## Layout
 
@@ -233,7 +235,7 @@ One radius token, `--radius` 10px, derived into three steps: `lg` 10px (cards, d
 
 ### Feedback and Motion
 - Toasts via sonner (`top-center`, rich colours, close button), styled as popover surfaces.
-- GSAP (`lib/gsap.ts`, primitives in `components/motion.tsx`), with every effect gated by `prefers-reduced-motion`. Native scrolling: there is no smooth-scroll layer. Entries fade and rise a few px; hover feedback is background or colour only; the quantity stepper updates instantly. The detail panel slides in over 150ms (none under reduced motion) and the table never animates on filter or sort. The stamp thunk is reserved for the sign-in sample.
+- GSAP (`lib/gsap.ts`, primitives in `components/motion.tsx`), with every effect gated by `prefers-reduced-motion`. Native scrolling: there is no smooth-scroll layer. Entries fade and rise a few px; hover feedback is background or colour only; the quantity stepper updates instantly. The detail panel slides in over 150ms (none under reduced motion) and the table never animates on filter or sort. The stamp thunk is reserved for the sign-in sample, which also carries the page's only ambient motion (a slow pill-field drift and a few day-count ticks, all off under reduced motion).
 - Loading uses skeletons shaped like the content; empty states always carry the next action.
 
 ### Icons

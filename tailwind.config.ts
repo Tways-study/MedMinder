@@ -55,6 +55,13 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
+        // Sign-in canvas only (DESIGN.md "Landing exception").
+        landing: {
+          DEFAULT: "hsl(var(--landing))",
+          deep: "hsl(var(--landing-deep))",
+          ink: "hsl(var(--landing-ink))",
+          "ink-strong": "hsl(var(--landing-ink-strong))",
+        },
         // Expiry severity ramp: fg (DEFAULT), bg, border per tier.
         tier: {
           expired: tier("expired"),
@@ -66,6 +73,7 @@ export default {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgb(0 0 0 / 0.04)",
+        landing: "0 28px 56px -20px hsl(var(--landing-deep) / 0.7)",
       },
       borderRadius: {
         lg: "var(--radius)",
