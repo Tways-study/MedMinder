@@ -1,0 +1,468 @@
+﻿<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #221835;
+      font-family: "Inter", sans-serif;
+      color: #18181b;
+    }
+    #s-field {
+      position: absolute;
+      left: -96px;
+      top: -96px;
+      width: 2112px;
+      height: 1272px;
+      color: rgba(255, 255, 255, 0.05);
+    }
+    #s-world {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: 0 0;
+    }
+    #s-shadow {
+      position: absolute;
+      left: 280px;
+      top: 130px;
+      width: 1360px;
+      height: 750px;
+      border-radius: 10px;
+      box-shadow: 0 24px 60px rgba(9, 4, 16, 0.5);
+      opacity: 0;
+    }
+    #s-card {
+      position: absolute;
+      left: 280px;
+      top: 130px;
+      width: 1360px;
+      height: 750px;
+      background: #fff;
+      border-radius: 10px;
+    }
+    #s-head {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1360px;
+      height: 110px;
+      border-bottom: 2px solid #e4e4e7;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding-left: 48px;
+      font-family: "EB Garamond", serif;
+      font-weight: 500;
+      font-size: 52px;
+    }
+    .s-row {
+      position: absolute;
+      left: 0;
+      width: 1360px;
+      height: 128px;
+      border-bottom: 2px dashed #e4e4e7;
+    }
+    .s-name {
+      position: absolute;
+      left: 48px;
+      top: 22px;
+      font-family: "EB Garamond", serif;
+      font-weight: 500;
+      font-size: 42px;
+      line-height: 1.1;
+    }
+    .s-meta {
+      position: absolute;
+      left: 48px;
+      top: 74px;
+      font-size: 26px;
+      color: #696971;
+    }
+    .s-days {
+      position: absolute;
+      right: 340px;
+      top: 40px;
+      width: 120px;
+      height: 44px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 32px;
+      color: #696971;
+      overflow: hidden;
+    }
+    .s-days span {
+      position: absolute;
+      right: 0;
+      top: 0;
+      line-height: 44px;
+    }
+    .s-cell {
+      position: absolute;
+      right: 48px;
+      top: 32px;
+      width: 270px;
+      height: 64px;
+    }
+    .stamp {
+      position: absolute;
+      right: 0;
+      top: 0;
+      display: inline-flex;
+      padding: 3px;
+      border: 2px solid currentColor;
+      border-radius: 4px;
+    }
+    .stamp > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 12px;
+      border: 2px solid currentColor;
+      border-radius: 2px;
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .stamp svg {
+      width: 26px;
+      height: 26px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .t-warning { color: #b45309; }
+    .t-critical { color: #c2410c; }
+    .t-watch { color: #0369a1; }
+    .t-ok { color: #047857; }
+
+    .cap {
+      position: absolute;
+      left: 280px;
+      top: 928px;
+      width: 1360px;
+      font-size: 42px;
+      line-height: 1.2;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .cap b { font-weight: 700; }
+    .cap span { font-weight: 400; color: rgba(255, 255, 255, 0.82); }
+
+    #s-open {
+      position: absolute;
+      inset: 0;
+      background: #fff;
+      clip-path: inset(0px 0px 0px 0px round 0px);
+    }
+    #s-stat {
+      position: absolute;
+      left: 410px;
+      top: 390px;
+      width: 1100px;
+      height: 270px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 24px 60px rgba(9, 4, 16, 0.5);
+    }
+    .stat {
+      position: absolute;
+      top: 40px;
+    }
+    .stat .lab {
+      font-weight: 600;
+      font-size: 26px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #696971;
+    }
+    .stat .val {
+      margin-top: 8px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 100px;
+      line-height: 1;
+    }
+    #s-sample {
+      position: absolute;
+      right: 40px;
+      bottom: 26px;
+      font-size: 26px;
+      color: #696971;
+    }
+    #s-mail {
+      position: absolute;
+      left: 480px;
+      top: 190px;
+      width: 960px;
+      height: 490px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 24px 60px rgba(9, 4, 16, 0.5);
+    }
+    #s-mail h2 {
+      position: absolute;
+      left: 56px;
+      top: 48px;
+      font-size: 46px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    #s-mail .sub {
+      position: absolute;
+      left: 56px;
+      top: 116px;
+      font-size: 30px;
+      color: #696971;
+    }
+    #s-mail .sec {
+      position: absolute;
+      left: 56px;
+      top: 214px;
+      font-size: 34px;
+      font-weight: 700;
+      color: #b45309;
+    }
+    #s-mail .li {
+      position: absolute;
+      left: 56px;
+      width: 848px;
+      height: 96px;
+      border-top: 2px solid #e4e4e7;
+    }
+    #s-mail .li b {
+      position: absolute;
+      left: 0;
+      top: 26px;
+      font-size: 34px;
+      font-weight: 600;
+    }
+    #s-mail .li i {
+      position: absolute;
+      right: 0;
+      top: 30px;
+      font-style: normal;
+      font-size: 30px;
+      color: #696971;
+    }
+  </style>
+  <div data-hf-id="hf-gtx1" id="root" data-composition-id="shelf" data-width="1920" data-height="1080">
+    <svg data-hf-id="hf-h6vb" data-layout-allow-overflow id="s-field" viewBox="0 0 2112 1272" aria-hidden="true">
+      <defs data-hf-id="hf-mh0t">
+        <pattern data-hf-id="hf-dg0c" id="s-pill-field" width="96" height="96" patternUnits="userSpaceOnUse">
+          <g data-hf-id="hf-23fm" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <g data-hf-id="hf-2dov" transform="translate(14 14) rotate(-30 12 12)">
+              <path data-hf-id="hf-6dam" d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
+              <path data-hf-id="hf-pjf9" d="m8.5 8.5 7 7" />
+            </g>
+            <g data-hf-id="hf-j435" transform="translate(60 58) rotate(40 12 12) scale(0.8)">
+              <path data-hf-id="hf-y1g2" d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
+              <path data-hf-id="hf-p58p" d="m8.5 8.5 7 7" />
+            </g>
+          </g>
+        </pattern>
+      </defs>
+      <rect data-hf-id="hf-m0do" width="100%" height="100%" fill="url(#s-pill-field)" />
+    </svg>
+
+    <div data-hf-id="hf-1kuk" id="s-world" data-layout-allow-overflow data-layout-allow-occlusion data-layout-allow-overlap>
+      <div data-hf-id="hf-4bzd" id="s-shadow"></div>
+      <div data-hf-id="hf-az53" id="s-card">
+        <div data-hf-id="hf-z6sd" id="s-head">
+          <svg data-hf-id="hf-vxdb" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#6D4AA8" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path data-hf-id="hf-yfr3" d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
+            <path data-hf-id="hf-qc5s" d="m8.5 8.5 7 7" />
+          </svg>
+          On the shelf
+        </div>
+
+        <div data-hf-id="hf-fuw8" class="s-row" id="row-0" style="top: 110px">
+          <div data-hf-id="hf-v3l5" class="s-name">Amoxicillin 500 mg</div>
+          <div data-hf-id="hf-wa6q" class="s-meta">Capsule, 42 on hand</div>
+          <div data-hf-id="hf-ucg5" class="s-days"><span data-hf-id="hf-crti" id="d-old">31d</span><span data-hf-id="hf-h45w" id="d-new">30d</span></div>
+          <div data-hf-id="hf-b9ww" class="s-cell">
+            <span data-hf-id="hf-rnt4" class="stamp t-warning" id="st-0" data-seed="Amoxicillin 500 mg"><span data-hf-id="hf-oit2"><svg data-hf-id="hf-ulu9" viewBox="0 0 24 24"><circle data-hf-id="hf-m1lh" cx="12" cy="12" r="10"/><path data-hf-id="hf-pebm" d="M12 6v6l4 2"/></svg>Soon</span></span>
+            <span data-hf-id="hf-knoj" class="stamp t-critical" id="st-0b" data-seed="Amoxicillin 500 mg"><span data-hf-id="hf-1wmc"><svg data-hf-id="hf-1tol" viewBox="0 0 24 24"><path data-hf-id="hf-fn22" d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path data-hf-id="hf-mlkx" d="M12 9v4"/><path data-hf-id="hf-c2s1" d="M12 17h.01"/></svg>Critical</span></span>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-uxlu" class="s-row" id="row-1" style="top: 238px">
+          <div data-hf-id="hf-iqmg" class="s-name">Salbutamol inhaler</div>
+          <div data-hf-id="hf-c1ne" class="s-meta">100 mcg, 3 on hand</div>
+          <div data-hf-id="hf-uj89" class="s-days"><span data-hf-id="hf-r94g">140d</span></div>
+          <div data-hf-id="hf-i18o" class="s-cell">
+            <span data-hf-id="hf-rr5p" class="stamp t-critical" id="st-1" data-seed="Salbutamol inhaler"><span data-hf-id="hf-4lwb"><svg data-hf-id="hf-30lo" viewBox="0 0 24 24"><path data-hf-id="hf-f94t" d="M16 16h6"/><path data-hf-id="hf-0qnb" d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/><path data-hf-id="hf-bk6y" d="M3.29 7 12 12l8.71-5"/><path data-hf-id="hf-dyop" d="M12 22V12"/></svg>Low stock</span></span>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-89bb" class="s-row" id="row-2" style="top: 366px">
+          <div data-hf-id="hf-zibt" class="s-name">Ibuprofen 200 mg</div>
+          <div data-hf-id="hf-eq4u" class="s-meta">Tablet, 96 on hand</div>
+          <div data-hf-id="hf-vq5c" class="s-days"><span data-hf-id="hf-0ltj">71d</span></div>
+          <div data-hf-id="hf-gubl" class="s-cell">
+            <span data-hf-id="hf-lfiq" class="stamp t-warning" id="st-2" data-seed="Ibuprofen 200 mg"><span data-hf-id="hf-az6i"><svg data-hf-id="hf-2man" viewBox="0 0 24 24"><circle data-hf-id="hf-jqh5" cx="12" cy="12" r="10"/><path data-hf-id="hf-xfs6" d="M12 6v6l4 2"/></svg>Soon</span></span>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-fx6c" class="s-row" id="row-3" style="top: 494px">
+          <div data-hf-id="hf-ghav" class="s-name">Loratadine 10 mg</div>
+          <div data-hf-id="hf-vs63" class="s-meta">Tablet, 64 on hand</div>
+          <div data-hf-id="hf-vbub" class="s-days"><span data-hf-id="hf-7p2e">160d</span></div>
+          <div data-hf-id="hf-h8mm" class="s-cell">
+            <span data-hf-id="hf-4ei2" class="stamp t-watch" id="st-3" data-seed="Loratadine 10 mg"><span data-hf-id="hf-cl5o"><svg data-hf-id="hf-3t7q" viewBox="0 0 24 24"><path data-hf-id="hf-ce86" d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle data-hf-id="hf-2731" cx="12" cy="12" r="3"/></svg>Watch</span></span>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-wdkt" class="s-row" id="row-4" style="top: 622px; border-bottom: 0">
+          <div data-hf-id="hf-5wgp" class="s-name">Paracetamol 500 mg</div>
+          <div data-hf-id="hf-r5ta" class="s-meta">Tablet, 380 on hand</div>
+          <div data-hf-id="hf-pac2" class="s-days"><span data-hf-id="hf-urro">412d</span></div>
+          <div data-hf-id="hf-g1pj" class="s-cell">
+            <span data-hf-id="hf-600s" class="stamp t-ok" id="st-4" data-seed="Paracetamol 500 mg"><span data-hf-id="hf-lvoy"><svg data-hf-id="hf-3ewp" viewBox="0 0 24 24"><circle data-hf-id="hf-ozdc" cx="12" cy="12" r="10"/><path data-hf-id="hf-yfzu" d="m9 12 2 2 4-4"/></svg>In date</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div data-hf-id="hf-mw2d" id="s-open"></div>
+
+    <div data-hf-id="hf-xcz4" id="s-cap1" class="cap clip" data-start="2.8" data-duration="2.6" data-track-index="3">
+      <div data-hf-id="hf-mjdw" id="s-cap1-in"><b data-hf-id="hf-si87">Expiry tiers.</b> <span data-hf-id="hf-xe65">Warnings that start early and escalate.</span></div>
+    </div>
+
+    <div data-hf-id="hf-hy1y" id="s-stat" data-layout-allow-overlap data-layout-allow-occlusion class="clip" data-start="5.9" data-duration="3.5" data-track-index="4">
+      <div data-hf-id="hf-528f" id="s-stat-in" style="position:absolute;inset:0">
+        <div data-hf-id="hf-7nng" class="stat" style="left:70px"><div data-hf-id="hf-l6t5" class="lab">On hand</div><div data-hf-id="hf-8wqz" class="val">42</div></div>
+        <div data-hf-id="hf-j37e" class="stat" style="left:430px"><div data-hf-id="hf-lyws" class="lab">Actual count</div><div data-hf-id="hf-19zp" class="val" style="color:#b45309">41</div></div>
+        <div data-hf-id="hf-210z" id="s-sample">Sample numbers</div>
+      </div>
+    </div>
+    <div data-hf-id="hf-wjdo" id="s-cap2" class="cap clip" data-start="6.0" data-duration="3.4" data-track-index="3">
+      <div data-hf-id="hf-z7c1" id="s-cap2-in"><b data-hf-id="hf-xi89">Book vs. counted.</b> <span data-hf-id="hf-sauh">See drift against your last physical count.</span></div>
+    </div>
+
+    <div data-hf-id="hf-uz8d" id="s-mail" data-layout-allow-overlap data-layout-allow-occlusion class="clip" data-start="9.5" data-duration="3.5" data-track-index="4">
+      <div data-hf-id="hf-70im" id="s-mail-in" style="position:absolute;inset:0">
+        <h2 data-hf-id="hf-8nar">MedMinder weekly summary</h2>
+        <div data-hf-id="hf-f8bu" class="sub">Your weekly shelf summary.</div>
+        <div data-hf-id="hf-kuhc" class="sec">Expiring within three months (2)</div>
+        <div data-hf-id="hf-hjdw" class="li" style="top: 280px"><b data-hf-id="hf-9oip">Amoxicillin 500 mg</b><i data-hf-id="hf-6tt6">expires in 1 month</i></div>
+        <div data-hf-id="hf-z69a" class="li" style="top: 376px"><b data-hf-id="hf-si2p">Ibuprofen 200 mg</b><i data-hf-id="hf-kst4">expires in 2 months</i></div>
+      </div>
+    </div>
+    <div data-hf-id="hf-cx3h" id="s-cap3" class="cap clip" data-start="9.6" data-duration="3.3" data-track-index="3">
+      <div data-hf-id="hf-wt3y" id="s-cap3-in"><b data-hf-id="hf-aaz0">Weekly digest.</b> <span data-hf-id="hf-4hgr">A summary in your inbox, on your schedule.</span></div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    // Same stable rotation hash as components/stamp-badge.tsx.
+    function stampRotation(seed) {
+      let h = 2166136261;
+      for (let i = 0; i < seed.length; i++) {
+        h ^= seed.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return -3 + ((h >>> 0) % 11) * 0.5;
+    }
+    const rot = {};
+    document.querySelectorAll(".stamp").forEach((el) => {
+      rot[el.id] = stampRotation(el.dataset.seed);
+      gsap.set(el, { rotation: rot[el.id], autoAlpha: 0 });
+    });
+    gsap.set("#d-new", { y: 30, opacity: 0 });
+    gsap.set(".s-row, #s-head", { opacity: 0 });
+    gsap.set("#s-world", { scale: 1, x: 0, y: 0 });
+
+    // The white label opens into the card.
+    tl.fromTo(
+      "#s-open",
+      { clipPath: "inset(0px 0px 0px 0px round 0px)" },
+      { clipPath: "inset(130px 280px 200px 280px round 10px)", duration: 0.7, ease: "power3.inOut" },
+      0,
+    );
+    tl.set("#s-open", { opacity: 0 }, 0.76);
+    tl.fromTo("#s-shadow", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0.6);
+    tl.fromTo("#s-head", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power3.out" }, 0.7);
+    tl.fromTo(
+      ".s-row",
+      { opacity: 0, y: 14 },
+      { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.08 },
+      0.8,
+    );
+    gsap.set("#s-field", { x: 0 });
+    tl.fromTo("#s-field", { x: 0 }, { x: -24, duration: 17.5, ease: "none" }, 0);
+
+    // Stamps thunk in, row by row, as on the landing page.
+    function thunk(id, at) {
+      tl.fromTo(
+        id,
+        { autoAlpha: 0, scale: 1.6, rotation: rot[id.slice(1)] + 8 },
+        { autoAlpha: 1, scale: 1, rotation: rot[id.slice(1)], duration: 0.28, ease: "back.out(2.2)" },
+        at,
+      );
+      tl.fromTo("#s-card", { x: 0 }, { keyframes: { x: [2, -2, 1, 0] }, duration: 0.2, ease: "none" }, at + 0.15);
+    }
+    ["#st-0", "#st-1", "#st-2", "#st-3", "#st-4"].forEach((id, i) => thunk(id, 1.25 + i * 0.14));
+
+    // Captions: whole-line blur in, blur out.
+    function cap(id, a, b) {
+      tl.fromTo(id, { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.18, ease: "power4.out" }, a);
+      tl.to(id, { opacity: 0, filter: "blur(8px)", duration: 0.16, ease: "power2.in" }, b);
+    }
+    cap("#s-cap1-in", 2.85, 5.2);
+    cap("#s-cap2-in", 6.05, 9.2);
+    cap("#s-cap3-in", 9.65, 12.7);
+
+    // Camera: push to the Amoxicillin row (row centre screen y 480), x = 960 - 960 s.
+    const S = 1.35;
+    const push = { scale: S, x: 960 - 960 * S, y: 480 - 304 * S, duration: 0.5, ease: "power2.inOut" };
+    tl.to("#s-world", push, 5.4);
+
+    // The shelf recedes behind the cards (stat pair, then digest) and returns at 12.8.
+    tl.to("#s-world", { opacity: 0.3, filter: "blur(6px)", duration: 0.4, ease: "power2.inOut" }, 5.9);
+
+    // Book vs. counted: the pair rises out of the row.
+    tl.fromTo(
+      "#s-stat-in",
+      { opacity: 0, y: 40, filter: "blur(10px)" },
+      { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.45, ease: "power4.out" },
+      5.95,
+    );
+    tl.to("#s-stat-in", { opacity: 0, filter: "blur(8px)", duration: 0.2, ease: "power2.in" }, 9.15);
+
+    // Weekly digest: the shelf recedes, the summary arrives on top.
+    tl.to("#s-world", { scale: 1, x: 0, y: 0, duration: 0.5, ease: "power2.inOut" }, 9.4);
+    tl.fromTo(
+      "#s-mail-in",
+      { opacity: 0, y: 40, filter: "blur(10px)" },
+      { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power4.out" },
+      9.6,
+    );
+    tl.to("#s-mail-in", { opacity: 0, filter: "blur(8px)", duration: 0.2, ease: "power2.in" }, 12.75);
+    tl.to("#s-world", { opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "power2.out" }, 12.8);
+
+    // Payoff: push in, the count ticks, the lot is re-stamped.
+    tl.to("#s-world", push, 13.4);
+    tl.to("#d-old", { y: -30, opacity: 0, duration: 0.2, ease: "power2.in" }, 14.5);
+    tl.to("#d-new", { y: 0, opacity: 1, duration: 0.25, ease: "power3.out" }, 14.5);
+    tl.to("#st-0", { autoAlpha: 0, scale: 0.92, duration: 0.1, ease: "power2.in" }, 14.55);
+    tl.fromTo(
+      "#st-0b",
+      { autoAlpha: 0, scale: 1.6, rotation: rot["st-0b"] + 8 },
+      { autoAlpha: 1, scale: 1, rotation: rot["st-0b"], duration: 0.28, ease: "back.out(2.2)" },
+      14.65,
+    );
+    tl.fromTo("#s-card", { x: 0 }, { keyframes: { x: [3, -3, 1.5, 0] }, duration: 0.24, ease: "none" }, 14.8);
+    tl.to("#s-world", { scale: 1, x: 0, y: 0, duration: 0.5, ease: "power2.inOut" }, 16.3);
+
+    window.__timelines["shelf"] = tl;
+  </script>
+</template>
+

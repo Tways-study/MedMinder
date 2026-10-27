@@ -1,5 +1,6 @@
 "use client";
 
+import { DemoVideo } from "@/components/demo-video";
 import { LandingShelf, PillField } from "@/components/landing-shelf";
 import { LogoMark } from "@/components/logo-mark";
 import { Button } from "@/components/ui/button";
@@ -391,6 +392,8 @@ export default function SignInPage() {
               </li>
             ))}
           </ul>
+
+          <DemoVideo />
         </div>
       </div>
     </main>

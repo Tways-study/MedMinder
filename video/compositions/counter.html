@@ -1,0 +1,285 @@
+﻿<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #bfcbc3;
+      font-family: "Inter", sans-serif;
+      color: #18181b;
+    }
+    #c-world {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: 0 0;
+    }
+    #c-edge {
+      position: absolute;
+      left: 0;
+      top: 900px;
+      width: 1920px;
+      height: 180px;
+      background: #a9b7ae;
+      box-shadow: 0 -2px 0 rgba(24, 24, 27, 0.08);
+    }
+    #c-board {
+      position: absolute;
+      left: 120px;
+      top: 60px;
+      width: 860px;
+      height: 960px;
+      background: #8a6b4a;
+      border-radius: 14px;
+      box-shadow: 12px 24px 24px rgba(24, 24, 27, 0.18);
+    }
+    #c-clip {
+      position: absolute;
+      left: 310px;
+      top: -22px;
+      width: 240px;
+      height: 70px;
+      background: #8e959b;
+      border-radius: 10px;
+      box-shadow: 0 6px 0 #6f767c;
+    }
+    #c-sheet {
+      position: absolute;
+      left: 30px;
+      top: 40px;
+      width: 800px;
+      height: 890px;
+      background: #fff;
+    }
+    #c-head {
+      position: absolute;
+      left: 40px;
+      top: 50px;
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .c-row {
+      position: absolute;
+      left: 0;
+      width: 800px;
+      height: 170px;
+      border-top: 2px solid #d4d4d8;
+    }
+    .c-name {
+      position: absolute;
+      left: 40px;
+      top: 54px;
+      font-size: 34px;
+      font-weight: 600;
+    }
+    .c-tally {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 800px;
+      height: 890px;
+      overflow: visible;
+    }
+    .c-tally path {
+      fill: none;
+      stroke: #1f2a5a;
+      stroke-width: 6;
+      stroke-linecap: round;
+    }
+    #c-pen {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 0;
+      height: 0;
+    }
+    #c-pen-body {
+      position: absolute;
+      left: -9px;
+      top: -250px;
+      width: 18px;
+      height: 250px;
+      background: #1f2a5a;
+      border-radius: 9px 9px 2px 2px;
+      transform-origin: 9px 250px;
+      transform: rotate(24deg);
+    }
+    #c-carton {
+      position: absolute;
+      left: 1080px;
+      top: 460px;
+      width: 640px;
+      height: 400px;
+      background: #f4f1ea;
+      border-radius: 6px;
+      box-shadow: 14px 22px 26px rgba(24, 24, 27, 0.2);
+      overflow: hidden;
+    }
+    #c-carton-band {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 640px;
+      height: 96px;
+      background: #3e7c6b;
+      color: #fff;
+      font-family: "EB Garamond", serif;
+      font-weight: 500;
+      font-size: 50px;
+      line-height: 96px;
+      padding-left: 36px;
+    }
+    #c-carton-sub {
+      position: absolute;
+      left: 36px;
+      top: 124px;
+      font-size: 30px;
+      font-weight: 400;
+      color: #3f3f46;
+    }
+    #c-sticker {
+      position: absolute;
+      left: 260px;
+      top: 220px;
+      width: 360px;
+      height: 120px;
+      background: #fff;
+      border: 3px solid #18181b;
+      border-radius: 6px;
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700;
+      font-size: 54px;
+      line-height: 114px;
+      letter-spacing: 0.04em;
+    }
+    #c-title {
+      position: absolute;
+      left: 1010px;
+      top: 200px;
+      width: 840px;
+      font-size: 76px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    #c-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      background: #fff;
+      clip-path: inset(396px 528px 396px 528px round 14px);
+      opacity: 0;
+      text-align: center;
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 700;
+      font-size: 130px;
+      line-height: 1080px;
+      letter-spacing: 0.04em;
+    }
+  </style>
+  <div data-hf-id="hf-5s0l" id="root" data-composition-id="counter" data-width="1920" data-height="1080">
+    <div data-hf-id="hf-3n3a" id="c-world" data-layout-allow-overflow data-layout-allow-overlap>
+      <div data-hf-id="hf-tnze" id="c-edge"></div>
+      <div data-hf-id="hf-9g8b" id="c-board">
+        <div data-hf-id="hf-3ipj" id="c-clip"></div>
+        <div data-hf-id="hf-dyvm" id="c-sheet">
+          <div data-hf-id="hf-n30m" id="c-head">Shelf count</div>
+          <div data-hf-id="hf-aqi3" class="c-row" style="top: 150px"><span data-hf-id="hf-vcj0" class="c-name">Amoxicillin 500 mg</span></div>
+          <div data-hf-id="hf-zb6g" class="c-row" style="top: 320px"><span data-hf-id="hf-xtcx" class="c-name">Salbutamol inhaler</span></div>
+          <div data-hf-id="hf-9w4u" class="c-row" style="top: 490px"><span data-hf-id="hf-q1ek" class="c-name">Ibuprofen 200 mg</span></div>
+          <div data-hf-id="hf-eosd" class="c-row" style="top: 660px"><span data-hf-id="hf-pbhi" class="c-name">Loratadine 10 mg</span></div>
+          <svg data-hf-id="hf-6un3" class="c-tally" viewBox="0 0 800 890">
+            <!-- 4 rows, 3/2/2/2 groups; each group is four strokes and a diagonal -->
+            <path data-hf-id="hf-1j6t" class="tg" id="tg-0" pathLength="1" d="M520 192 v44 M534 192 v44 M548 192 v44 M562 192 v44 M512 226 L572 200" />
+            <path data-hf-id="hf-hjb4" class="tg" id="tg-1" pathLength="1" d="M620 192 v44 M634 192 v44 M648 192 v44 M662 192 v44 M612 226 L672 200" />
+            <path data-hf-id="hf-x7nu" class="tg" id="tg-2" pathLength="1" d="M720 192 v44 M734 192 v44 M748 192 v44" />
+            <path data-hf-id="hf-nmyw" class="tg" id="tg-3" pathLength="1" d="M520 362 v44 M534 362 v44 M548 362 v44 M562 362 v44 M512 396 L572 370" />
+            <path data-hf-id="hf-zxqc" class="tg" id="tg-4" pathLength="1" d="M620 362 v44 M634 362 v44" />
+            <path data-hf-id="hf-rgug" class="tg" id="tg-5" pathLength="1" d="M520 532 v44 M534 532 v44 M548 532 v44 M562 532 v44 M512 566 L572 540" />
+            <path data-hf-id="hf-sw45" class="tg" id="tg-6" pathLength="1" d="M620 532 v44 M634 532 v44 M648 532 v44" />
+            <path data-hf-id="hf-tof4" class="tg" id="tg-7" pathLength="1" d="M520 702 v44 M534 702 v44 M548 702 v44 M562 702 v44 M512 736 L572 710" />
+            <path data-hf-id="hf-t0lw" class="tg" id="tg-8" pathLength="1" d="M620 702 v44 M634 702 v44 M648 702 v44 M662 702 v44" />
+          </svg>
+          <div data-hf-id="hf-mlxe" id="c-pen"><div data-hf-id="hf-c70r" id="c-pen-body"></div></div>
+        </div>
+      </div>
+      <div data-hf-id="hf-t0a8" id="c-carton">
+        <div data-hf-id="hf-r8xg" id="c-carton-band">Amoxicillin 500 mg</div>
+        <div data-hf-id="hf-2xm0" id="c-carton-sub">Capsule</div>
+        <div data-hf-id="hf-pph6" id="c-sticker">EXP 11/26</div>
+      </div>
+    </div>
+    <div data-hf-id="hf-mos8" data-layout-allow-overflow id="c-title"
+      class="clip"
+      data-start="4.3"
+      data-duration="1.5"
+      data-track-index="2"
+    >
+      <span data-hf-id="hf-qycz" id="c-title-line">Counted. Not checked.</span>
+    </div>
+    <div data-hf-id="hf-5oba" id="c-fill"><span data-hf-id="hf-yr6p" id="c-fill-text">EXP 11/26</span></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    gsap.set("#c-board", { rotation: -3, transformOrigin: "50% 50%" });
+    gsap.set("#c-carton", { x: 1000 });
+    gsap.set("#c-world", { scale: 1, x: 0, y: 0 });
+
+    // The pen: positions are in sheet coordinates (the pen sits inside the sheet).
+    const pen = "#c-pen";
+    const groups = [
+      // [id, penStartX, penStartY, penEndX, penEndY, time, duration]
+      ["tg-1", 612, 192, 672, 230, 0.35, 0.36],
+      ["tg-2", 712, 192, 750, 236, 0.85, 0.3],
+      ["tg-3", 512, 362, 572, 400, 1.45, 0.4],
+      ["tg-4", 612, 362, 636, 406, 2.0, 0.26],
+      ["tg-5", 512, 532, 572, 570, 2.5, 0.4],
+      ["tg-6", 612, 532, 650, 576, 3.05, 0.3],
+      ["tg-7", 512, 702, 572, 740, 3.45, 0.4],
+      ["tg-8", 612, 702, 664, 746, 4.0 - 0.0, 0.0],
+    ];
+    // Row 1, first group is already drawn at t=0; the pen is mid-stroke on the second.
+    gsap.set(".tg", { strokeDasharray: 1, strokeDashoffset: 1 });
+    gsap.set("#tg-0", { strokeDashoffset: 0 });
+    gsap.set(pen, { x: 512, y: 192 });
+    groups.slice(0, 7).forEach(([id, sx, sy, ex, ey, t, d]) => {
+      tl.to(pen, { x: sx, y: sy, duration: 0.14, ease: "power2.out" }, t - 0.14);
+      tl.to("#" + id, { strokeDashoffset: 0, duration: d, ease: "none" }, t);
+      tl.to(pen, { x: ex, y: ey, duration: d, ease: "none" }, t);
+    });
+    // Last group in row 4 finishes the count; the pen lifts away.
+    tl.to("#tg-8", { strokeDashoffset: 0, duration: 0.4, ease: "none" }, 3.9);
+    tl.to(pen, { x: 664, y: 746, duration: 0.01 }, 3.9);
+    tl.to(pen, { x: 760, y: 820, duration: 0.4, ease: "power2.out" }, 4.3);
+
+    // Carton arrives, title blurs in and out.
+    tl.fromTo("#c-carton", { x: 1000 }, { x: 0, duration: 0.8, ease: "power4.out" }, 4.1);
+    tl.fromTo(
+      "#c-title-line",
+      { opacity: 0, filter: "blur(8px)" },
+      { opacity: 1, filter: "blur(0px)", duration: 0.18, ease: "power4.out" },
+      4.4,
+    );
+    tl.to("#c-title-line", { opacity: 0, filter: "blur(8px)", duration: 0.16, ease: "power2.in" }, 5.6);
+
+    // Camera pushes onto the sticker: world scale 2.4, sticker centre (1440, 740) to the screen centre.
+    tl.to("#c-world", { scale: 2.4, x: 960 - 1440 * 2.4, y: 540 - 740 * 2.4, duration: 0.8, ease: "power2.inOut" }, 5.8);
+    // The label's rectangle becomes the world: white fill takes its place, grows past the frame.
+    tl.set("#c-fill", { opacity: 1 }, 6.6);
+    tl.to(
+      "#c-fill",
+      { clipPath: "inset(-20px -20px -20px -20px round 0px)", duration: 0.65, ease: "power2.inOut" },
+      6.65,
+    );
+    tl.to("#c-fill-text", { opacity: 0, duration: 0.25, ease: "power2.in" }, 6.7);
+    window.__timelines["counter"] = tl;
+  </script>
+</template>
+
