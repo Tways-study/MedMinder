@@ -41,6 +41,11 @@ const FEATURES = [
   },
 ] as const;
 
+// The two hero doors share one size so neither outranks the other; only the
+// fill tells them apart. Both sit on the dark landing canvas.
+const doorClass =
+  "inline-flex h-12 w-full items-center justify-center gap-2 rounded-md px-6 text-base font-medium transition-[transform,background-color,color,border-color] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-landing active:scale-[0.98] motion-reduce:transform-none sm:w-auto sm:min-w-48";
+
 export default function SignInPage() {
   const { signIn } = useAuthActions();
   const router = useRouter();
@@ -50,6 +55,8 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const padRef = useRef<HTMLElement>(null);
+  const accessRef = useRef<HTMLElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
   const firstFlow = useRef(true);
 
@@ -57,22 +64,19 @@ export default function SignInPage() {
     () => {
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
+        // The one authored entrance: the hero lands top to bottom, then the
+        // film settles in beside it.
         const tl = gsap.timeline({ defaults: { ease: EASE.out } });
-        tl.from("[data-brand]", {
+        tl.from("[data-hero]", {
           y: 12,
           autoAlpha: 0,
           duration: DUR.enter,
           stagger: STAGGER * 2,
         });
         tl.from(
-          "[data-pad]",
+          "[data-hero-media]",
           { y: 16, autoAlpha: 0, duration: DUR.enter },
-          0.18,
-        );
-        tl.from(
-          "[data-field]",
-          { y: 8, autoAlpha: 0, duration: DUR.base, stagger: STAGGER },
-          DUR.enter - 0.1,
+          0.2,
         );
 
         // Ambient: the pill field drifts one tile, seamlessly, over a minute.
@@ -84,8 +88,7 @@ export default function SignInPage() {
           repeat: -1,
         });
 
-        // The sample shelf and feature list wait for the form to land (on a
-        // phone they sit below the fold and wait to be reached).
+        // Everything below the hero waits to be reached.
         const below = gsap.utils.toArray<HTMLElement>("[data-below]");
         if (below.length) {
           gsap.set(below, { y: 14, autoAlpha: 0 });
@@ -95,7 +98,7 @@ export default function SignInPage() {
               autoAlpha: 1,
               duration: DUR.enter,
               ease: EASE.out,
-              delay: 0.25,
+              delay: 0.15,
               stagger: STAGGER * 2,
               overwrite: "auto",
               clearProps: "transform,opacity,visibility",
@@ -165,6 +168,28 @@ export default function SignInPage() {
     { dependencies: [error], scope: padRef },
   );
 
+  // Either hero door picks its flow, brings the form into view and puts the
+  // caret in the email field so the visitor can start typing.
+  function openAccess(
+    event: React.MouseEvent<HTMLAnchorElement>,
+    next: "signIn" | "signUp",
+  ) {
+    event.preventDefault();
+    setFlow(next);
+    setError(null);
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    accessRef.current?.scrollIntoView({
+      behavior: reduced ? "auto" : "smooth",
+      block: "center",
+    });
+    window.setTimeout(
+      () => emailRef.current?.focus({ preventScroll: true }),
+      reduced ? 0 : 600,
+    );
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
@@ -197,50 +222,138 @@ export default function SignInPage() {
   return (
     <main
       ref={padRef}
-      className="relative min-h-[100dvh] overflow-hidden bg-landing px-4 py-10 text-primary-foreground sm:px-8 sm:py-14 lg:flex lg:items-center"
+      className="relative overflow-hidden bg-landing text-primary-foreground"
     >
       <PillField />
 
-      <div className="relative mx-auto grid w-full max-w-6xl gap-14 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:items-center lg:gap-16 xl:gap-24">
-        {/* The promise and the form, on one axis. */}
-        <div className="mx-auto flex w-full max-w-md flex-col items-center gap-8 text-center lg:mx-0 lg:max-w-none lg:items-start lg:text-left">
-          <div data-brand className="flex items-center gap-3">
-            <LogoMark className="size-9 ring-1 ring-primary-foreground/25" />
-            <span className="font-serif text-3xl font-medium leading-none">
-              MedMinder
-            </span>
-          </div>
+      {/* Hero: what this is, and two equal doors in. */}
+      <section
+        aria-labelledby="hero-title"
+        className="relative flex min-h-[100dvh] flex-col px-4 pb-16 pt-6 sm:px-8 sm:pt-8 lg:pb-20"
+      >
+        <header
+          data-hero
+          className="mx-auto flex w-full max-w-6xl items-center gap-3"
+        >
+          <LogoMark className="size-9 ring-1 ring-primary-foreground/25" />
+          <span className="font-serif text-3xl font-medium leading-none">
+            MedMinder
+          </span>
+        </header>
 
-          <div className="flex flex-col items-center gap-4 lg:items-start">
-            <p
-              data-brand
-              className="font-serif text-4xl font-medium leading-[1.1] sm:text-5xl"
-            >
-              Know what&rsquo;s on the shelf{" "}
-              <em className="pb-1 font-normal italic text-landing-ink">
-                before it expires.
-              </em>
-            </p>
-            <p
-              data-brand
-              className="max-w-sm text-base leading-relaxed text-primary-foreground/80"
-            >
-              Stock, expiry and reorder tracking for the dispensary. Every
-              account keeps its own private shelf.
-            </p>
-          </div>
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center gap-10 py-12 lg:gap-14 lg:py-16">
+          <h1
+            id="hero-title"
+            data-hero
+            className="max-w-4xl text-balance font-serif text-4xl font-medium leading-[1.1] sm:text-6xl lg:text-7xl"
+          >
+            Know what&rsquo;s on the shelf{" "}
+            <em className="pb-1 font-normal italic text-landing-ink">
+              before it expires.
+            </em>
+          </h1>
 
+          <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+            <div className="flex flex-col items-start gap-8">
+              <p
+                data-hero
+                className="max-w-sm text-base leading-relaxed text-primary-foreground/80"
+              >
+                Stock, expiry and reorder tracking for the dispensary. Every
+                account keeps its own private shelf.
+              </p>
+
+              <div
+                data-hero
+                className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row"
+              >
+                <a
+                  href="#access"
+                  onClick={(e) => openAccess(e, "signIn")}
+                  className={`${doorClass} bg-primary-foreground text-landing hover:bg-primary-foreground/90`}
+                >
+                  Sign in
+                  <ArrowRight className="size-4" aria-hidden />
+                </a>
+                <a
+                  href="#access"
+                  onClick={(e) => openAccess(e, "signUp")}
+                  className={`${doorClass} border border-primary-foreground/45 text-primary-foreground hover:bg-primary-foreground/10`}
+                >
+                  Open an account
+                </a>
+              </div>
+            </div>
+
+            <div data-hero-media className="w-full">
+              <DemoVideo />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Proof: the shelf doing its job, and what else it does. */}
+      <section
+        aria-labelledby="proof-title"
+        className="relative border-t border-primary-foreground/15 px-4 py-24 sm:px-8 lg:py-32"
+      >
+        <div className="mx-auto grid w-full max-w-6xl gap-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-center lg:gap-20">
+          <div className="flex flex-col gap-10 lg:order-2">
+            <h2
+              id="proof-title"
+              data-below
+              className="text-balance font-serif text-3xl font-medium leading-[1.15] sm:text-4xl"
+            >
+              Every lot is stamped by how close it is to expiring.
+            </h2>
+            <ul className="grid gap-6">
+              {FEATURES.map(({ icon: Icon, title, body }) => (
+                <li
+                  key={title}
+                  data-below
+                  className="flex items-baseline gap-4"
+                >
+                  <Icon
+                    className="size-5 shrink-0 translate-y-1 text-landing-ink"
+                    strokeWidth={1.75}
+                    aria-hidden
+                  />
+                  <p className="max-w-sm text-base leading-relaxed text-primary-foreground/75">
+                    <span className="font-medium text-primary-foreground">
+                      {title}.
+                    </span>{" "}
+                    {body}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="lg:order-1">
+            <LandingShelf />
+          </div>
+        </div>
+      </section>
+
+      {/* Access: the form, with a section of its own. */}
+      <section
+        id="access"
+        ref={accessRef}
+        aria-labelledby="access-title"
+        className="relative border-t border-primary-foreground/15 px-4 py-24 sm:px-8 lg:py-32"
+      >
+        <div className="mx-auto flex w-full max-w-md flex-col items-center gap-8">
           <div
             data-pad
-            className="w-full max-w-md rounded-lg bg-card text-left text-card-foreground shadow-landing"
+            className="w-full rounded-lg bg-card text-left text-card-foreground shadow-landing"
           >
-            <div className="px-6 py-5 text-center sm:px-8">
-              <h1
+            <div className="px-6 py-6 text-center sm:px-8">
+              <h2
+                id="access-title"
                 data-flow-swap
                 className="font-serif text-4xl font-medium leading-none"
               >
                 {isSignUp ? "Open an account" : "Sign in"}
-              </h1>
+              </h2>
               <p data-flow-swap className="mt-3 text-sm text-muted-foreground">
                 {isSignUp
                   ? "Each account keeps its own private shelf of medicines."
@@ -250,8 +363,8 @@ export default function SignInPage() {
             <div className="card-divider" aria-hidden />
 
             <div className="p-6 sm:p-8">
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <div data-field className="flex flex-col gap-1.5">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                <div className="flex flex-col gap-1.5">
                   <label htmlFor="email" className="text-sm font-medium">
                     Email
                   </label>
@@ -261,6 +374,7 @@ export default function SignInPage() {
                       aria-hidden
                     />
                     <Input
+                      ref={emailRef}
                       id="email"
                       name="email"
                       type="email"
@@ -272,7 +386,7 @@ export default function SignInPage() {
                   </div>
                 </div>
 
-                <div data-field className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5">
                   <label htmlFor="password" className="text-sm font-medium">
                     Password
                   </label>
@@ -318,7 +432,7 @@ export default function SignInPage() {
                   </ExpandCollapse>
                 </div>
 
-                <div data-field className="pt-1">
+                <div className="pt-1">
                   <Button
                     type="submit"
                     disabled={submitting}
@@ -363,39 +477,14 @@ export default function SignInPage() {
               setFlow(isSignUp ? "signIn" : "signUp");
               setError(null);
             }}
-            className="-mt-2 rounded-md lg:-ml-3 px-3 py-2.5 text-sm font-medium text-landing-ink-strong underline underline-offset-4 hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
+            className="rounded-md px-3 py-2.5 text-sm font-medium text-landing-ink-strong underline underline-offset-4 hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
           >
             {isSignUp
               ? "Already have an account? Sign in"
               : "New here? Open an account"}
           </button>
         </div>
-
-        {/* What a shelf looks like, and what the app does. */}
-        <div className="mx-auto flex w-full max-w-md flex-col gap-8 border-t border-primary-foreground/15 pt-12 lg:max-w-xl lg:border-t-0 lg:pt-0">
-          <LandingShelf />
-
-          <ul className="grid gap-4 text-left">
-            {FEATURES.map(({ icon: Icon, title, body }) => (
-              <li key={title} data-below className="flex items-baseline gap-3">
-                <Icon
-                  className="size-4 shrink-0 translate-y-0.5 text-landing-ink"
-                  strokeWidth={1.75}
-                  aria-hidden
-                />
-                <p className="text-sm text-primary-foreground/75">
-                  <span className="font-medium text-primary-foreground">
-                    {title}.
-                  </span>{" "}
-                  {body}
-                </p>
-              </li>
-            ))}
-          </ul>
-
-          <DemoVideo />
-        </div>
-      </div>
+      </section>
     </main>
   );
 }

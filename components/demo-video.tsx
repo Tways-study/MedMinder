@@ -1,78 +1,118 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Play } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-const SEEN_KEY = "medminder:demo-seen";
+const controlClass =
+  "flex size-11 items-center justify-center rounded-md bg-black/55 text-white backdrop-blur-sm transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
 /**
- * The demo film on the sign-in page. It opens by itself the first time the
- * page loads in a browser session, and from the "Watch the demo" button any
- * time after. Radix unmounts the content on close, so the video stops with the
- * dialog.
- *
- * Browsers only allow sound after a user gesture, so an automatic open tries
- * sound first and falls back to muted (the player's controls unmute it). It is
- * skipped under reduced motion.
+ * The demo film, embedded on the sign-in page. It plays muted and looped as
+ * soon as it is mostly on screen (on a phone it sits below the form, so that
+ * is when it is scrolled to) and pauses when it leaves, which saves battery
+ * and data. Sound is a tap away. Under reduced motion, or when the browser
+ * refuses to autoplay (Low Power Mode, data saver), the poster shows and the
+ * play button starts it.
  */
 export function DemoVideo() {
-  const [open, setOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  // True once the viewer has paused it themselves; scrolling must not restart it.
+  const userPaused = useRef(false);
+  const reducedMotion = useRef(false);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(true);
 
-  useEffect(() => {
-    try {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      if (window.sessionStorage.getItem(SEEN_KEY)) return;
-      window.sessionStorage.setItem(SEEN_KEY, "1");
-    } catch {
-      // Storage can be blocked; fall through and open once for this load.
-    }
-    setOpen(true);
-  }, []);
-
-  const play = useCallback((video: HTMLVideoElement | null) => {
+  const attemptPlay = useCallback(() => {
+    const video = videoRef.current;
     if (!video) return;
+    video.muted = true;
     video.play().catch(() => {
-      video.muted = true;
-      video.play().catch(() => {});
+      // Autoplay refused: the poster stays up and the play button takes over.
     });
   }, []);
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true; // React's `muted` prop is unreliable for autoplay.
+    reducedMotion.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (!userPaused.current && !reducedMotion.current) attemptPlay();
+        } else {
+          video.pause();
+        }
+      },
+      { threshold: 0.4 },
+    );
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, [attemptPlay]);
+
+  function togglePlay() {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      userPaused.current = false;
+      video.play().catch(() => {});
+    } else {
+      userPaused.current = true;
+      video.pause();
+    }
+  }
+
+  function toggleSound() {
+    const video = videoRef.current;
+    if (video) video.muted = !video.muted;
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <div className="relative w-full overflow-hidden rounded-lg bg-black shadow-landing">
+      <video
+        ref={videoRef}
+        className="aspect-video w-full"
+        src="/demo/medminder-demo.mp4"
+        poster="/demo/medminder-demo-poster.jpg"
+        aria-label="MedMinder demo film: counting a shelf is not the same as checking its dates, and MedMinder stamps every lot by how close it is to expiring."
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onVolumeChange={(e) => setMuted(e.currentTarget.muted)}
+      />
+      <div className="absolute bottom-2 right-2 flex gap-2">
         <button
           type="button"
-          data-below
-          className="group flex w-fit items-center gap-3 rounded-md border border-primary-foreground/30 px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
+          onClick={toggleSound}
+          aria-label={muted ? "Turn sound on" : "Turn sound off"}
+          aria-pressed={!muted}
+          className={controlClass}
         >
-          <Play className="size-4" strokeWidth={1.75} aria-hidden />
-          Watch the demo
-          <span className="font-data text-xs text-landing-ink">0:32</span>
+          {muted ? (
+            <VolumeX className="size-4" aria-hidden />
+          ) : (
+            <Volume2 className="size-4" aria-hidden />
+          )}
         </button>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl gap-0 overflow-hidden border-0 bg-black p-0 text-white">
-        <DialogTitle className="sr-only">MedMinder demo</DialogTitle>
-        <DialogDescription className="sr-only">
-          A 32 second film: counting a shelf is not the same as checking its
-          dates, and MedMinder stamps every lot by how close it is to expiring.
-        </DialogDescription>
-        <video
-          ref={play}
-          className="aspect-video w-full"
-          src="/demo/medminder-demo.mp4"
-          poster="/demo/medminder-demo-poster.jpg"
-          controls
-          playsInline
-          preload="auto"
-        />
-      </DialogContent>
-    </Dialog>
+        <button
+          type="button"
+          onClick={togglePlay}
+          aria-label={playing ? "Pause demo" : "Play demo"}
+          className={controlClass}
+        >
+          {playing ? (
+            <Pause className="size-4" aria-hidden />
+          ) : (
+            <Play className="size-4" aria-hidden />
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
