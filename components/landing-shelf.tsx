@@ -58,7 +58,7 @@ export function LandingShelf() {
       aria-hidden
       className="w-full rounded-lg bg-card text-left text-card-foreground shadow-landing"
     >
-      <div className="flex items-center gap-2.5 px-4 py-3 sm:px-5">
+      <div className="flex items-center gap-2.5 px-4 py-4 sm:px-6">
         <Pill className="size-5 text-primary" strokeWidth={1.75} aria-hidden />
         <p className="font-serif text-xl font-medium leading-none">
           On the shelf
@@ -74,7 +74,7 @@ export function LandingShelf() {
             <li
               key={row.name}
               data-below
-              className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5"
+              className="flex items-center justify-between gap-3 px-4 py-4 sm:px-6"
             >
               <div className="min-w-0">
                 <p className="font-serif text-lg font-medium leading-tight">
