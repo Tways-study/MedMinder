@@ -54,9 +54,8 @@ export function LandingShelf() {
 
   return (
     <div
-      data-below
       aria-hidden
-      className="w-full rounded-lg bg-card text-left text-card-foreground shadow-landing"
+      className="w-full rounded-lg border bg-card text-left text-card-foreground shadow-xs"
     >
       <div className="flex items-center gap-2.5 px-4 py-4 sm:px-6">
         <Pill className="size-5 text-primary" strokeWidth={1.75} aria-hidden />
@@ -73,7 +72,6 @@ export function LandingShelf() {
           return (
             <li
               key={row.name}
-              data-below
               className="flex items-center justify-between gap-3 px-4 py-4 sm:px-6"
             >
               <div className="min-w-0">
@@ -105,46 +103,5 @@ export function LandingShelf() {
         })}
       </ul>
     </div>
-  );
-}
-
-/**
- * Faint tiled pills for the landing canvas. The svg overscans the page by one
- * tile (96px) so the drift in app/signin can loop seamlessly.
- */
-export function PillField() {
-  return (
-    <svg
-      data-drift
-      aria-hidden
-      className="pointer-events-none absolute -inset-24 size-[calc(100%+12rem)] text-primary-foreground/[0.05]"
-    >
-      <defs>
-        <pattern
-          id="pill-field"
-          width="96"
-          height="96"
-          patternUnits="userSpaceOnUse"
-        >
-          <g
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <g transform="translate(14 14) rotate(-30 12 12)">
-              <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
-              <path d="m8.5 8.5 7 7" />
-            </g>
-            <g transform="translate(60 58) rotate(40 12 12) scale(0.8)">
-              <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
-              <path d="m8.5 8.5 7 7" />
-            </g>
-          </g>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#pill-field)" />
-    </svg>
   );
 }

@@ -17,11 +17,11 @@ export function LogoMark({
       aria-hidden
       className={cn("shrink-0 rounded-md", className)}
     >
-      <rect width="32" height="32" rx="7" fill="#6D4AA8" />
+      <rect width="32" height="32" rx="7" className="fill-primary" />
       <g
         transform="translate(5 5) scale(0.9167)"
         fill="none"
-        stroke="#fff"
+        className="stroke-primary-foreground"
         strokeWidth="2.25"
         strokeLinecap="round"
         strokeLinejoin="round"

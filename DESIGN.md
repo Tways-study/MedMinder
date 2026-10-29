@@ -131,8 +131,8 @@ Tokens are HSL channels in `app/globals.css` (`:root`), exposed through Tailwind
 - **Violet Wash** (#F3EFFA) with **Deep Violet** text (#4C2F80): `accent`. The selected sidebar item only. 9.15:1.
 
 ### Neutral
-- **Canvas** (#FAFAFA / #09090B): `background`, the page. Never tinted.
-- **Card** (#FFFFFF / #111113): `card` and `popover`, every raised surface and input fill.
+- **Canvas** (#FAFAFA): `background`, the page. Never tinted.
+- **Card** (#FFFFFF): `card` and `popover`, every raised surface and input fill.
 - **Muted** (#F4F4F5 / #18181B): `muted` and `secondary`, table header, hover fill, icon wells.
 - **Ink** (#18181B / #FAFAFA): `foreground`. 16.97:1 and 19.06:1 on canvas.
 - **Muted Ink** (#696971): secondary text. Deliberately darker than zinc-500 (#71717A) because that measured 4.34:1 on the muted fill; this one is 4.95:1 there.
@@ -156,7 +156,7 @@ Each tier has foreground, background, and border tokens (`tier-{name}`, `-bg`, `
 
 **The Ramp Is Not A Palette Rule.** Red, orange, amber, sky, and emerald exist only to express expiry. Do not borrow them for categories, charts, or accents.
 
-**The Landing Exception Rule.** `/signin` is the one place the canvas is tinted. It uses the `landing*` tokens (`--landing` #221835, `--landing-deep` #090410, `--landing-ink` #D3C2F0, `--landing-ink-strong` #DCCEF3), exposed as `bg-landing`, `text-landing-ink`, `text-landing-ink-strong` and `shadow-landing`. Nothing inside the app shell uses them. White text on it is `primary-foreground`; every pairing is measured in `globals.css`.
+**The One Canvas Rule.** `/signin` (the landing) uses the same canvas, tokens, `Button`, border-plus-`shadow-xs` surfaces and type scale as the app. There are no landing-only colours or shadows; the stamps and the sample shelf are the only landing-specific components.
 
 **The Measured Pair Rule.** A new foreground/background pairing is added to the contrast comment in `globals.css` with its ratio, in both themes, before it ships. Text needs 4.5:1.
 
@@ -235,7 +235,7 @@ One radius token, `--radius` 10px, derived into three steps: `lg` 10px (cards, d
 
 ### Feedback and Motion
 - Toasts via sonner (`top-center`, rich colours, close button), styled as popover surfaces.
-- GSAP (`lib/gsap.ts`, primitives in `components/motion.tsx`), with every effect gated by `prefers-reduced-motion`. Native scrolling: there is no smooth-scroll layer. Entries fade and rise a few px; hover feedback is background or colour only; the quantity stepper updates instantly. The detail panel slides in over 150ms (none under reduced motion) and the table never animates on filter or sort. The stamp thunk is reserved for the sign-in sample, which also carries the page's only ambient motion (a slow pill-field drift and a few day-count ticks, all off under reduced motion).
+- GSAP (`lib/gsap.ts`, primitives in `components/motion.tsx`), with every effect gated by `prefers-reduced-motion`. Native scrolling: there is no smooth-scroll layer. Entries fade and rise a few px; hover feedback is background or colour only; the quantity stepper updates instantly. The detail panel slides in over 150ms (none under reduced motion) and the table never animates on filter or sort. The stamp thunk is reserved for the sign-in sample, which also carries the page's only ambient motion (a few day-count ticks, off under reduced motion). The landing has no background pattern or drift.
 - Loading uses skeletons shaped like the content; empty states always carry the next action.
 
 ### Icons

@@ -71,7 +71,7 @@ export function DemoVideo() {
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-lg bg-black shadow-landing">
+    <div className="relative w-full overflow-hidden rounded-lg border bg-card shadow-xs">
       <video
         ref={videoRef}
         className="aspect-video w-full"

@@ -29,6 +29,10 @@ Not a generic SaaS dashboard: no identical rounded-card grids, no decorative gra
 - **Data reads in mono tabular figures.** Quantities, dates, and KPIs are set so they compare cleanly down a column.
 - **Built for the shelf.** Large touch targets on a phone, compact on desktop, short task-focused visits.
 
+## Public Surface
+
+The sign-in page (`/signin`) doubles as the landing page. It uses the same light canvas, tokens, `Button` and border-plus-`shadow-xs` surfaces as the app; there is no separate landing palette. Its "How MedMinder handles your data" card is a factual summary of current behaviour (what is stored, per-account isolation, digest email). Keep it in step with `convex/schema.ts`, `convex/auth.ts` and `convex/sendDigest.ts`, and have wording reviewed before launch: it is not a legal privacy policy.
+
 ## Accessibility & Inclusion
 
 WCAG AA contrast is a hard floor, verified per color pairing (documented inline in `app/globals.css` with actual ratios). Status/tier information never relies on color alone: always paired with an icon and a word. The theme is light only (dark mode was removed deliberately). Respect `prefers-reduced-motion`: every GSAP effect is gated by it, plus `motion-reduce` utilities.

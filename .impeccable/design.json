@@ -13,7 +13,7 @@
       "data": { "displayName": "Data", "purpose": "Geist Mono, tabular figures, for quantities, dates, KPIs." }
     },
     "shadows": [
-      { "name": "xs", "value": "0 1px 2px 0 rgb(0 0 0 / 0.04)", "purpose": "Resting cards and tables; removed in dark." },
+      { "name": "xs", "value": "0 1px 2px 0 rgb(0 0 0 / 0.04)", "purpose": "Resting cards and tables. Light only." },
       { "name": "lg", "value": "Tailwind shadow-lg", "purpose": "Floating layers: dialog, menus, popover, select, tooltip, toast." }
     ],
     "motion": [
@@ -79,10 +79,10 @@
   ],
   "narrative": {
     "northStar": "The Dispensary Ledger",
-    "overview": "A well-kept ledger on a clean counter: neutral zinc surfaces, hairline borders, numbers that line up, and one violet that means act here. Light, dark, and system themes are all first-class and measured to WCAG AA.",
+    "overview": "A well-kept ledger on a clean counter: neutral zinc surfaces, hairline borders, numbers that line up, and one violet that means act here. The theme is light only and every text pairing is measured to WCAG AA.",
     "keyCharacteristics": [
       "Neutral zinc canvas, a single violet accent, a five-step traffic-light ramp for expiry only.",
-      "Border plus a barely-there shadow for elevation; no shadow at rest in dark.",
+      "Border plus a barely-there shadow for elevation.",
       "Geist for text, Geist Mono with tabular figures for data.",
       "Status is always icon + word + colour.",
       "Touch-first sizing (44px) that compacts to 36px from sm up.",
@@ -93,10 +93,10 @@
       { "name": "The Ramp Is Not A Palette Rule", "body": "Red, orange, amber, sky, and emerald exist only to express expiry.", "section": "colors" },
       { "name": "The Measured Pair Rule", "body": "A new foreground/background pairing is added to the contrast comment in globals.css with its ratio, in both themes, before it ships.", "section": "colors" },
       { "name": "The Mono Is For Data Rule", "body": "Numbers that get compared use .font-data. Prose and labels never do.", "section": "typography" },
-      { "name": "The Border Carries It Rule", "body": "Depth at rest comes from the 1px border; the shadow is a whisper and disappears in dark.", "section": "elevation" }
+      { "name": "The Border Carries It Rule", "body": "Depth at rest comes from the 1px border; the shadow is a whisper.", "section": "elevation" }
     ],
     "dos": [
-      "Do use semantic tokens so light and dark come free.",
+      "Do use semantic tokens instead of raw colours.",
       "Do pair every tier with its icon and word, via TierBadge.",
       "Do set quantities, dates, and KPIs in .font-data.",
       "Do keep touch targets at 44px on mobile and compact to 36px from sm.",
@@ -111,7 +111,7 @@
       "Don't convey status by colour alone.",
       "Don't scale elements on hover.",
       "Don't use emoji or glyph icons; lucide only.",
-      "Don't add shadows to resting surfaces beyond shadow-xs, and none in dark.",
+      "Don't add shadows to resting surfaces beyond shadow-xs.",
       "Don't spend violet on anything but action, focus, selection, and links."
     ]
   }
