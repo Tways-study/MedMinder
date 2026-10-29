@@ -27,7 +27,7 @@ npx vitest run convex/medicines.test.ts
 
 Route groups:
 - `app/(app)/` — authenticated routes behind middleware; layout wraps all inventory pages. `/` is the Inventory workspace (status tabs, table, side panel); its state lives in the URL (`?view=`, `?m=`, `?edit=1`, `?add=1`). `/medicines*` only redirect there
-- `app/signin/` — unauthenticated entry point
+- `app/signin/` — unauthenticated entry point and the landing page (sticky header, hero with demo film, sample shelf and features, sign-in/sign-up form, data privacy card, footer). Uses the app's own tokens and `Button`; there are no landing-only colours
 
 `middleware.ts` uses `convexAuthNextjsMiddleware` to protect every non-sign-in route by default — adding a new route is protected automatically without explicit listing.
 
@@ -66,6 +66,7 @@ settings  → by_owner (ownerId)
 
 - `ui/` — shadcn/ui primitives (Button, Card, Dialog, etc.)
 - Feature components: `inventory-table.tsx`, `medicine-drawer.tsx` (view/edit/add/delete panel), `quantity-stepper.tsx`, `medicine-form.tsx`, `status-chip.tsx`, `timezone-combobox.tsx`, `email-chip-input.tsx`
+- Landing only: `landing-shelf.tsx` (animated sample shelf), `demo-video.tsx` (hero film player), `stamp-badge.tsx`; `logo-mark.tsx` is shared
 - `ConvexClientProvider.tsx` — wraps the app with `ConvexAuthNextjsServerProvider`
 - Shell: `app-shell.tsx` (top bar, frame), `app-nav.tsx` (collapsible sidebar + mobile tabs), `command-palette.tsx` (Cmd/Ctrl+K), `shell-state.tsx` (collapsed + palette state); destinations live in `lib/nav.ts`
 - `motion.tsx` — GSAP motion primitives (`Stagger`, `ExpandCollapse`, `useStampIn`, `usePressFeedback`, `useAlertIn`); GSAP setup lives in `lib/gsap.ts`

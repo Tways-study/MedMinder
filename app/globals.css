@@ -16,10 +16,6 @@
            destructive/background 4.63, destructive-foreground/destructive 4.83
            tier fg on tier bg: expired 5.91, critical 4.88, warning 4.84,
            watch 5.57, ok 5.21
-  Landing (/signin only, see DESIGN.md "Landing exception"), on --landing:
-           primary-foreground 16.82, primary-foreground/80 11.08,
-           primary-foreground/75 9.88, landing-ink 10.18,
-           landing-ink-strong 11.33
   Light muted-foreground is #696971 rather than zinc-500 (#71717A), which
   measured 4.34:1 on the muted fill.
   Tier is never colour alone: always icon + word + colour.
@@ -62,12 +58,6 @@
     --tier-ok: 162.9 93.5% 24.3%; /* #047857 */
     --tier-ok-bg: 151.8 81% 95.9%; /* #ECFDF5 */
     --tier-ok-border: 152.4 76% 80.4%; /* #A7F3D0 */
-
-    /* Landing canvas: the one tinted surface, used only by app/signin. */
-    --landing: 262 38% 15%; /* #221835 */
-    --landing-deep: 262 60% 4%; /* #090410, shadow tint */
-    --landing-ink: 262 60% 85%; /* #D3C2F0, supporting text and icons */
-    --landing-ink-strong: 262 60% 88%; /* #DCCEF3, toggle link */
 
     --radius: 0.625rem; /* 10px: cards, dialogs. md = 8px, sm = 6px */
     color-scheme: light;
