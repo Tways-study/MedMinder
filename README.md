@@ -35,7 +35,50 @@
 - **Multi-tenant** — open sign-up, and every account's inventory is fully isolated from every other
 - **Responsive shell** — a sidebar that collapses to an icon rail on desktop, and a bottom tab bar on a phone. Light theme, built to WCAG AA contrast
 
-## Data model
+## Background
+
+### How the project came about
+
+MedMinder started on 2026-07-16 as a scaffold from the Convex Next.js auth template. The first version was ambitious: medicines, per-batch stock, deliveries, and count sessions. Within a week it was reshaped into what it is now: a multi-tenant app where stock lives directly on the medicine. Since then it has been through a visual restyle, a staged UI overhaul into a single Inventory workspace, and a landing page. See [Version history](#version-history) for the full trail.
+
+### The motivation
+
+A pharmacy or clinic shelf is checked by hand, usually standing at the shelf. Expiry dates and low stock are easy to miss in that routine, and the cost of missing one is an expired product still on the shelf or an empty slot when someone needs it. MedMinder was built to move that checking out of memory and paper and into a system that raises it first. The product brief is in `PRODUCT.md`.
+
+### What problem it hopes to solve
+
+- **Expired stock going unnoticed** — every medicine gets an expiry tier (expired, critical, soon, watch) with cutoffs you set
+- **Running out** — a reorder point per medicine flags low stock before the shelf is empty
+- **Book count drifting from reality** — on-hand and actual quantities are tracked side by side, so a gap shows as surplus or deficit
+- **Having to remember to look** — a weekly digest email lists everything expiring or low, so the week starts with a to-do list
+
+### Intended use
+
+- **Who:** pharmacists and clinic staff managing a physical medicine shelf, often on a phone, one-handed
+- **How:** short, task-focused visits. Check what needs action, adjust a count, add or edit a medicine, move on
+- **Where it fits:** a single pharmacy's or clinic's day-to-day shelf tracking. Each account's inventory is private to it, so several pharmacies can use one deployment without seeing each other's data
+
+## Limitations
+
+- **No per-lot tracking.** Stock is one on-hand count and one actual count per medicine, and a medicine has one expiry date. Two lots of the same medicine with different expiry dates need to be tracked as separate entries. Batches, deliveries, and count sessions were built and then deliberately removed to keep the app simple
+- **Not a regulated or clinical system.** There is no controlled-substance register, dispensing record, or audit trail, and it has not been assessed against any pharmacy regulation. The in-app data privacy card is a factual summary, not a legal privacy policy, and its wording should be reviewed before any real launch
+- **Digest email depends on Gmail SMTP.** Digests need a `GMAIL_USER` and a Gmail App Password configured on the Convex deployment, and sending is bound by Gmail's limits. Without them, nothing is sent
+- **Light theme only.** Dark mode was built and removed on purpose
+- **No tagged releases and no license.** The version is `0.1.0`, and the repository has no license file, so default copyright applies
+- **Stats strip not yet back.** The Inventory page dropped its dashboard stat strip during the UI overhaul. A return is planned in `docs/2026-10-17-phase-4-alerts-and-polish-plan.md`
+
+## Challenges
+
+These are taken from the git history rather than from memory.
+
+- **Finding the right amount of model.** The first schema tracked batches, deliveries, and counts. It was more than a shelf check needs, so it was cut back to on-hand and actual quantities on the medicine
+- **Retrofitting multi-tenancy.** The app began with a single-account claim. Moving to open sign-up meant scoping every table to `ownerId`, and the migration briefly crashed every medicine read until it was fixed
+- **Not capping the inventory.** The medicines list first had a silent 2000-item cap. It was replaced with pagination, and the dashboard and digest now stream rather than load everything
+- **Dates and time zones.** Expiry dates once rendered a day apart, and the digest has to fire at the right local hour. Both are handled by pure, tested date and schedule helpers in `convex/lib/`
+- **Email delivery.** Digests were first sent with Resend and later moved to Gmail SMTP through Nodemailer
+- **Deploying a backend and a frontend together.** Production builds deploy Convex and Next.js atomically, while preview builds must not push a branch's schema to production (see [Deploying](#deploying))
+- **Design consistency.** The look changed several times: a purple pastel system, an Apple-style restyle, an apothecary theme, and finally a calmer, denser workspace. Contrast is measured against WCAG AA, and status is never shown by colour alone
+
 
 Every table is scoped to the signed-in account (`ownerId`) and read through a Convex index — tenants are fully isolated and queries stay O(your rows), not O(all rows).
 
@@ -204,3 +247,16 @@ A staged redesign aimed at pharmacy and clinic staff working at a desktop. Each 
 - Purple "apothecary" design system, expiry dashboard, weekly digest, and settings
 - Medicines, batches, deliveries, and count sessions (later simplified, see above)
 - Branded sign-in screen, wordmark, logo mark, and favicon
+
+## Credits
+
+- Built by [Twice Navarro](https://github.com/Tways-study), with [Claude Code](https://claude.com/claude-code) as a pair-programming and design-review assistant
+- Scaffolded from the [Convex](https://www.convex.dev) Next.js + Convex Auth + shadcn/ui template
+- [Next.js](https://nextjs.org), [React](https://react.dev), and [Tailwind CSS](https://tailwindcss.com)
+- [shadcn/ui](https://ui.shadcn.com) and [Radix UI](https://www.radix-ui.com) primitives, [cmdk](https://cmdk.paco.me) for the command palette, and [Sonner](https://sonner.emilkowal.ski) for toasts
+- [Lucide](https://lucide.dev) icons, including the Pill icon the favicon is drawn from
+- [GSAP](https://gsap.com) for motion
+- [Nodemailer](https://nodemailer.com) for digest email
+- [Hyperframes](https://www.npmjs.com/package/hyperframes) for the landing page demo film in `video/`
+- Design direction shaped with the Impeccable and taste-skill design skills for Claude Code
+- Gentian violet, the accent colour, is a real pharmacy antiseptic dye
