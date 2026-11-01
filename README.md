@@ -43,7 +43,7 @@ MedMinder started on 2026-07-16 as a scaffold from the Convex Next.js auth templ
 
 ### The motivation
 
-A pharmacy or clinic shelf is checked by hand, usually standing at the shelf. Expiry dates and low stock are easy to miss in that routine, and the cost of missing one is an expired product still on the shelf or an empty slot when someone needs it. MedMinder was built to move that checking out of memory and paper and into a system that raises it first. The product brief is in `PRODUCT.md`.
+I built MedMinder after pharmacists told me about a pain point in their work: keeping track of expiry dates, both for medicine in stock and for medicine out on the shelves. Checking by hand is slow, and an expired product is easy to miss. MedMinder is my answer to that: a system that tracks expiry dates and surfaces what needs attention before it becomes a problem. The product brief is in `PRODUCT.md`.
 
 ### What problem it hopes to solve
 
